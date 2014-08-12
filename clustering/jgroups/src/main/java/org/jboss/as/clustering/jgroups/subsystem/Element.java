@@ -33,12 +33,16 @@ public enum Element {
 
     CHANNEL(ModelKeys.CHANNEL),
     CHANNELS("channels"),
+    DEFAULT_EXECUTOR(ModelKeys.DEFAULT_EXECUTOR),
+    OOB_EXECUTOR(ModelKeys.OOB_EXECUTOR),
     PROPERTY(ModelKeys.PROPERTY),
     PROTOCOL(ModelKeys.PROTOCOL),
     RELAY(ModelKeys.RELAY),
     REMOTE_SITE(ModelKeys.REMOTE_SITE),
     STACK(ModelKeys.STACK),
     STACKS("stacks"),
+    THREAD_FACTORY(ModelKeys.THREAD_FACTORY),
+    TIMER_EXECUTOR(ModelKeys.TIMER_EXECUTOR),
     TRANSPORT(ModelKeys.TRANSPORT),
     ;
 

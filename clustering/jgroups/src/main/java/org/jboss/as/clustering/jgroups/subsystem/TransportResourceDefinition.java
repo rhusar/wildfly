@@ -164,5 +164,10 @@ public class TransportResourceDefinition extends SimpleResourceDefinition {
     @Override
     public void registerChildren(ManagementResourceRegistration registration) {
         registration.registerSubModel(PropertyResourceDefinition.INSTANCE);
+
+        registration.registerSubModel(new ThreadFactoryResourceDefinition());
+        registration.registerSubModel(new ExecutorResourceDefinition(ModelKeys.DEFAULT_EXECUTOR));
+        registration.registerSubModel(new ExecutorResourceDefinition(ModelKeys.OOB_EXECUTOR));
+        registration.registerSubModel(new TimerExecutorResourceDefinition());
     }
 }

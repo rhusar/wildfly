@@ -36,6 +36,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 import org.jboss.as.clustering.dmr.ModelNodes;
 import org.jboss.as.clustering.jgroups.ChannelFactory;
@@ -57,7 +58,10 @@ import org.jboss.as.network.SocketBinding;
 import org.jboss.as.server.ServerEnvironment;
 import org.jboss.as.server.ServerEnvironmentService;
 import org.jboss.as.server.Services;
-import org.jboss.as.threads.ThreadsServices;
+import org.jboss.as.threads.BoundedQueueThreadPoolService;
+import org.jboss.as.threads.ScheduledThreadPoolService;
+import org.jboss.as.threads.ThreadFactoryService;
+import org.jboss.as.threads.TimeSpec;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.Property;
 import org.jboss.modules.ModuleIdentifier;
@@ -72,6 +76,8 @@ import org.jgroups.Channel;
 
 /**
  * @author Paul Ferraro
+ * @author Richard Achmatowicz
+ * @author Radoslav Husar
  */
 public class StackAddHandler extends AbstractAddStepHandler {
 
@@ -123,14 +129,14 @@ public class StackAddHandler extends AbstractAddStepHandler {
 
     static void installRuntimeServices(OperationContext context, ModelNode operation, ModelNode model) throws OperationFailedException {
 
-        PathAddress address = PathAddress.pathAddress(operation.get(OP_ADDR));
-        String name = address.getLastElement().getValue();
+        final PathAddress address = PathAddress.pathAddress(operation.get(OP_ADDR));
+        final String name = address.getLastElement().getValue();
 
         // check that we have enough information to create a stack
         protocolStackSanityCheck(name, model);
 
         // we need to preserve the order of the protocols as maintained by PROTOCOLS
-        // pick up the ordered protocols here as a List<Property> where property is <name, ModelNode>
+        // pick up the ordered protocols here as a List<Property> where property is <stackName, ModelNode>
         List<Property> orderedProtocols = getOrderedProtocolPropertyList(model);
 
         // pick up the transport here and its values
@@ -183,6 +189,8 @@ public class StackAddHandler extends AbstractAddStepHandler {
             protocolSocketBindings.add(new AbstractMap.SimpleImmutableEntry<>(protocolConfig, protocolSocketBinding));
         }
 
+        // Deprecated -- support EAP 6.x slaves
+        // TODO special handling
         String timerExecutor = ModelNodes.asString(TransportResourceDefinition.TIMER_EXECUTOR.resolveModelAttribute(context, transport));
         String threadFactory = ModelNodes.asString(TransportResourceDefinition.THREAD_FACTORY.resolveModelAttribute(context, transport));
         String diagnosticsSocketBinding = ModelNodes.asString(TransportResourceDefinition.DIAGNOSTICS_SOCKET_BINDING.resolveModelAttribute(context, transport));
@@ -190,8 +198,60 @@ public class StackAddHandler extends AbstractAddStepHandler {
         String oobExecutor = ModelNodes.asString(TransportResourceDefinition.OOB_EXECUTOR.resolveModelAttribute(context, transport));
         String transportSocketBinding = ModelNodes.asString(ProtocolResourceDefinition.SOCKET_BINDING.resolveModelAttribute(context, transport));
 
-        // create the channel factory service builder
         ServiceTarget target = context.getServiceTarget();
+
+        // Install thread factory
+        boolean threadFactoryDep = false;
+        if (transport.get(ModelKeys.THREAD, ModelKeys.THREAD_FACTORY).isDefined()) {
+            threadFactoryDep = true;
+
+            // Get the model
+            ModelNode factoryModel = transport.get(ModelKeys.THREAD, ModelKeys.THREAD_FACTORY);
+            final String threadGroupName = ThreadFactoryResourceDefinition.GROUP_NAME.resolveModelAttribute(context, factoryModel).asString();
+            final Integer priority = ThreadFactoryResourceDefinition.PRIORITY.resolveModelAttribute(context, factoryModel).asInt();
+            final String threadNamePattern = ThreadFactoryResourceDefinition.THREAD_NAME_PATTERN.resolveModelAttribute(context, factoryModel).asString();
+
+            // Install the service
+            final ThreadFactoryService service = new ThreadFactoryService();
+            service.setNamePattern(threadNamePattern);
+            service.setPriority(priority);
+            service.setThreadGroupName(threadGroupName);
+            ServiceBuilder<?> serviceBuilder = target.addService(ThreadFactoryResourceDefinition.serviceName(name), service)
+                    .setInitialMode(ServiceController.Mode.ON_DEMAND);
+
+            ServiceController<?> sc = serviceBuilder.install();
+        }
+
+        // Install default + OOB pools
+        boolean defaultExecutorDep = installExecutorService(transport, name, ModelKeys.DEFAULT_EXECUTOR, threadFactoryDep, context, operation, model);
+        boolean oobExecutorDep = installExecutorService(transport, name, ModelKeys.OOB_EXECUTOR, threadFactoryDep, context, operation, model);
+
+        // install timer pool
+        boolean timerExecutorDep = false;
+        if (transport.get(ModelKeys.THREAD, ModelKeys.TIMER_EXECUTOR).isDefined()) {
+            timerExecutorDep = true;
+
+            // Get the model
+            ModelNode executorModel = transport.get(ModelKeys.THREAD, ModelKeys.TIMER_EXECUTOR);
+            final int maxThreads = CommonThreadAttributeDefinitions.MAX_THREADS.resolveModelAttribute(context, executorModel).asInt();
+            final int keepalive = CommonThreadAttributeDefinitions.KEEPALIVE_TIME.resolveModelAttribute(context, executorModel).asInt();
+            final String keepaliveUnit = CommonThreadAttributeDefinitions.KEEPALIVE_TIME_UNIT.resolveModelAttribute(context, executorModel).asString();
+
+            // Install the service
+            TimeSpec time = new TimeSpec(TimeUnit.valueOf(keepaliveUnit), keepalive);
+            final ScheduledThreadPoolService service = new ScheduledThreadPoolService(maxThreads, time);
+            ServiceBuilder<?> serviceBuilder = target.addService(TimerExecutorResourceDefinition.serviceName(name), service)
+                    .setInitialMode(ServiceController.Mode.ON_DEMAND);
+
+            // Add dependency if thread factory is defined
+            if (threadFactoryDep) {
+                serviceBuilder.addDependency(ThreadFactoryResourceDefinition.serviceName(name), ThreadFactory.class, service.getThreadFactoryInjector());
+            }
+
+            ServiceController<?> sc = serviceBuilder.install();
+        }
+
+        // create the channel factory service builder
         ServiceBuilder<ChannelFactory> builder = target.addService(ChannelFactoryService.getServiceName(name), new ChannelFactoryService(stackConfig))
                 .addDependency(ProtocolDefaultsService.SERVICE_NAME, ProtocolDefaults.class, stackConfig.getDefaultsInjector())
                 .addDependency(ServerEnvironmentService.SERVICE_NAME, ServerEnvironment.class, stackConfig.getEnvironmentInjector())
@@ -206,13 +266,13 @@ public class StackAddHandler extends AbstractAddStepHandler {
 
         // add remaining dependencies
         addSocketBindingDependency(builder, diagnosticsSocketBinding, transportConfig.getDiagnosticsSocketBindingInjector());
-        addExecutorDependency(builder, defaultExecutor, transportConfig.getDefaultExecutorInjector());
-        addExecutorDependency(builder, oobExecutor, transportConfig.getOOBExecutorInjector());
-        if (timerExecutor != null) {
-            builder.addDependency(ThreadsServices.executorName(timerExecutor), ScheduledExecutorService.class, transportConfig.getTimerExecutorInjector());
+        addExecutorDependency(builder, name, ModelKeys.DEFAULT_EXECUTOR, defaultExecutorDep, transportConfig.getDefaultExecutorInjector());
+        addExecutorDependency(builder, name, ModelKeys.OOB_EXECUTOR, oobExecutorDep, transportConfig.getOOBExecutorInjector());
+        if (timerExecutorDep) {
+            builder.addDependency(TimerExecutorResourceDefinition.serviceName(name), ScheduledExecutorService.class, transportConfig.getTimerExecutorInjector());
         }
-        if (threadFactory != null) {
-            builder.addDependency(ThreadsServices.threadFactoryName(threadFactory), ThreadFactory.class, transportConfig.getThreadFactoryInjector());
+        if (threadFactoryDep) {
+            builder.addDependency(ThreadFactoryResourceDefinition.serviceName(name), ThreadFactory.class, transportConfig.getThreadFactoryInjector());
         }
         for (Map.Entry<String, Injector<Channel>> entry: channels) {
             builder.addDependency(ChannelService.getServiceName(entry.getKey()), Channel.class, entry.getValue());
@@ -220,6 +280,34 @@ public class StackAddHandler extends AbstractAddStepHandler {
         builder.setInitialMode(ServiceController.Mode.ON_DEMAND).install();
 
         new BinderServiceBuilder(target).build(ChannelFactoryService.createChannelFactoryBinding(name), ChannelFactoryService.getServiceName(name), ChannelFactory.class).install();
+    }
+
+    static boolean installExecutorService(ModelNode transport, String stackName, String executor, boolean threadFactoryDep, OperationContext context, ModelNode operation, ModelNode model) throws OperationFailedException {
+        if (transport.get(ModelKeys.THREAD, executor).isDefined()) {
+            // Get the model
+            ModelNode executorModel = transport.get(ModelKeys.THREAD, executor);
+            final int coreThreads = CommonThreadAttributeDefinitions.CORE_THREADS.resolveModelAttribute(context, executorModel).asInt();
+            final int maxThreads = CommonThreadAttributeDefinitions.MAX_THREADS.resolveModelAttribute(context, executorModel).asInt();
+            final int queueLength = CommonThreadAttributeDefinitions.QUEUE_LENGTH.resolveModelAttribute(context, executorModel).asInt();
+            final int keepalive = CommonThreadAttributeDefinitions.KEEPALIVE_TIME.resolveModelAttribute(context, executorModel).asInt();
+            final String keepaliveUnit = CommonThreadAttributeDefinitions.KEEPALIVE_TIME_UNIT.resolveModelAttribute(context, executorModel).asString();
+
+            // Install the service
+            TimeSpec time = new TimeSpec(TimeUnit.valueOf(keepaliveUnit), keepalive);
+            final BoundedQueueThreadPoolService service = new BoundedQueueThreadPoolService(coreThreads, maxThreads, queueLength, false, time, false);
+            ServiceBuilder<?> serviceBuilder = context.getServiceTarget()
+                    .addService(ExecutorResourceDefinition.serviceName(stackName, executor), service)
+                    .setInitialMode(ServiceController.Mode.ON_DEMAND);
+
+            // Add dependency if thread factory is defined
+            if (threadFactoryDep) {
+                serviceBuilder.addDependency(ThreadFactoryResourceDefinition.serviceName(stackName), ThreadFactory.class, service.getThreadFactoryInjector());
+            }
+
+            ServiceController<?> sc = serviceBuilder.install();
+            return true;
+        }
+        return false;
     }
 
     static void removeRuntimeServices(OperationContext context, ModelNode operation, ModelNode model) {
@@ -275,13 +363,13 @@ public class StackAddHandler extends AbstractAddStepHandler {
         }
     }
 
-    private static void addExecutorDependency(ServiceBuilder<ChannelFactory> builder, String executor, Injector<Executor> injector) {
-        if (executor != null) {
-            builder.addDependency(ThreadsServices.executorName(executor), Executor.class, injector);
+    private static void addExecutorDependency(ServiceBuilder<ChannelFactory> builder, String stackName, String executor, boolean isDependent, Injector<Executor> injector) {
+        if (isDependent) {
+            builder.addDependency(ExecutorResourceDefinition.serviceName(stackName, executor), Executor.class, injector);
         }
     }
 
-    /*
+    /**
      * A check that we have the minimal configuration required to create a protocol stack.
      */
     private static void protocolStackSanityCheck(String stackName, ModelNode model) throws OperationFailedException {

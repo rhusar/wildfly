@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <!--
   ~ JBoss, Home of Professional Open Source.
   ~ Copyright 2011, Red Hat, Inc., and individual contributors
@@ -155,6 +154,29 @@
     <xs:complexType name="transport">
         <xs:complexContent>
             <xs:extension base="tns:protocol">
+                <xs:all>
+                    <!--<xs:element name="thread-factory" type="threadFactoryType" minOccurs="0" maxOccurs="1"/>-->
+                    <xs:element name="default-thread-factory" type="threadFactoryType" minOccurs="0" maxOccurs="1">
+                        <xs:annotation>
+                            <xs:documentation></xs:documentation>
+                        </xs:annotation>
+                    </xs:element>
+                    <xs:element name="internal-thread-factory" type="threadFactoryType" minOccurs="0" maxOccurs="1">
+                        <xs:annotation>
+                            <xs:documentation></xs:documentation>
+                        </xs:annotation>
+                    </xs:element>
+                    <xs:element name="oob-thread-factory" type="threadFactoryType" minOccurs="0" maxOccurs="1">
+                        <xs:annotation>
+                            <xs:documentation></xs:documentation>
+                        </xs:annotation>
+                    </xs:element>
+                    <xs:element name="timer-thread-factory" type="threadFactoryType" minOccurs="0" maxOccurs="1">
+                        <xs:annotation>
+                            <xs:documentation></xs:documentation>
+                        </xs:annotation>
+                    </xs:element>
+                </xs:all>
                 <xs:attribute name="shared" type="xs:boolean" default="true">
                     <xs:annotation>
                         <xs:documentation>Indicates whether or not the channels created for this stack should use a single, shared transport.</xs:documentation>
@@ -202,6 +224,65 @@
                 </xs:attribute>
             </xs:extension>
         </xs:complexContent>
+    </xs:complexType>
+
+    <!--<xs:complexType name="threadFactoryType">-->
+    <!--<xs:attribute name="group-name" type="xs:string" use="optional">-->
+    <!--<xs:annotation>-->
+    <!--<xs:documentation>TODO</xs:documentation>-->
+    <!--</xs:annotation>-->
+    <!--</xs:attribute>-->
+    <!--<xs:attribute name="thread-name-pattern" type="xs:string" use="optional">-->
+    <!--<xs:annotation>-->
+    <!--<xs:documentation>TODO</xs:documentation>-->
+    <!--</xs:annotation>-->
+    <!--</xs:attribute>-->
+    <!--<xs:attribute name="priority" type="priorityType" use="optional">-->
+    <!--<xs:annotation>-->
+    <!--<xs:documentation>TODO</xs:documentation>-->
+    <!--</xs:annotation>-->
+    <!--</xs:attribute>-->
+    <!--</xs:complexType>-->
+
+    <!--<xs:simpleType name="priorityType">-->
+    <!--<xs:annotation>-->
+    <!--<xs:documentation>-->
+    <!--A priority which can range from 1 to 10 (inclusive). See http://java.sun.com/javase/6/docs/api/java/lang/Thread.html#setPriority(int) for more information.-->
+    <!--</xs:documentation>-->
+    <!--</xs:annotation>-->
+    <!--<xs:restriction base="xs:integer">-->
+    <!--<xs:minInclusive value="1"/>-->
+    <!--<xs:maxInclusive value="10"/>-->
+    <!--</xs:restriction>-->
+    <!--</xs:simpleType>-->
+
+    <xs:complexType name="threadFactoryType">
+        <xs:attribute name="core-threads" type="xs:int" use="optional">
+            <xs:annotation>
+                <xs:documentation></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="queue-length" type="xs:int" use="optional">
+            <xs:annotation>
+                <xs:documentation></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="max-threads" type="xs:int" use="optional">
+            <xs:annotation>
+                <xs:documentation></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="keepalive-time" type="xs:int" use="optional">
+            <xs:annotation>
+                <xs:documentation></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <!-- TODO TYPE -->
+        <xs:attribute name="keepalive-time-unit" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
     </xs:complexType>
 
     <xs:complexType name="property">

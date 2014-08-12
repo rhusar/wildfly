@@ -49,6 +49,17 @@ public enum Attribute {
     THREAD_FACTORY(ModelKeys.THREAD_FACTORY),
     TIMER_EXECUTOR(ModelKeys.TIMER_EXECUTOR),
     TYPE(ModelKeys.TYPE),
+
+    // thread
+    GROUP_NAME(ModelKeys.GROUP_NAME),
+    THREAD_NAME_PATTERN(ModelKeys.THREAD_NAME_PATTERN),
+    PRIORITY(ModelKeys.PRIORITY),
+    CORE_THREADS(ModelKeys.CORE_THREADS),
+    QUEUE_LENGTH(ModelKeys.QUEUE_LENGTH),
+    MAX_THREADS(ModelKeys.MAX_THREADS),
+    KEEPALIVE_TIME(ModelKeys.KEEPALIVE_TIME),
+    KEEPALIVE_TIME_UNIT(ModelKeys.KEEPALIVE_TIME_UNIT),
+    ALLOW_CORE_TIMEOUT(ModelKeys.ALLOW_CORE_TIMEOUT),
     ;
 
     private final String name;

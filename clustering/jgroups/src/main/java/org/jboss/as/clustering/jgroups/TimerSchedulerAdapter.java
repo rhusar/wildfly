@@ -40,6 +40,7 @@ import org.jgroups.util.TimeScheduler;
  * Adapts a {@link ScheduledExecutorService} to a {@link TimeScheduler}.
  * Disallow modification of the pool itself - this should be done via
  * the threading subsystem directly.
+ * TODO: allow modifications
  * @author Paul Ferraro
  */
 public class TimerSchedulerAdapter implements TimeScheduler {

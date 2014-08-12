@@ -12,6 +12,33 @@
                 default-executor="jgroups" oob-executor="jgroups-oob" timer-executor="jgroups-timer" shared="${test.expr:false}"
                 thread-factory="jgroups-thread-factory" machine="${test.expr:machine1}" rack="${test.expr:rack1}" site="${test.expr:site1}" >
                 <property name="enable_bundling">${test.expr:true}</property>
+
+                <!-- /thread=* -->
+                <!--
+                <thread-factory thread-name-pattern="cl"
+                                group-name="jgroups-group"
+                                priority="1"/>
+                -->
+                <default-executor core-threads="1"
+                                        queue-length="10"
+                                        max-threads="10"
+                                        keepalive-time="10"
+                                        keepalive-time-unit="SECONDS"/>
+                <!--<internal-thread-factory core-threads="1"-->
+                                         <!--queue-length="10"-->
+                                         <!--max-threads="10"-->
+                                         <!--keepalive-time="10"-->
+                                         <!--keepalive-time-unit="SECONDS"/>-->
+                <oob-executor core-threads="1"
+                                    queue-length="10"
+                                    max-threads="10"
+                                    keepalive-time="10"
+                                    keepalive-time-unit="SECONDS"/>
+                <timer-executor core-threads="1"
+                                      queue-length="10"
+                                      max-threads="10"
+                                      keepalive-time="10"
+                                      keepalive-time-unit="SECONDS"/>
             </transport>
             <protocol type="MPING" module="org.jgroups" socket-binding="jgroups-mping">
                 <property name="name">${test.expr:value}</property>

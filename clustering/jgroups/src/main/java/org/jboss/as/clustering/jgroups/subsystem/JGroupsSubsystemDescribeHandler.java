@@ -84,6 +84,24 @@ public class JGroupsSubsystemDescribeHandler implements OperationStepHandler {
                     // no optional transport:add parameters will be present, so use attributes list
                     result.add(createOperation(transportAddress, transport, TransportResourceDefinition.ATTRIBUTES));
                     addProtocolPropertyCommands(transportAddress, transport, result);
+
+                    // Describe /thread=*
+                    if (transport.get(ThreadFactoryResourceDefinition.PATH.getKeyValuePair()).isDefined()) {
+                        ModelNode threadFactory = transport.get(ThreadFactoryResourceDefinition.PATH.getKeyValuePair());
+                        result.add(createOperation(transportAddress.append(ThreadFactoryResourceDefinition.PATH), threadFactory, ThreadFactoryResourceDefinition.ATTRIBUTES));
+                    }
+                    if (transport.get(ExecutorResourceDefinition.pathElement(ModelKeys.DEFAULT_EXECUTOR).getKeyValuePair()).isDefined()) {
+                        ModelNode executor = transport.get(ExecutorResourceDefinition.pathElement(ModelKeys.DEFAULT_EXECUTOR).getKeyValuePair());
+                        result.add(createOperation(transportAddress.append(ExecutorResourceDefinition.pathElement(ModelKeys.DEFAULT_EXECUTOR)), executor, ExecutorResourceDefinition.ATTRIBUTES));
+                    }
+                    if (transport.get(ExecutorResourceDefinition.pathElement(ModelKeys.OOB_EXECUTOR).getKeyValuePair()).isDefined()) {
+                        ModelNode executor = transport.get(ExecutorResourceDefinition.pathElement(ModelKeys.OOB_EXECUTOR).getKeyValuePair());
+                        result.add(createOperation(transportAddress.append(ExecutorResourceDefinition.pathElement(ModelKeys.OOB_EXECUTOR)), executor, ExecutorResourceDefinition.ATTRIBUTES));
+                    }
+                    if (transport.get(ExecutorResourceDefinition.pathElement(ModelKeys.TIMER_EXECUTOR).getKeyValuePair()).isDefined()) {
+                        ModelNode executor = transport.get(ExecutorResourceDefinition.pathElement(ModelKeys.TIMER_EXECUTOR).getKeyValuePair());
+                        result.add(createOperation(transportAddress.append(ExecutorResourceDefinition.pathElement(ModelKeys.TIMER_EXECUTOR)), executor, ExecutorResourceDefinition.ATTRIBUTES));
+                    }
                 }
                 if (stack.get(ProtocolResourceDefinition.WILDCARD_PATH.getKey()).isDefined()) {
                     for (Property protocol : StackAddHandler.getOrderedProtocolPropertyList(stack)) {

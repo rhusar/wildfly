@@ -99,7 +99,36 @@ public class JGroupsSubsystemXMLWriter implements XMLElementWriter<SubsystemMars
         TransportResourceDefinition.RACK.marshallAsAttribute(transport, writer);
         TransportResourceDefinition.SITE.marshallAsAttribute(transport, writer);
         writeProtocolElements(writer, transport);
+        writeThreadFactoryElements(writer, transport);
+        writeExecutorElements(Element.DEFAULT_EXECUTOR, ModelKeys.DEFAULT_EXECUTOR, writer, transport);
+        writeExecutorElements(Element.OOB_EXECUTOR, ModelKeys.OOB_EXECUTOR, writer, transport);
+        writeExecutorElements(Element.TIMER_EXECUTOR, ModelKeys.TIMER_EXECUTOR, writer, transport);
         writer.writeEndElement();
+    }
+
+    private static void writeThreadFactoryElements(XMLExtendedStreamWriter writer, ModelNode transport) throws XMLStreamException {
+        if (transport.hasDefined(ThreadFactoryResourceDefinition.PATH.getKey())) {
+            ModelNode threadFactory = transport.get(ThreadFactoryResourceDefinition.PATH.getKeyValuePair());
+            writer.writeStartElement(Element.THREAD_FACTORY.getLocalName());
+            ThreadFactoryResourceDefinition.THREAD_NAME_PATTERN.marshallAsAttribute(threadFactory, writer);
+            ThreadFactoryResourceDefinition.GROUP_NAME.marshallAsAttribute(threadFactory, writer);
+            ThreadFactoryResourceDefinition.PRIORITY.marshallAsAttribute(threadFactory, writer);
+            writer.writeEndElement();
+        }
+    }
+
+    private static void writeExecutorElements(Element element, String modelPath, XMLExtendedStreamWriter writer, ModelNode transport) throws XMLStreamException {
+        if (transport.hasDefined(ExecutorResourceDefinition.pathElement(modelPath).getKey())) {
+            ModelNode executor = transport.get(ExecutorResourceDefinition.pathElement(modelPath).getKeyValuePair());
+            writer.writeStartElement(element.getLocalName());
+            CommonThreadAttributeDefinitions.CORE_THREADS.marshallAsAttribute(executor, writer);
+            CommonThreadAttributeDefinitions.QUEUE_LENGTH.marshallAsAttribute(executor, writer);
+            CommonThreadAttributeDefinitions.MAX_THREADS.marshallAsAttribute(executor, writer);
+            CommonThreadAttributeDefinitions.KEEPALIVE_TIME.marshallAsAttribute(executor, writer);
+            CommonThreadAttributeDefinitions.KEEPALIVE_TIME_UNIT.marshallAsAttribute(executor, writer);
+            CommonThreadAttributeDefinitions.ALLOW_CORE_TIMEOUT.marshallAsAttribute(executor, writer);
+            writer.writeEndElement();
+        }
     }
 
     private static void writeProtocol(XMLExtendedStreamWriter writer, ModelNode protocol) throws XMLStreamException {
