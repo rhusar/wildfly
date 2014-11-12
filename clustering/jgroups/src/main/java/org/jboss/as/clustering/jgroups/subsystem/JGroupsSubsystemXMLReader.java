@@ -334,17 +334,17 @@ public class JGroupsSubsystemXMLReader implements XMLElementReader<List<ModelNod
                 this.parseProperty(reader, address, operations);
                 break;
             }
-            case THREAD_FACTORY:
-                parseThreadFactory(reader, address, operations);
+            case DEFAULT_THREAD_FACTORY:
+                parseThreadFactory(ModelKeys.DEFAULT, reader, address, operations);
                 break;
-            case DEFAULT_EXECUTOR:
-                parseExecutor(ModelKeys.DEFAULT_EXECUTOR, reader, address, operations);
+            case INTERNAL_THREAD_FACTORY:
+                parseThreadFactory(ModelKeys.INTERNAL, reader, address, operations);
                 break;
-            case OOB_EXECUTOR:
-                parseExecutor(ModelKeys.OOB_EXECUTOR, reader, address, operations);
+            case OOB_THREAD_FACTORY:
+                parseThreadFactory(ModelKeys.OOB, reader, address, operations);
                 break;
-            case TIMER_EXECUTOR:
-                parseTimerExecutor(reader, address, operations);
+            case TIMER_THREAD_FACTORY:
+                parseThreadFactory(ModelKeys.TIMER, reader, address, operations);
                 break;
             default: {
                 throw ParseUtils.unexpectedElement(reader);
@@ -361,8 +361,8 @@ public class JGroupsSubsystemXMLReader implements XMLElementReader<List<ModelNod
         PropertyResourceDefinition.VALUE.parseAndSetParameter(reader.getElementText(), operation, reader);
     }
 
-    private static void parseThreadFactory(XMLExtendedStreamReader reader, PathAddress parentAddress, Map<PathAddress, ModelNode> operations) throws XMLStreamException {
-        PathAddress address = parentAddress.append(ThreadFactoryResourceDefinition.PATH);
+    private static void parseThreadFactory(String poolName, XMLExtendedStreamReader reader, PathAddress parentAddress, Map<PathAddress, ModelNode> operations) throws XMLStreamException {
+        PathAddress address = parentAddress.append(ThreadPoolDefinition.pathElement(poolName));
         ModelNode operation = Util.createAddOperation(address);
         operations.put(address, operation);
 
@@ -370,72 +370,20 @@ public class JGroupsSubsystemXMLReader implements XMLElementReader<List<ModelNod
             String value = reader.getAttributeValue(i);
             Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
             switch (attribute) {
-                case GROUP_NAME:
-                    ThreadFactoryResourceDefinition.GROUP_NAME.parseAndSetParameter(value, operation, reader);
-                    break;
-                case THREAD_NAME_PATTERN:
-                    ThreadFactoryResourceDefinition.THREAD_NAME_PATTERN.parseAndSetParameter(value, operation, reader);
-                    break;
-                case PRIORITY:
-                    ThreadFactoryResourceDefinition.PRIORITY.parseAndSetParameter(value, operation, reader);
-                    break;
-                default:
-                    throw ParseUtils.unexpectedAttribute(reader, i);
-            }
-        }
-
-        ParseUtils.requireNoContent(reader);
-    }
-
-    private static void parseExecutor(String executorType, XMLExtendedStreamReader reader, PathAddress parentAddress, Map<PathAddress, ModelNode> operations) throws XMLStreamException {
-        PathAddress address = parentAddress.append(ExecutorResourceDefinition.pathElement(executorType));
-        ModelNode operation = Util.createAddOperation(address);
-        operations.put(address, operation);
-
-        for (int i = 0; i < reader.getAttributeCount(); i++) {
-            String value = reader.getAttributeValue(i);
-            Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
-            switch (attribute) {
-                case CORE_THREADS:
-                    CommonThreadAttributeDefinitions.CORE_THREADS.parseAndSetParameter(value, operation, reader);
-                    break;
-                case QUEUE_LENGTH:
-                    CommonThreadAttributeDefinitions.QUEUE_LENGTH.parseAndSetParameter(value, operation, reader);
+                case MIN_THREADS:
+                    ThreadPoolDefinition.MIN_THREADS.parseAndSetParameter(value, operation, reader);
                     break;
                 case MAX_THREADS:
-                    CommonThreadAttributeDefinitions.MAX_THREADS.parseAndSetParameter(value, operation, reader);
+                    ThreadPoolDefinition.MAX_THREADS.parseAndSetParameter(value, operation, reader);
+                    break;
+                case QUEUE_MAX_SIZE:
+                    ThreadPoolDefinition.QUEUE_MAX_SIZE.parseAndSetParameter(value, operation, reader);
                     break;
                 case KEEPALIVE_TIME:
-                    CommonThreadAttributeDefinitions.KEEPALIVE_TIME.parseAndSetParameter(value, operation, reader);
+                    ThreadPoolDefinition.KEEPALIVE_TIME.parseAndSetParameter(value, operation, reader);
                     break;
                 case KEEPALIVE_TIME_UNIT:
-                    CommonThreadAttributeDefinitions.KEEPALIVE_TIME_UNIT.parseAndSetParameter(value, operation, reader);
-                    break;
-                case ALLOW_CORE_TIMEOUT:
-                    CommonThreadAttributeDefinitions.ALLOW_CORE_TIMEOUT.parseAndSetParameter(value, operation, reader);
-                    break;
-                default:
-                    throw ParseUtils.unexpectedAttribute(reader, i);
-            }
-        }
-
-        ParseUtils.requireNoContent(reader);
-    }
-
-    private static void parseTimerExecutor(XMLExtendedStreamReader reader, PathAddress parentAddress, Map<PathAddress, ModelNode> operations) throws XMLStreamException {
-        PathAddress address = parentAddress.append(TimerExecutorResourceDefinition.PATH);
-        ModelNode operation = Util.createAddOperation(address);
-        operations.put(address, operation);
-
-        for (int i = 0; i < reader.getAttributeCount(); i++) {
-            String value = reader.getAttributeValue(i);
-            Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
-            switch (attribute) {
-                case CORE_THREADS:
-                    CommonThreadAttributeDefinitions.CORE_THREADS.parseAndSetParameter(value, operation, reader);
-                    break;
-                case QUEUE_LENGTH:
-                    CommonThreadAttributeDefinitions.QUEUE_LENGTH.parseAndSetParameter(value, operation, reader);
+                    ThreadPoolDefinition.KEEPALIVE_TIME_UNIT.parseAndSetParameter(value, operation, reader);
                     break;
                 default:
                     throw ParseUtils.unexpectedAttribute(reader, i);
@@ -523,7 +471,7 @@ public class JGroupsSubsystemXMLReader implements XMLElementReader<List<ModelNod
                         PathAddress channelAddress = subsystemAddress.append(ChannelResourceDefinition.pathElement(value));
                         ModelNode channelOperation = operations.get(channelAddress);
                         if (channelOperation != null) {
-                            String stack = null;
+                            String stack;
                             if (channelOperation.hasDefined(ChannelResourceDefinition.STACK.getName())) {
                                 stack = channelOperation.get(ChannelResourceDefinition.STACK.getName()).asString();
                             } else {

@@ -21,10 +21,6 @@
  */
 package org.jboss.as.clustering.jgroups;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
-
 import org.jboss.as.network.SocketBinding;
 
 /**
@@ -36,14 +32,6 @@ public interface TransportConfiguration extends ProtocolConfiguration {
     boolean isShared();
 
     SocketBinding getDiagnosticsSocketBinding();
-
-    ExecutorService getDefaultExecutor();
-
-    ExecutorService getOOBExecutor();
-
-    ScheduledExecutorService getTimerExecutor();
-
-    ThreadFactory getThreadFactory();
 
     Topology getTopology();
 

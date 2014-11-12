@@ -22,6 +22,9 @@
 
 package org.jboss.as.clustering.jgroups.subsystem;
 
+import java.util.concurrent.TimeUnit;
+
+import org.jboss.as.controller.AbstractAddStepHandler;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.ModelVersion;
 import org.jboss.as.controller.OperationStepHandler;
@@ -31,48 +34,57 @@ import org.jboss.as.controller.ReloadRequiredWriteAttributeHandler;
 import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.SimpleResourceDefinition;
+import org.jboss.as.controller.operations.validation.EnumValidator;
 import org.jboss.as.controller.operations.validation.IntRangeValidator;
 import org.jboss.as.controller.registry.AttributeAccess;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.transform.description.ResourceTransformationDescriptionBuilder;
+import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
-import org.jboss.msc.service.ServiceName;
 
 /**
  * @author Radoslav Husar
  * @version Aug 2014
  */
-public class ThreadFactoryResourceDefinition extends SimpleResourceDefinition {
+public class ThreadPoolDefinition extends SimpleResourceDefinition {
 
-    static final PathElement PATH = PathElement.pathElement(ModelKeys.THREAD, ModelKeys.THREAD_FACTORY);
-
-    // TODO move this
-    public static ServiceName serviceName(String stack) {
-        return ServiceName.JBOSS.append(JGroupsExtension.SUBSYSTEM_NAME).append(ModelKeys.STACK).append(stack).append(ModelKeys.THREAD).append(ModelKeys.THREAD_FACTORY);
-    }
-
-    static final SimpleAttributeDefinition GROUP_NAME = new SimpleAttributeDefinitionBuilder(ModelKeys.GROUP_NAME, ModelType.STRING, true)
-            .setXmlName(Attribute.GROUP_NAME.getLocalName())
+    public static final SimpleAttributeDefinition MIN_THREADS = new SimpleAttributeDefinitionBuilder(Attribute.MIN_THREADS.getLocalName(), ModelType.INT, true)
+            .setXmlName(Attribute.MIN_THREADS.getLocalName())
             .setAllowExpression(true)
             .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
             .build();
 
-    static final SimpleAttributeDefinition THREAD_NAME_PATTERN = new SimpleAttributeDefinitionBuilder(ModelKeys.THREAD_NAME_PATTERN, ModelType.STRING, true)
-            .setXmlName(Attribute.THREAD_NAME_PATTERN.getLocalName())
+    public static final SimpleAttributeDefinition MAX_THREADS = new SimpleAttributeDefinitionBuilder(Attribute.MAX_THREADS.getLocalName(), ModelType.INT, true)
+            .setXmlName(Attribute.MAX_THREADS.getLocalName())
+            .setValidator(new IntRangeValidator(0, Integer.MAX_VALUE, false, true))
+            .setAllowExpression(true)
+            .build();
+
+    public static final SimpleAttributeDefinition QUEUE_MAX_SIZE = new SimpleAttributeDefinitionBuilder(Attribute.QUEUE_MAX_SIZE.getLocalName(), ModelType.INT, true)
+            .setXmlName(Attribute.QUEUE_MAX_SIZE.getLocalName())
             .setAllowExpression(true)
             .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
             .build();
 
-    static final SimpleAttributeDefinition PRIORITY = new SimpleAttributeDefinitionBuilder(ModelKeys.PRIORITY, ModelType.INT, true)
-            .setXmlName(Attribute.PRIORITY.getLocalName())
-            .setValidator(new IntRangeValidator(Thread.MIN_PRIORITY, Thread.MAX_PRIORITY, true, true))
+    public static final SimpleAttributeDefinition KEEPALIVE_TIME = new SimpleAttributeDefinitionBuilder(Attribute.KEEPALIVE_TIME.getLocalName(), ModelType.LONG, true)
+            .setXmlName(Attribute.KEEPALIVE_TIME.getLocalName())
             .setAllowExpression(true)
-            .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
+            .build();
+
+    public static final SimpleAttributeDefinition KEEPALIVE_TIME_UNIT = new SimpleAttributeDefinitionBuilder(Attribute.KEEPALIVE_TIME_UNIT.getLocalName(), ModelType.STRING, true)
+            .setXmlName(Attribute.KEEPALIVE_TIME_UNIT.getLocalName())
+            .setValidator(new EnumValidator<>(TimeUnit.class, false, true))
+            .setDefaultValue(new ModelNode("SECONDS"))
+            .setAllowExpression(true)
             .build();
 
     static final AttributeDefinition[] ATTRIBUTES = new AttributeDefinition[]{
-            GROUP_NAME, THREAD_NAME_PATTERN, PRIORITY
+            MIN_THREADS, MAX_THREADS, QUEUE_MAX_SIZE, KEEPALIVE_TIME, KEEPALIVE_TIME_UNIT
     };
+
+    static PathElement pathElement(String poolName) {
+        return PathElement.pathElement(ModelKeys.THREAD_POOL, poolName);
+    }
 
     @Override
     public void registerAttributes(ManagementResourceRegistration registration) {
@@ -82,14 +94,15 @@ public class ThreadFactoryResourceDefinition extends SimpleResourceDefinition {
         }
     }
 
-    ThreadFactoryResourceDefinition() {
-        super(PATH,
-                JGroupsExtension.getResourceDescriptionResolver(ModelKeys.THREAD, ModelKeys.THREAD_FACTORY),
-                new ThreadFactoryAddHandler(ATTRIBUTES),
-                new ReloadRequiredRemoveStepHandler());
+    ThreadPoolDefinition(String poolName) {
+        super(pathElement(poolName),
+                JGroupsExtension.getResourceDescriptionResolver(ModelKeys.TRANSPORT, ModelKeys.THREAD_POOL),
+                new AbstractAddStepHandler(ATTRIBUTES),
+                ReloadRequiredRemoveStepHandler.INSTANCE
+        );
     }
 
     static void buildTransformation(ModelVersion version, ResourceTransformationDescriptionBuilder parent) {
-        // TODO
+        // No transformations yet.
     }
 }

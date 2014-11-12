@@ -66,24 +66,28 @@ public class TransportResourceDefinition extends SimpleResourceDefinition {
             .build();
 
     static final SimpleAttributeDefinition DEFAULT_EXECUTOR = new SimpleAttributeDefinitionBuilder(ModelKeys.DEFAULT_EXECUTOR, ModelType.STRING, true)
+            .setDeprecated(JGroupsModel.VERSION_2_0_0.getVersion())
             .setXmlName(Attribute.DEFAULT_EXECUTOR.getLocalName())
             .setAllowExpression(false)
             .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
             .build();
 
     static final SimpleAttributeDefinition OOB_EXECUTOR = new SimpleAttributeDefinitionBuilder(ModelKeys.OOB_EXECUTOR, ModelType.STRING, true)
+            .setDeprecated(JGroupsModel.VERSION_2_0_0.getVersion())
             .setXmlName(Attribute.OOB_EXECUTOR.getLocalName())
             .setAllowExpression(false)
             .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
             .build();
 
     static final SimpleAttributeDefinition TIMER_EXECUTOR = new SimpleAttributeDefinitionBuilder(ModelKeys.TIMER_EXECUTOR, ModelType.STRING, true)
+            .setDeprecated(JGroupsModel.VERSION_2_0_0.getVersion())
             .setXmlName(Attribute.TIMER_EXECUTOR.getLocalName())
             .setAllowExpression(false)
             .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
             .build();
 
     static final SimpleAttributeDefinition THREAD_FACTORY = new SimpleAttributeDefinitionBuilder(ModelKeys.THREAD_FACTORY, ModelType.STRING, true)
+            .setDeprecated(JGroupsModel.VERSION_2_0_0.getVersion())
             .setXmlName(Attribute.THREAD_FACTORY.getLocalName())
             .setAllowExpression(false)
             .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
@@ -139,7 +143,12 @@ public class TransportResourceDefinition extends SimpleResourceDefinition {
 
         if (JGroupsModel.VERSION_3_0_0.requiresTransformation(version)) {
             builder.getAttributeBuilder().setValueConverter(new DefaultValueAttributeConverter(SHARED), SHARED);
+
+            // Reject thread pool configuration, support EAP 6.x slaves using deprecated attributes
+            builder.rejectChildResource(ThreadPoolDefinition.pathElement(PathElement.WILDCARD_VALUE));
         }
+
+        ThreadPoolDefinition.buildTransformation(version, builder);
     }
 
     // registration
@@ -157,7 +166,11 @@ public class TransportResourceDefinition extends SimpleResourceDefinition {
     public void registerAttributes(ManagementResourceRegistration registration) {
         final OperationStepHandler writeHandler = new ReloadRequiredWriteAttributeHandler(ATTRIBUTES);
         for (AttributeDefinition attr : ATTRIBUTES) {
-            registration.registerReadWriteAttribute(attr, null, writeHandler);
+            if (attr.isDeprecated()) {
+                registration.registerReadWriteAttribute(attr, null, new ThreadsAttributesWriteHandler(attr));
+            } else {
+                registration.registerReadWriteAttribute(attr, null, writeHandler);
+            }
         }
     }
 
@@ -165,9 +178,9 @@ public class TransportResourceDefinition extends SimpleResourceDefinition {
     public void registerChildren(ManagementResourceRegistration registration) {
         registration.registerSubModel(PropertyResourceDefinition.INSTANCE);
 
-        registration.registerSubModel(new ThreadFactoryResourceDefinition());
-        registration.registerSubModel(new ExecutorResourceDefinition(ModelKeys.DEFAULT_EXECUTOR));
-        registration.registerSubModel(new ExecutorResourceDefinition(ModelKeys.OOB_EXECUTOR));
-        registration.registerSubModel(new TimerExecutorResourceDefinition());
+        registration.registerSubModel(new ThreadPoolDefinition(ModelKeys.DEFAULT));
+        registration.registerSubModel(new ThreadPoolDefinition(ModelKeys.INTERNAL));
+        registration.registerSubModel(new ThreadPoolDefinition(ModelKeys.OOB));
+        registration.registerSubModel(new ThreadPoolDefinition(ModelKeys.TIMER));
     }
 }

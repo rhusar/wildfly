@@ -70,7 +70,7 @@ public class SubsystemParsingTestCase extends ClusteringSubsystemTest {
         Object[][] data = new Object[][] {
                 { JGroupsSchema.VERSION_1_1, 22 },
                 { JGroupsSchema.VERSION_2_0, 24 },
-                { JGroupsSchema.VERSION_3_0, 27 },
+                { JGroupsSchema.VERSION_3_0, 29 },
         };
         return Arrays.asList(data);
     }

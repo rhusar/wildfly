@@ -8,37 +8,35 @@
             <transport type="UDP"/>
         </stack>
         <stack name="maximal">
-            <transport type="TCP" module="org.jgroups" socket-binding="some-binding" diagnostics-socket-binding="jgroups-diagnostics"
-                default-executor="jgroups" oob-executor="jgroups-oob" timer-executor="jgroups-timer" shared="${test.expr:false}"
-                thread-factory="jgroups-thread-factory" machine="${test.expr:machine1}" rack="${test.expr:rack1}" site="${test.expr:site1}" >
+            <transport type="TCP"
+                       module="org.jgroups"
+                       socket-binding="some-binding"
+                       diagnostics-socket-binding="jgroups-diagnostics"
+                       shared="${test.expr:false}"
+                       machine="${test.expr:machine1}"
+                       rack="${test.expr:rack1}"
+                       site="${test.expr:site1}">
                 <property name="enable_bundling">${test.expr:true}</property>
-
-                <!-- /thread=* -->
-                <!--
-                <thread-factory thread-name-pattern="cl"
-                                group-name="jgroups-group"
-                                priority="1"/>
-                -->
-                <default-executor core-threads="1"
-                                        queue-length="10"
-                                        max-threads="10"
-                                        keepalive-time="10"
-                                        keepalive-time-unit="SECONDS"/>
-                <!--<internal-thread-factory core-threads="1"-->
-                                         <!--queue-length="10"-->
-                                         <!--max-threads="10"-->
-                                         <!--keepalive-time="10"-->
-                                         <!--keepalive-time-unit="SECONDS"/>-->
-                <oob-executor core-threads="1"
-                                    queue-length="10"
-                                    max-threads="10"
-                                    keepalive-time="10"
-                                    keepalive-time-unit="SECONDS"/>
-                <timer-executor core-threads="1"
-                                      queue-length="10"
-                                      max-threads="10"
-                                      keepalive-time="10"
-                                      keepalive-time-unit="SECONDS"/>
+                <default-thread-pool min-threads="11"
+                                     queue-max-size="12"
+                                     max-threads="13"
+                                     keepalive-time="14"
+                                     keepalive-time-unit="SECONDS"/>
+                <internal-thread-pool min-threads="21"
+                                      queue-max-size="22"
+                                      max-threads="23"
+                                      keepalive-time="24"
+                                      keepalive-time-unit="DAYS"/>
+                <oob-thread-pool min-threads="31"
+                                 queue-max-size="32"
+                                 max-threads="33"
+                                 keepalive-time="34"
+                                 keepalive-time-unit="HOURS"/>
+                <timer-thread-pool min-threads="41"
+                                   queue-max-size="42"
+                                   max-threads="43"
+                                   keepalive-time="44"
+                                   keepalive-time-unit="NANOSECONDS"/>
             </transport>
             <protocol type="MPING" module="org.jgroups" socket-binding="jgroups-mping">
                 <property name="name">${test.expr:value}</property>

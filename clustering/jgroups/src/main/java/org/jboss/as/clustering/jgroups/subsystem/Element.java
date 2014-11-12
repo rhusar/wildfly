@@ -33,8 +33,9 @@ public enum Element {
 
     CHANNEL(ModelKeys.CHANNEL),
     CHANNELS("channels"),
-    DEFAULT_EXECUTOR(ModelKeys.DEFAULT_EXECUTOR),
-    OOB_EXECUTOR(ModelKeys.OOB_EXECUTOR),
+    DEFAULT_THREAD_FACTORY("default-thread-pool"),
+    INTERNAL_THREAD_FACTORY("internal-thread-pool"),
+    OOB_THREAD_FACTORY("oob-thread-pool"),
     PROPERTY(ModelKeys.PROPERTY),
     PROTOCOL(ModelKeys.PROTOCOL),
     RELAY(ModelKeys.RELAY),
@@ -42,7 +43,7 @@ public enum Element {
     STACK(ModelKeys.STACK),
     STACKS("stacks"),
     THREAD_FACTORY(ModelKeys.THREAD_FACTORY),
-    TIMER_EXECUTOR(ModelKeys.TIMER_EXECUTOR),
+    TIMER_THREAD_FACTORY("timer-thread-pool"),
     TRANSPORT(ModelKeys.TRANSPORT),
     ;
 

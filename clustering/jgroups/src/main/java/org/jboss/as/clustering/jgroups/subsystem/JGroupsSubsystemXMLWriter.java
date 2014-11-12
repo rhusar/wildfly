@@ -99,34 +99,22 @@ public class JGroupsSubsystemXMLWriter implements XMLElementWriter<SubsystemMars
         TransportResourceDefinition.RACK.marshallAsAttribute(transport, writer);
         TransportResourceDefinition.SITE.marshallAsAttribute(transport, writer);
         writeProtocolElements(writer, transport);
-        writeThreadFactoryElements(writer, transport);
-        writeExecutorElements(Element.DEFAULT_EXECUTOR, ModelKeys.DEFAULT_EXECUTOR, writer, transport);
-        writeExecutorElements(Element.OOB_EXECUTOR, ModelKeys.OOB_EXECUTOR, writer, transport);
-        writeExecutorElements(Element.TIMER_EXECUTOR, ModelKeys.TIMER_EXECUTOR, writer, transport);
+        writeThreadPoolElements(Element.DEFAULT_THREAD_FACTORY, ModelKeys.DEFAULT, writer, transport);
+        writeThreadPoolElements(Element.INTERNAL_THREAD_FACTORY, ModelKeys.INTERNAL, writer, transport);
+        writeThreadPoolElements(Element.OOB_THREAD_FACTORY, ModelKeys.OOB, writer, transport);
+        writeThreadPoolElements(Element.TIMER_THREAD_FACTORY, ModelKeys.TIMER, writer, transport);
         writer.writeEndElement();
     }
 
-    private static void writeThreadFactoryElements(XMLExtendedStreamWriter writer, ModelNode transport) throws XMLStreamException {
-        if (transport.hasDefined(ThreadFactoryResourceDefinition.PATH.getKey())) {
-            ModelNode threadFactory = transport.get(ThreadFactoryResourceDefinition.PATH.getKeyValuePair());
-            writer.writeStartElement(Element.THREAD_FACTORY.getLocalName());
-            ThreadFactoryResourceDefinition.THREAD_NAME_PATTERN.marshallAsAttribute(threadFactory, writer);
-            ThreadFactoryResourceDefinition.GROUP_NAME.marshallAsAttribute(threadFactory, writer);
-            ThreadFactoryResourceDefinition.PRIORITY.marshallAsAttribute(threadFactory, writer);
-            writer.writeEndElement();
-        }
-    }
-
-    private static void writeExecutorElements(Element element, String modelPath, XMLExtendedStreamWriter writer, ModelNode transport) throws XMLStreamException {
-        if (transport.hasDefined(ExecutorResourceDefinition.pathElement(modelPath).getKey())) {
-            ModelNode executor = transport.get(ExecutorResourceDefinition.pathElement(modelPath).getKeyValuePair());
+    private static void writeThreadPoolElements(Element element, String threadPoolName, XMLExtendedStreamWriter writer, ModelNode transport) throws XMLStreamException {
+        if (transport.get(ThreadPoolDefinition.pathElement(threadPoolName).getKeyValuePair()).isDefined()) {
+            ModelNode threadPool = transport.get(ThreadPoolDefinition.pathElement(threadPoolName).getKeyValuePair());
             writer.writeStartElement(element.getLocalName());
-            CommonThreadAttributeDefinitions.CORE_THREADS.marshallAsAttribute(executor, writer);
-            CommonThreadAttributeDefinitions.QUEUE_LENGTH.marshallAsAttribute(executor, writer);
-            CommonThreadAttributeDefinitions.MAX_THREADS.marshallAsAttribute(executor, writer);
-            CommonThreadAttributeDefinitions.KEEPALIVE_TIME.marshallAsAttribute(executor, writer);
-            CommonThreadAttributeDefinitions.KEEPALIVE_TIME_UNIT.marshallAsAttribute(executor, writer);
-            CommonThreadAttributeDefinitions.ALLOW_CORE_TIMEOUT.marshallAsAttribute(executor, writer);
+            ThreadPoolDefinition.MIN_THREADS.marshallAsAttribute(threadPool, writer);
+            ThreadPoolDefinition.MAX_THREADS.marshallAsAttribute(threadPool, writer);
+            ThreadPoolDefinition.QUEUE_MAX_SIZE.marshallAsAttribute(threadPool, writer);
+            ThreadPoolDefinition.KEEPALIVE_TIME.marshallAsAttribute(threadPool, writer);
+            ThreadPoolDefinition.KEEPALIVE_TIME_UNIT.marshallAsAttribute(threadPool, writer);
             writer.writeEndElement();
         }
     }
