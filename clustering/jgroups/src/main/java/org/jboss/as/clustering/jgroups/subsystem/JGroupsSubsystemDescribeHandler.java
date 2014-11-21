@@ -23,6 +23,9 @@ package org.jboss.as.clustering.jgroups.subsystem;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
 
+import java.util.Arrays;
+import java.util.Collection;
+
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.logging.ControllerLogger;
 import org.jboss.as.controller.OperationContext;
@@ -86,22 +89,14 @@ public class JGroupsSubsystemDescribeHandler implements OperationStepHandler {
                     result.add(createOperation(transportAddress, transport, TransportResourceDefinition.ATTRIBUTES));
                     addProtocolPropertyCommands(transportAddress, transport, result);
 
-                    // Describe /thread-pool=*
-                    if (transport.get(ThreadPoolDefinition.pathElement(ModelKeys.DEFAULT).getKeyValuePair()).isDefined()) {
-                        ModelNode threadFactory = transport.get(ThreadPoolDefinition.pathElement(ModelKeys.DEFAULT).getKeyValuePair());
-                        result.add(createOperation(transportAddress.append(ThreadPoolDefinition.pathElement(ModelKeys.DEFAULT)), threadFactory, ThreadPoolDefinition.ATTRIBUTES));
-                    }
-                    if (transport.get(ThreadPoolDefinition.pathElement(ModelKeys.INTERNAL).getKeyValuePair()).isDefined()) {
-                        ModelNode threadFactory = transport.get(ThreadPoolDefinition.pathElement(ModelKeys.INTERNAL).getKeyValuePair());
-                        result.add(createOperation(transportAddress.append(ThreadPoolDefinition.pathElement(ModelKeys.INTERNAL)), threadFactory, ThreadPoolDefinition.ATTRIBUTES));
-                    }
-                    if (transport.get(ThreadPoolDefinition.pathElement(ModelKeys.OOB).getKeyValuePair()).isDefined()) {
-                        ModelNode threadFactory = transport.get(ThreadPoolDefinition.pathElement(ModelKeys.OOB).getKeyValuePair());
-                        result.add(createOperation(transportAddress.append(ThreadPoolDefinition.pathElement(ModelKeys.OOB)), threadFactory, ThreadPoolDefinition.ATTRIBUTES));
-                    }
-                    if (transport.get(ThreadPoolDefinition.pathElement(ModelKeys.TIMER).getKeyValuePair()).isDefined()) {
-                        ModelNode threadFactory = transport.get(ThreadPoolDefinition.pathElement(ModelKeys.TIMER).getKeyValuePair());
-                        result.add(createOperation(transportAddress.append(ThreadPoolDefinition.pathElement(ModelKeys.TIMER)), threadFactory, ThreadPoolDefinition.ATTRIBUTES));
+                    if (transport.hasDefined(ThreadPoolResourceDefinition.WILDCARD_PATH.getKey())) {
+                        // Describe /thread-pool=*
+                        for (ThreadPoolResourceDefinition pool : ThreadPoolResourceDefinition.values()) {
+                            if (transport.get(pool.getPathElement().getKey()).hasDefined(pool.getPathElement().getValue())) {
+                                ModelNode threadPool = transport.get(pool.getPathElement().getKeyValuePair());
+                                result.add(createOperation(transportAddress.append(pool.getPathElement()), threadPool, pool.getAttributes()));
+                            }
+                        }
                     }
                 }
                 if (stack.get(ProtocolResourceDefinition.WILDCARD_PATH.getKey()).isDefined()) {
@@ -141,7 +136,11 @@ public class JGroupsSubsystemDescribeHandler implements OperationStepHandler {
         }
     }
 
-    private static ModelNode createOperation(PathAddress address, ModelNode existing, AttributeDefinition ... attributes) throws OperationFailedException {
+    private static ModelNode createOperation(PathAddress address, ModelNode existing, AttributeDefinition... attributes) throws OperationFailedException {
+        return createOperation(address, existing, Arrays.asList(attributes));
+    }
+
+    private static ModelNode createOperation(PathAddress address, ModelNode existing, Collection<AttributeDefinition> attributes) throws OperationFailedException {
         ModelNode operation = Util.createAddOperation(address);
         for (final AttributeDefinition attribute : attributes) {
             attribute.validateAndSet(existing, operation);

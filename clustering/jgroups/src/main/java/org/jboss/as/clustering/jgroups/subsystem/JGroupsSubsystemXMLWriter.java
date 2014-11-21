@@ -99,22 +99,24 @@ public class JGroupsSubsystemXMLWriter implements XMLElementWriter<SubsystemMars
         TransportResourceDefinition.RACK.marshallAsAttribute(transport, writer);
         TransportResourceDefinition.SITE.marshallAsAttribute(transport, writer);
         writeProtocolElements(writer, transport);
-        writeThreadPoolElements(Element.DEFAULT_THREAD_FACTORY, ModelKeys.DEFAULT, writer, transport);
-        writeThreadPoolElements(Element.INTERNAL_THREAD_FACTORY, ModelKeys.INTERNAL, writer, transport);
-        writeThreadPoolElements(Element.OOB_THREAD_FACTORY, ModelKeys.OOB, writer, transport);
-        writeThreadPoolElements(Element.TIMER_THREAD_FACTORY, ModelKeys.TIMER, writer, transport);
+        if (transport.hasDefined(ThreadPoolResourceDefinition.WILDCARD_PATH.getKey())) {
+            writeThreadPoolElements(Element.DEFAULT_THREAD_POOL, ThreadPoolResourceDefinition.DEFAULT, writer, transport);
+            writeThreadPoolElements(Element.OOB_THREAD_POOL, ThreadPoolResourceDefinition.OOB, writer, transport);
+            writeThreadPoolElements(Element.INTERNAL_THREAD_POOL, ThreadPoolResourceDefinition.INTERNAL, writer, transport);
+            writeThreadPoolElements(Element.TIMER_THREAD_POOL, ThreadPoolResourceDefinition.TIMER, writer, transport);
+        }
         writer.writeEndElement();
     }
 
-    private static void writeThreadPoolElements(Element element, String threadPoolName, XMLExtendedStreamWriter writer, ModelNode transport) throws XMLStreamException {
-        if (transport.get(ThreadPoolDefinition.pathElement(threadPoolName).getKeyValuePair()).isDefined()) {
-            ModelNode threadPool = transport.get(ThreadPoolDefinition.pathElement(threadPoolName).getKeyValuePair());
+    private static void writeThreadPoolElements(Element element, ThreadPoolResourceDefinition pool, XMLExtendedStreamWriter writer, ModelNode transport) throws XMLStreamException {
+        if (transport.get(pool.getPathElement().getKey()).hasDefined(pool.getPathElement().getValue())) {
+            ModelNode threadPool = transport.get(pool.getPathElement().getKeyValuePair());
             writer.writeStartElement(element.getLocalName());
-            ThreadPoolDefinition.MIN_THREADS.marshallAsAttribute(threadPool, writer);
-            ThreadPoolDefinition.MAX_THREADS.marshallAsAttribute(threadPool, writer);
-            ThreadPoolDefinition.QUEUE_MAX_SIZE.marshallAsAttribute(threadPool, writer);
-            ThreadPoolDefinition.KEEPALIVE_TIME.marshallAsAttribute(threadPool, writer);
-            ThreadPoolDefinition.KEEPALIVE_TIME_UNIT.marshallAsAttribute(threadPool, writer);
+            pool.getMinThreads().marshallAsAttribute(threadPool, writer);
+            pool.getMaxThreads().marshallAsAttribute(threadPool, writer);
+            pool.getQueueLength().marshallAsAttribute(threadPool, writer);
+            pool.getKeepAliveTime().marshallAsAttribute(threadPool, writer);
+            pool.getKeepAliveTimeUnit().marshallAsAttribute(threadPool, writer);
             writer.writeEndElement();
         }
     }

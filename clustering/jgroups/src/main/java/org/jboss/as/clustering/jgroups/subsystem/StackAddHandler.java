@@ -185,10 +185,12 @@ public class StackAddHandler extends AbstractAddStepHandler {
 
         // Setup threading as jgroups properties
         // TODO better place to hard-code jgroups props
-        applyThreadPoolConfiguration(ModelKeys.DEFAULT, "thread_pool", context, transport, transportConfig);
-        applyThreadPoolConfiguration(ModelKeys.INTERNAL, "internal_thread_pool", context, transport, transportConfig);
-        applyThreadPoolConfiguration(ModelKeys.OOB, "oob_thread_pool", context, transport, transportConfig);
-        applyThreadPoolConfiguration(ModelKeys.TIMER, "timer", context, transport, transportConfig);
+        if (transport.hasDefined(ThreadPoolResourceDefinition.WILDCARD_PATH.getKey())) {
+            applyThreadPoolConfiguration(ThreadPoolResourceDefinition.DEFAULT, "thread_pool", context, transport, transportConfig);
+            applyThreadPoolConfiguration(ThreadPoolResourceDefinition.INTERNAL, "internal_thread_pool", context, transport, transportConfig);
+            applyThreadPoolConfiguration(ThreadPoolResourceDefinition.OOB, "oob_thread_pool", context, transport, transportConfig);
+            applyThreadPoolConfiguration(ThreadPoolResourceDefinition.TIMER, "timer", context, transport, transportConfig);
+        }
 
         // create the channel factory service builder
         ServiceTarget target = context.getServiceTarget();
@@ -214,19 +216,19 @@ public class StackAddHandler extends AbstractAddStepHandler {
         new BinderServiceBuilder(target).build(ChannelFactoryService.createChannelFactoryBinding(name), ChannelFactoryService.getServiceName(name), ChannelFactory.class).install();
     }
 
-    private static void applyThreadPoolConfiguration(String threadPool, String propertyPrefix, OperationContext context, ModelNode transport, TransportConfiguration transportConfig) throws OperationFailedException {
-        if (transport.get(ThreadPoolDefinition.pathElement(threadPool).getKeyValuePair()).isDefined()) {
+    private static void applyThreadPoolConfiguration(ThreadPoolResourceDefinition pool, String propertyPrefix, OperationContext context, ModelNode transport, TransportConfiguration transportConfig) throws OperationFailedException {
+        if (transport.get(pool.getPathElement().getKey()).hasDefined(pool.getPathElement().getValue())) {
             Map<String, String> properties = transportConfig.getProperties();
-            ModelNode threadModel = transport.get(ModelKeys.THREAD_POOL, threadPool);
+            ModelNode threadModel = transport.get(pool.getPathElement().getKeyValuePair());
 
-            if (ThreadPoolDefinition.MIN_THREADS.resolveModelAttribute(context, threadModel).isDefined()) {
-                properties.put(propertyPrefix + ".min_threads", ThreadPoolDefinition.MIN_THREADS.resolveModelAttribute(context, threadModel).asString());
+            if (pool.getMinThreads().resolveModelAttribute(context, threadModel).isDefined()) {
+                properties.put(propertyPrefix + ".min_threads", pool.getMinThreads().resolveModelAttribute(context, threadModel).asString());
             }
-            if (ThreadPoolDefinition.MAX_THREADS.resolveModelAttribute(context, threadModel).isDefined()) {
-                properties.put(propertyPrefix + ".max_threads", ThreadPoolDefinition.MAX_THREADS.resolveModelAttribute(context, threadModel).asString());
+            if (pool.getMaxThreads().resolveModelAttribute(context, threadModel).isDefined()) {
+                properties.put(propertyPrefix + ".max_threads", pool.getMaxThreads().resolveModelAttribute(context, threadModel).asString());
             }
-            if (ThreadPoolDefinition.QUEUE_MAX_SIZE.resolveModelAttribute(context, threadModel).isDefined()) {
-                int queueSize = ThreadPoolDefinition.QUEUE_MAX_SIZE.resolveModelAttribute(context, threadModel).asInt();
+            if (pool.getQueueLength().resolveModelAttribute(context, threadModel).isDefined()) {
+                int queueSize = pool.getQueueLength().resolveModelAttribute(context, threadModel).asInt();
                 if (queueSize == 0) {
                     // TODO should we be disabling if set to 0?
                     properties.put(propertyPrefix + ".queue_enabled", Boolean.FALSE.toString());
@@ -235,10 +237,10 @@ public class StackAddHandler extends AbstractAddStepHandler {
                     properties.put(propertyPrefix + ".queue_max_size", String.valueOf(queueSize));
                 }
             }
-            if (ThreadPoolDefinition.KEEPALIVE_TIME.resolveModelAttribute(context, threadModel).isDefined()) {
-                long keepAliveTime = ThreadPoolDefinition.KEEPALIVE_TIME.resolveModelAttribute(context, threadModel).asLong();
-                TimeUnit unit = Enum.valueOf(TimeUnit.class, ThreadPoolDefinition.KEEPALIVE_TIME_UNIT.resolveModelAttribute(context, threadModel).asString());
-                long keepAliveTimeInSeconds = unit.toSeconds(keepAliveTime);
+            if (pool.getKeepAliveTime().resolveModelAttribute(context, threadModel).isDefined()) {
+                long keepAliveTime = pool.getKeepAliveTime().resolveModelAttribute(context, threadModel).asLong();
+                TimeUnit unit = Enum.valueOf(TimeUnit.class, pool.getKeepAliveTimeUnit().resolveModelAttribute(context, threadModel).asString());
+                long keepAliveTimeInSeconds = unit.toMillis(keepAliveTime);
                 properties.put(propertyPrefix + ".keep_alive_time", String.valueOf(keepAliveTimeInSeconds));
             }
         }
