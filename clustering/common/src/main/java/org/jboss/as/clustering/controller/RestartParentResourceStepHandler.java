@@ -32,7 +32,8 @@ import org.jboss.dmr.ModelNode;
 import org.jboss.msc.service.ServiceName;
 
 /**
- * Generic operation handler that leverages a {@link ResourceServiceBuilderFactory} to restart a parent resource and delegates operation execution and registration to another {@link OperationStepHandler}.
+ * Generic operation handler that leverages a {@link ResourceServiceBuilderFactory} to restart a parent resource and
+ * delegates operation execution and registration to another {@link OperationStepHandler}.
  * @author Paul Ferraro
  */
 public class RestartParentResourceStepHandler<T> extends RestartParentResourceHandlerBase implements Registration {
