@@ -22,8 +22,7 @@
                 />
         <ts.config-as.add-port-offset name="wildfly-${cacheMode}-${stack}-0"/>
         <ts.config-as.change-transport-stack name="wildfly-${cacheMode}-${stack}-0"
-                                             defaultStack="${stack}"
-                />
+                                             stack="${stack}"/>
         <ts.config-as.change-cache-mode name="wildfly-${cacheMode}-${stack}-0"
                                         cacheMode="${cacheMode}"
                 />
@@ -44,8 +43,7 @@
                 />
         <ts.config-as.add-port-offset name="wildfly-${cacheMode}-${stack}-1" offset="100" nativePort="9999" httpPort="9990"/>
         <ts.config-as.change-transport-stack name="wildfly-${cacheMode}-${stack}-1"
-                                             defaultStack="${stack}"
-                />
+                                             stack="${stack}"/>
         <ts.config-as.change-cache-mode name="wildfly-${cacheMode}-${stack}-1"
                                         cacheMode="${cacheMode}"
                 />
@@ -61,12 +59,12 @@
             <fileset dir="${basedir}/target/jbossas"/>
         </copy>
         <ts.config-as.change-transport-stack name="wildfly-clustered-messaging-0"
-                                             defaultStack="${stack}"/>
+                                             stack="${stack}"/>
         <copy todir="target/wildfly-clustered-messaging-1" overwrite="true">
             <fileset dir="${basedir}/target/jbossas"/>
         </copy>
         <ts.config-as.change-transport-stack name="wildfly-clustered-messaging-1"
-                                             defaultStack="${stack}"/>
+                                             stack="${stack}"/>
     </target>
 
     <!-- Build SYNC-tcp stack configs -->
