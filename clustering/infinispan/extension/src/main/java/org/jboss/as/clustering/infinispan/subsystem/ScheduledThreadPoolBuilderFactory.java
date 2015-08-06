@@ -33,10 +33,10 @@ import org.jboss.as.controller.PathAddress;
  */
 public class ScheduledThreadPoolBuilderFactory implements ResourceServiceBuilderFactory<ThreadPoolConfiguration> {
 
-    private final ScheduledThreadPoolResourceDefinition resource;
+    private final ScheduledThreadPoolDefinition definition;
 
-    ScheduledThreadPoolBuilderFactory(ScheduledThreadPoolResourceDefinition resource) {
-        this.resource = resource;
+    ScheduledThreadPoolBuilderFactory(ScheduledThreadPoolDefinition definition) {
+        this.definition = definition;
     }
 
     @Override
@@ -44,7 +44,7 @@ public class ScheduledThreadPoolBuilderFactory implements ResourceServiceBuilder
         PathAddress containerAddress = address.getParent();
         String containerName = containerAddress.getLastElement().getValue();
 
-        return new ScheduledThreadPoolBuilder(resource, containerName);
+        return new ScheduledThreadPoolBuilder(this.definition, containerName);
     }
 
 }

@@ -53,6 +53,8 @@ import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.transform.description.ResourceTransformationDescriptionBuilder;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
+import org.jboss.msc.service.ServiceName;
+import org.wildfly.clustering.infinispan.spi.service.CacheContainerServiceName;
 
 /**
  * Scheduled thread pool resource definitions for Infinispan subsystem.
@@ -63,7 +65,7 @@ import org.jboss.dmr.ModelType;
  * @author Radoslav Husar
  * @version Mar 2015
  */
-public enum ScheduledThreadPoolResourceDefinition implements ResourceDefinition, Registration {
+public enum ScheduledThreadPoolResourceDefinition implements ResourceDefinition, Registration, ScheduledThreadPoolDefinition {
 
     EXPIRATION("expiration", 1, 60000), // called eviction prior to Infinispan 8
     ;
@@ -141,28 +143,35 @@ public enum ScheduledThreadPoolResourceDefinition implements ResourceDefinition,
     }
 
     @Override
+    public boolean isOrderedChild() {
+        return false;
+    }
+
+    @Override
     public void register(ManagementResourceRegistration registration) {
         registration.registerSubModel(this);
+    }
+
+    @Override
+    public ServiceName getServiceName(String containerName) {
+        return CacheContainerServiceName.CONFIGURATION.getServiceName(containerName).append(this.getPathElement().getKeyValuePair());
+    }
+
+    @Override
+    public Attribute getMaxThreads() {
+        return this.maxThreads;
+    }
+
+    @Override
+    public Attribute getKeepAliveTime() {
+        return this.keepAliveTime;
     }
 
     Iterable<Attribute> getAttributes() {
         return Arrays.asList(this.maxThreads, this.keepAliveTime);
     }
 
-    Attribute getMaxThreads() {
-        return this.maxThreads;
-    }
-
-    Attribute getKeepAliveTime() {
-        return this.keepAliveTime;
-    }
-
     void buildTransformation(ModelVersion version, ResourceTransformationDescriptionBuilder parent) {
         // Nothing to transform yet
-    }
-
-    @Override
-    public boolean isOrderedChild() {
-        return false;
     }
 }

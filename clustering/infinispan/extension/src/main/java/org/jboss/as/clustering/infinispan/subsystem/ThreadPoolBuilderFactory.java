@@ -33,10 +33,10 @@ import org.jboss.as.controller.PathAddress;
  */
 public class ThreadPoolBuilderFactory implements ResourceServiceBuilderFactory<ThreadPoolConfiguration> {
 
-    private final ThreadPoolResourceDefinition resource;
+    private final ThreadPoolDefinition definition;
 
-    ThreadPoolBuilderFactory(ThreadPoolResourceDefinition resource) {
-        this.resource = resource;
+    ThreadPoolBuilderFactory(ThreadPoolDefinition definition) {
+        this.definition = definition;
     }
 
     @Override
@@ -44,7 +44,6 @@ public class ThreadPoolBuilderFactory implements ResourceServiceBuilderFactory<T
         PathAddress containerAddress = address.getParent();
         String containerName = containerAddress.getLastElement().getValue();
 
-        return new ThreadPoolBuilder(resource, containerName);
+        return new ThreadPoolBuilder(this.definition, containerName);
     }
-
 }

@@ -148,12 +148,12 @@ public class GlobalConfigurationBuilder implements ResourceServiceBuilder<Global
                 .addDependency(Services.JBOSS_SERVICE_MODULE_LOADER, ModuleLoader.class, this.loader)
                 .addDependency(MBeanServerService.SERVICE_NAME, MBeanServer.class, this.server)
                 .addDependency(CacheContainerComponent.TRANSPORT.getServiceName(this.name), TransportConfiguration.class, this.transport)
-                .addDependency(CacheContainerComponent.ASYNC_OPERATIONS_THREAD_POOL.getServiceName(this.name), ThreadPoolConfiguration.class, this.asyncOperationsThreadPool)
-                .addDependency(CacheContainerComponent.EXPIRATION_THREAD_POOL.getServiceName(this.name), ThreadPoolConfiguration.class, this.expirationThreadPool)
-                .addDependency(CacheContainerComponent.LISTENER_THREAD_POOL.getServiceName(this.name), ThreadPoolConfiguration.class, this.listenerThreadPool)
-                .addDependency(CacheContainerComponent.STATE_TRANSFER_THREAD_POOL.getServiceName(this.name), ThreadPoolConfiguration.class, this.stateTransferThreadPool)
-                .addDependency(CacheContainerComponent.PERSISTENCE_THREAD_POOL.getServiceName(this.name), ThreadPoolConfiguration.class, this.persistenceThreadPool)
-                .addDependency(CacheContainerComponent.TRANSPORT_THREAD_POOL.getServiceName(this.name), ThreadPoolConfiguration.class, this.transportThreadPool)
+                .addDependency(ThreadPoolResourceDefinition.ASYNC_OPERATIONS.getServiceName(this.name), ThreadPoolConfiguration.class, this.asyncOperationsThreadPool)
+                .addDependency(ScheduledThreadPoolResourceDefinition.EXPIRATION.getServiceName(this.name), ThreadPoolConfiguration.class, this.expirationThreadPool)
+                .addDependency(ThreadPoolResourceDefinition.LISTENER.getServiceName(this.name), ThreadPoolConfiguration.class, this.listenerThreadPool)
+                .addDependency(ThreadPoolResourceDefinition.STATE_TRANSFER.getServiceName(this.name), ThreadPoolConfiguration.class, this.stateTransferThreadPool)
+                .addDependency(ThreadPoolResourceDefinition.PERSISTENCE.getServiceName(this.name), ThreadPoolConfiguration.class, this.persistenceThreadPool)
+                .addDependency(ThreadPoolResourceDefinition.TRANSPORT.getServiceName(this.name), ThreadPoolConfiguration.class, this.transportThreadPool)
                 .setInitialMode(ServiceController.Mode.ON_DEMAND)
         ;
     }

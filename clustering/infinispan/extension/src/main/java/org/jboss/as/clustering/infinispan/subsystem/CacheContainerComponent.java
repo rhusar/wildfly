@@ -23,7 +23,6 @@
 package org.jboss.as.clustering.infinispan.subsystem;
 
 import org.jboss.as.controller.PathElement;
-import org.jboss.as.controller.ResourceDefinition;
 import org.jboss.msc.service.ServiceName;
 import org.wildfly.clustering.infinispan.spi.service.CacheContainerServiceName;
 import org.wildfly.clustering.service.GroupServiceNameFactory;
@@ -33,32 +32,21 @@ import org.wildfly.clustering.service.GroupServiceNameFactory;
  */
 public enum CacheContainerComponent implements GroupServiceNameFactory {
 
-    ASYNC_OPERATIONS_THREAD_POOL(ThreadPoolResourceDefinition.ASYNC_OPERATIONS.getPathElement()),
-    EXPIRATION_THREAD_POOL(ScheduledThreadPoolResourceDefinition.EXPIRATION.getPathElement()),
-    LISTENER_THREAD_POOL(ThreadPoolResourceDefinition.LISTENER.getPathElement()),
     SITE("site"),
-    STATE_TRANSFER_THREAD_POOL(ThreadPoolResourceDefinition.STATE_TRANSFER.getPathElement()),
-    PERSISTENCE_THREAD_POOL(ThreadPoolResourceDefinition.PERSISTENCE.getPathElement()),
     TRANSPORT(JGroupsTransportResourceDefinition.PATH),
-    TRANSPORT_THREAD_POOL(ThreadPoolResourceDefinition.TRANSPORT.getPathElement()),;
-
-    private final String[] components;
+    ;
+    private final String component;
 
     CacheContainerComponent(PathElement path) {
-        this.components = new String[]{path.getKey(), path.getValue()};
+        this.component = path.getKey();
     }
 
     CacheContainerComponent(String component) {
-        this.components = new String[]{component};
+        this.component = component;
     }
 
     @Override
     public ServiceName getServiceName(String container) {
-        return CacheContainerServiceName.CONFIGURATION.getServiceName(container).append(this.components);
-    }
-
-    public static CacheContainerComponent forThreadPool(ResourceDefinition resource) {
-        // FIXME
-        return valueOf(resource.getPathElement().getValue().toUpperCase().replace("-", "_") + "_THREAD_POOL");
+        return CacheContainerServiceName.CONFIGURATION.getServiceName(container).append(this.component);
     }
 }
