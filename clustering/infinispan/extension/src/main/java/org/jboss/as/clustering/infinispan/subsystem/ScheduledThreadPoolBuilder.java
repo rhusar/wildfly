@@ -43,20 +43,20 @@ import org.wildfly.clustering.service.Builder;
 public class ScheduledThreadPoolBuilder extends CacheContainerComponentBuilder<ThreadPoolConfiguration> implements ResourceServiceBuilder<ThreadPoolConfiguration> {
 
     private final ThreadPoolConfigurationBuilder builder = new ThreadPoolConfigurationBuilder(null);
-    private final ScheduledThreadPoolResourceDefinition resource;
+    private final ScheduledThreadPoolDefinition definition;
 
-    ScheduledThreadPoolBuilder(ScheduledThreadPoolResourceDefinition resource, String containerName) {
-        super(CacheContainerComponent.forThreadPool(resource), containerName);
-        this.resource = resource;
+    ScheduledThreadPoolBuilder(ScheduledThreadPoolDefinition definition, String containerName) {
+        super(definition, containerName);
+        this.definition = definition;
     }
 
     @Override
     public Builder<ThreadPoolConfiguration> configure(OperationContext context, ModelNode model) throws OperationFailedException {
 
-        int maxThreads = resource.getMaxThreads().getDefinition().resolveModelAttribute(context, model).asInt();
-        long keepAliveTime = resource.getKeepAliveTime().getDefinition().resolveModelAttribute(context, model).asLong();
+        int maxThreads = this.definition.getMaxThreads().getDefinition().resolveModelAttribute(context, model).asInt();
+        long keepAliveTime = this.definition.getKeepAliveTime().getDefinition().resolveModelAttribute(context, model).asLong();
 
-        ThreadPoolExecutorFactory factory = new ThreadPoolExecutorFactory<ScheduledExecutorService>() {
+        ThreadPoolExecutorFactory<?> factory = new ThreadPoolExecutorFactory<ScheduledExecutorService>() {
 
             @Override
             public ScheduledExecutorService createExecutor(ThreadFactory factory) {
@@ -71,7 +71,7 @@ public class ScheduledThreadPoolBuilder extends CacheContainerComponentBuilder<T
 
             }
         };
-        builder.threadPoolFactory(factory);
+        this.builder.threadPoolFactory(factory);
 
         return this;
     }
@@ -80,6 +80,5 @@ public class ScheduledThreadPoolBuilder extends CacheContainerComponentBuilder<T
     public ThreadPoolConfiguration getValue() throws IllegalStateException, IllegalArgumentException {
         return this.builder.create();
     }
-
 }
 

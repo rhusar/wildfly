@@ -36,25 +36,25 @@ import org.wildfly.clustering.service.Builder;
  * @author Radoslav Husar
  * @version August 2015
  */
-public class ThreadPoolBuilder extends CacheContainerComponentBuilder<ThreadPoolConfiguration> implements ResourceServiceBuilder<ThreadPoolConfiguration> {
+public class ThreadPoolBuilder extends ComponentConfigurationBuilder<ThreadPoolConfiguration> implements ResourceServiceBuilder<ThreadPoolConfiguration> {
 
     private final ThreadPoolConfigurationBuilder builder = new ThreadPoolConfigurationBuilder(null);
-    private final ThreadPoolResourceDefinition resource;
+    private final ThreadPoolDefinition definition;
 
-    ThreadPoolBuilder(ThreadPoolResourceDefinition resource, String containerName) {
-        super(CacheContainerComponent.forThreadPool(resource), containerName);
-        this.resource = resource;
+    ThreadPoolBuilder(ThreadPoolDefinition definition, String containerName) {
+        super(new CacheContainerComponentServiceNameProvider(definition, containerName));
+        this.definition = definition;
     }
 
     @Override
     public Builder<ThreadPoolConfiguration> configure(OperationContext context, ModelNode model) throws OperationFailedException {
-        ThreadPoolExecutorFactory factory = new BlockingThreadPoolExecutorFactory(
-                resource.getMaxThreads().getDefinition().resolveModelAttribute(context, model).asInt(),
-                resource.getMinThreads().getDefinition().resolveModelAttribute(context, model).asInt(),
-                resource.getQueueLength().getDefinition().resolveModelAttribute(context, model).asInt(),
-                resource.getKeepAliveTime().getDefinition().resolveModelAttribute(context, model).asLong()
+        ThreadPoolExecutorFactory<?> factory = new BlockingThreadPoolExecutorFactory(
+                this.definition.getMaxThreads().getDefinition().resolveModelAttribute(context, model).asInt(),
+                this.definition.getMinThreads().getDefinition().resolveModelAttribute(context, model).asInt(),
+                this.definition.getQueueLength().getDefinition().resolveModelAttribute(context, model).asInt(),
+                this.definition.getKeepAliveTime().getDefinition().resolveModelAttribute(context, model).asLong()
         );
-        builder.threadPoolFactory(factory);
+        this.builder.threadPoolFactory(factory);
 
         return this;
     }
