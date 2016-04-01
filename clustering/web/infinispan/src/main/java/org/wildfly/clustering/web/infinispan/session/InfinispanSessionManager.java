@@ -98,6 +98,7 @@ public class InfinispanSessionManager<MV, AV, L> implements SessionManager<L, Tr
     private final boolean persistent;
     private final Invoker invoker = new RetryingInvoker(0, 10, 100);
     private final SessionCreationMetaDataKeyFilter filter = new SessionCreationMetaDataKeyFilter();
+    private final NodeLocalityPredicate localityPredicate;
     private final Recordable<ImmutableSession> recorder;
     private final ServletContext context;
 
@@ -121,6 +122,7 @@ public class InfinispanSessionManager<MV, AV, L> implements SessionManager<L, Tr
         // then we need to trigger any HttpSessionActivationListeners per request
         // See SRV.7.7.2 Distributed Environments
         this.persistent = config.clustering().cacheMode().needsStateTransfer() || (config.persistence().usingStores() && !config.persistence().passivation());
+        this.localityPredicate = new NodeLocalityPredicate(new ConsistentHashLocality(this.cache));
     }
 
     @Override
@@ -278,7 +280,7 @@ public class InfinispanSessionManager<MV, AV, L> implements SessionManager<L, Tr
 
     private Set<String> getSessions(Flag... flags) {
         try (Stream<? extends Key<String>> keys = this.cache.getAdvancedCache().withFlags(flags).keySet().stream()) {
-            return keys.filter(this.filter).map(key -> key.getValue()).collect(Collectors.toSet());
+            return keys.filter(this.filter).filter(this.localityPredicate).map(key -> key.getValue()).collect(Collectors.toSet());
         }
     }
 
