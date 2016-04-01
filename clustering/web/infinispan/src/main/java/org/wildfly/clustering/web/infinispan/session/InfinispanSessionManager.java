@@ -98,7 +98,7 @@ public class InfinispanSessionManager<MV, AV, L> implements SessionManager<L, Tr
     private final boolean persistent;
     private final Invoker invoker = new RetryingInvoker(0, 10, 100);
     private final SessionCreationMetaDataKeyFilter filter = new SessionCreationMetaDataKeyFilter();
-    private final NodeLocalityPredicate localityPredicate;
+    private final Locality locality;
     private final Recordable<ImmutableSession> recorder;
     private final ServletContext context;
 
@@ -109,6 +109,7 @@ public class InfinispanSessionManager<MV, AV, L> implements SessionManager<L, Tr
     public InfinispanSessionManager(SessionFactory<MV, AV, L> factory, InfinispanSessionManagerConfiguration configuration) {
         this.factory = factory;
         this.cache = configuration.getCache();
+        this.locality = new ConsistentHashLocality(this.cache);
         this.expirationListener = configuration.getExpirationListener();
         this.identifierFactory = configuration.getIdentifierFactory();
         this.batcher = configuration.getBatcher();
@@ -122,7 +123,6 @@ public class InfinispanSessionManager<MV, AV, L> implements SessionManager<L, Tr
         // then we need to trigger any HttpSessionActivationListeners per request
         // See SRV.7.7.2 Distributed Environments
         this.persistent = config.clustering().cacheMode().needsStateTransfer() || (config.persistence().usingStores() && !config.persistence().passivation());
-        this.localityPredicate = new NodeLocalityPredicate(new ConsistentHashLocality(this.cache));
     }
 
     @Override
@@ -160,7 +160,7 @@ public class InfinispanSessionManager<MV, AV, L> implements SessionManager<L, Tr
         };
         this.dispatcher = this.dispatcherFactory.createCommandDispatcher(this.cache.getName() + ".schedulers", this.scheduler);
         this.cache.addListener(this, this.filter);
-        this.schedule(this.cache, new SimpleLocality(false), new ConsistentHashLocality(this.cache));
+        this.schedule(this.cache, new SimpleLocality(false), this.locality);
     }
 
     @Override
@@ -280,7 +280,7 @@ public class InfinispanSessionManager<MV, AV, L> implements SessionManager<L, Tr
 
     private Set<String> getSessions(Flag... flags) {
         try (Stream<? extends Key<String>> keys = this.cache.getAdvancedCache().withFlags(flags).keySet().stream()) {
-            return keys.filter(this.filter).filter(this.localityPredicate).map(key -> key.getValue()).collect(Collectors.toSet());
+            return keys.filter(this.filter.and(key -> this.locality.isLocal(key))).map(key -> key.getValue()).collect(Collectors.toSet());
         }
     }
 
@@ -358,11 +358,11 @@ public class InfinispanSessionManager<MV, AV, L> implements SessionManager<L, Tr
         this.executor.execute(() -> {
             Cache<SessionCreationMetaDataKey, ?> cache = event.getCache();
             Address localAddress = cache.getCacheManager().getAddress();
-            Locality oldLocality = new ConsistentHashLocality(localAddress, event.getConsistentHashAtStart());
             Locality newLocality = new ConsistentHashLocality(localAddress, event.getConsistentHashAtEnd());
             if (event.isPre()) {
                 this.scheduler.cancel(newLocality);
             } else {
+                Locality oldLocality = new ConsistentHashLocality(localAddress, event.getConsistentHashAtStart());
                 this.schedule(cache, oldLocality, newLocality);
             }
         });
