@@ -44,7 +44,8 @@ enum Namespace {
     UNDERTOW_6_0("urn:jboss:domain:undertow:6.0"),
     UNDERTOW_7_0("urn:jboss:domain:undertow:7.0"),
     UNDERTOW_8_0("urn:jboss:domain:undertow:8.0"),
-    UNDERTOW_9_0("urn:jboss:domain:undertow:9.0");
+    UNDERTOW_9_0("urn:jboss:domain:undertow:9.0"),
+    ;
 
     /**
      * The current namespace version.

@@ -31,9 +31,12 @@ import org.wildfly.extension.undertow.filters.FilterDefinitions;
 import org.wildfly.extension.undertow.filters.FilterRefDefinition;
 import org.wildfly.extension.undertow.filters.GzipFilter;
 import org.wildfly.extension.undertow.filters.ModClusterDefinition;
+import org.wildfly.extension.undertow.filters.NoAffinityResourceDefinition;
+import org.wildfly.extension.undertow.filters.RankedAffinityResourceDefinition;
 import org.wildfly.extension.undertow.filters.RequestLimitHandler;
 import org.wildfly.extension.undertow.filters.ResponseHeaderFilter;
 import org.wildfly.extension.undertow.filters.RewriteFilterDefinition;
+import org.wildfly.extension.undertow.filters.SingleAffinityResourceDefinition;
 import org.wildfly.extension.undertow.handlers.FileHandler;
 import org.wildfly.extension.undertow.handlers.HandlerDefinitions;
 import org.wildfly.extension.undertow.handlers.ReverseProxyHandler;
@@ -299,7 +302,8 @@ public class UndertowSubsystemParser_9_0 extends PersistentResourceXMLParser {
                                         .addAttributes(ErrorPageDefinition.CODE, ErrorPageDefinition.PATH)
                         ).addChild(
                                 builder(ModClusterDefinition.INSTANCE.getPathElement())
-                                .addAttributes(ModClusterDefinition.MANAGEMENT_SOCKET_BINDING,
+                                .addAttributes(
+                                        ModClusterDefinition.MANAGEMENT_SOCKET_BINDING,
                                         ModClusterDefinition.ADVERTISE_SOCKET_BINDING,
                                         ModClusterDefinition.SECURITY_KEY,
                                         ModClusterDefinition.ADVERTISE_PROTOCOL,
@@ -327,6 +331,16 @@ public class UndertowSubsystemParser_9_0 extends PersistentResourceXMLParser {
                                         ModClusterDefinition.HTTP2_MAX_FRAME_SIZE,
                                         ModClusterDefinition.HTTP2_MAX_HEADER_LIST_SIZE,
                                         ModClusterDefinition.MAX_RETRIES)
+                                        .addChild(
+                                                builder(new NoAffinityResourceDefinition().getPathElement()).setXmlElementName(Constants.NO_AFFINITY)
+                                        )
+                                        .addChild(
+                                                builder(new SingleAffinityResourceDefinition().getPathElement()).setXmlElementName(Constants.SINGLE_AFFINITY)
+                                        )
+                                        .addChild(
+                                                builder(new RankedAffinityResourceDefinition().getPathElement()).setXmlElementName(Constants.RANKED_AFFINITY)
+                                                        .addAttribute(RankedAffinityResourceDefinition.Attribute.DELIMITER.getDefinition())
+                                        )
                         ).addChild(
                                 builder(CustomFilterDefinition.INSTANCE.getPathElement())
                                         .addAttributes(CustomFilterDefinition.CLASS_NAME, CustomFilterDefinition.MODULE, CustomFilterDefinition.PARAMETERS)
@@ -371,8 +385,8 @@ public class UndertowSubsystemParser_9_0 extends PersistentResourceXMLParser {
 
     @Override
     public PersistentResourceXMLDescription getParserDescription() {
-                return xmlDescription;
-        }
+        return xmlDescription;
+    }
 
     /** Registers attributes common across listener types */
     private static PersistentResourceXMLDescription.PersistentResourceXMLBuilder listenerBuilder(PersistentResourceDefinition resource) {

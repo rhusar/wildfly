@@ -107,6 +107,12 @@ public class ReverseProxyHandler extends Handler {
             .setDefaultValue(new ModelNode(1L))
             .build();
 
+//    public static final AttributeDefinition RANKED_AFFINITY_DELIMITER = new SimpleAttributeDefinitionBuilder(Constants.RANKED_AFFINITY_DELIMITER, ModelType.STRING)
+//            .setRequired(false)
+//            .setRestartAllServices()
+//            .setAllowExpression(true)
+//            .build();
+
     public static final ReverseProxyHandler INSTANCE = new ReverseProxyHandler();
 
     private ReverseProxyHandler() {
@@ -137,6 +143,7 @@ public class ReverseProxyHandler extends Handler {
         int cachedConnectionsPerThread = CACHED_CONNECTIONS_PER_THREAD.resolveModelAttribute(context, model).asInt();
         int connectionIdleTimeout = CONNECTION_IDLE_TIMEOUT.resolveModelAttribute(context, model).asInt();
         int maxRetries = MAX_RETRIES.resolveModelAttribute(context, model).asInt();
+//        String rankedAffinityDelimiter = RANKED_AFFINITY_DELIMITER.resolveModelAttribute(context, model).asStringOrNull();
 
 
         final LoadBalancingProxyClient lb = new LoadBalancingProxyClient(exchange -> {
@@ -147,7 +154,9 @@ public class ReverseProxyHandler extends Handler {
                 .setMaxQueueSize(requestQueueSize)
                 .setSoftMaxConnectionsPerThread(cachedConnectionsPerThread)
                 .setTtl(connectionIdleTimeout)
-                .setProblemServerRetry(problemServerRetry);
+                .setProblemServerRetry(problemServerRetry)
+//                .setRankedRoutingDelimiter(rankedAffinityDelimiter)
+                ;
         String[] sessionIds = sessionCookieNames.split(",");
         for (String id : sessionIds) {
             lb.addSessionCookieName(id);

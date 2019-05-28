@@ -22,6 +22,14 @@
 
 package org.wildfly.extension.undertow.filters;
 
+import static org.jboss.as.controller.PathElement.pathElement;
+import static org.wildfly.extension.undertow.Capabilities.CAPABILITY_MOD_CLUSTER_FILTER;
+import static org.wildfly.extension.undertow.Capabilities.REF_SSL_CONTEXT;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+
 import io.undertow.UndertowOptions;
 import io.undertow.predicate.Predicate;
 import io.undertow.protocols.ajp.AjpClientRequestClientStreamSinkChannel;
@@ -37,6 +45,7 @@ import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.ServiceRemoveStepHandler;
 import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
+import org.jboss.as.controller.SimpleResourceDefinition;
 import org.jboss.as.controller.access.management.SensitiveTargetAccessConstraintDefinition;
 import org.jboss.as.controller.capability.RuntimeCapability;
 import org.jboss.as.controller.client.helpers.MeasurementUnit;
@@ -55,27 +64,19 @@ import org.wildfly.extension.undertow.PredicateValidator;
 import org.wildfly.extension.undertow.UndertowExtension;
 import org.wildfly.extension.undertow.UndertowService;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-
-import static org.jboss.as.controller.PathElement.pathElement;
-import static org.wildfly.extension.undertow.Capabilities.CAPABILITY_MOD_CLUSTER_FILTER;
-import static org.wildfly.extension.undertow.Capabilities.REF_SSL_CONTEXT;
-
 
 /**
  * mod_cluster front end handler. This acts like a filter, but does not re-use a lot of the filter code as it
  * needs to inject various services.
  *
  * @author Stuart Douglas
+ * @author Radoslav Husar
  */
 public class ModClusterDefinition extends AbstractHandlerDefinition {
 
 
     static final RuntimeCapability<Void> MOD_CLUSTER_FILTER_CAPABILITY = RuntimeCapability
             .Builder.of(CAPABILITY_MOD_CLUSTER_FILTER, true, FilterService.class)
-            //.addDynamicOptionalRequirements(REF_SSL_CONTEXT) -- has no function so don't use it
             .build();
 
     public static final AttributeDefinition MANAGEMENT_SOCKET_BINDING = new SimpleAttributeDefinitionBuilder(Constants.MANAGEMENT_SOCKET_BINDING, ModelType.STRING)
@@ -299,10 +300,13 @@ public class ModClusterDefinition extends AbstractHandlerDefinition {
             ADVERTISE_PATH, ADVERTISE_FREQUENCY, FAILOVER_STRATEGY, HEALTH_CHECK_INTERVAL, BROKEN_NODE_TIMEOUT, WORKER, MAX_REQUEST_TIME, MANAGEMENT_ACCESS_PREDICATE,
             CONNECTIONS_PER_THREAD, CACHED_CONNECTIONS_PER_THREAD, CONNECTION_IDLE_TIMEOUT, REQUEST_QUEUE_SIZE, SECURITY_REALM, SSL_CONTEXT, USE_ALIAS, ENABLE_HTTP2, MAX_AJP_PACKET_SIZE,
             HTTP2_MAX_HEADER_LIST_SIZE, HTTP2_MAX_FRAME_SIZE, HTTP2_MAX_CONCURRENT_STREAMS, HTTP2_INITIAL_WINDOW_SIZE, HTTP2_HEADER_TABLE_SIZE, HTTP2_ENABLE_PUSH, MAX_RETRIES));
+
     public static final ModClusterDefinition INSTANCE = new ModClusterDefinition();
 
     private ModClusterDefinition() {
-        super(new Parameters(pathElement(Constants.MOD_CLUSTER), UndertowExtension.getResolver(Constants.HANDLER, Constants.MOD_CLUSTER))
+        super(new SimpleResourceDefinition.Parameters(
+                pathElement(Constants.MOD_CLUSTER),
+                UndertowExtension.getResolver(Constants.HANDLER, Constants.MOD_CLUSTER))
                 .setAddHandler(new ModClusterAdd())
                 .setRemoveHandler(new ServiceRemoveStepHandler(UndertowService.FILTER, new ModClusterAdd()))
                 .setCapabilities(MOD_CLUSTER_FILTER_CAPABILITY)
@@ -328,6 +332,10 @@ public class ModClusterDefinition extends AbstractHandlerDefinition {
     @Override
     public void registerChildren(ManagementResourceRegistration resourceRegistration) {
         resourceRegistration.registerSubModel(ModClusterBalancerDefinition.INSTANCE);
+
+        resourceRegistration.registerSubModel(new NoAffinityResourceDefinition());
+        resourceRegistration.registerSubModel(new SingleAffinityResourceDefinition());
+        resourceRegistration.registerSubModel(new RankedAffinityResourceDefinition());
     }
 
     static class ModClusterAdd extends AbstractAddStepHandler {

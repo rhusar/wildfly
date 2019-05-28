@@ -112,6 +112,12 @@ public class UndertowTransformers implements ExtensionTransformerRegistration {
                     .addRejectCheck(RejectAttributeChecker.DEFINED, ENABLE_JASPI, INTEGRATED_JASPI)
                     .setDiscard(DiscardAttributeChecker.ALWAYS, ENABLE_JASPI, INTEGRATED_JASPI) // Discard so we don't send over the defaults.
                 .end();
+
+//        subsystemBuilder.addChildResource(UndertowExtension.PATH_FILTERS)
+//                .addChildResource(PathElement.pathElement(Constants.MOD_CLUSTER))
+//                .getAttributeBuilder()
+////                .addRejectCheck(RejectAttributeChecker.DEFINED, ModClusterDefinition.RANKED_AFFINITY_DELIMITER)
+//                .end();
     }
 
     private static void registerTransformers_EAP_7_1_0(ResourceTransformationDescriptionBuilder subsystemBuilder) {

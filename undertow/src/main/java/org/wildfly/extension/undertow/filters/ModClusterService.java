@@ -88,6 +88,7 @@ public class ModClusterService extends FilterService {
     private final boolean useAlias;
     private final int maxRetries;
     private final FailoverStrategy failoverStrategy;
+    private final String routeDelimiter;
 
     private ModCluster modCluster;
     private MCMPConfig config;
@@ -109,6 +110,7 @@ public class ModClusterService extends FilterService {
                       boolean useAlias,
                       int maxRetries,
                       FailoverStrategy failoverStrategy,
+                      String routeDelimiter,
                       OptionMap clientOptions) {
         super(ModClusterDefinition.INSTANCE, model);
         this.healthCheckInterval = healthCheckInterval;
@@ -126,6 +128,7 @@ public class ModClusterService extends FilterService {
         this.useAlias = useAlias;
         this.maxRetries = maxRetries;
         this.failoverStrategy = failoverStrategy;
+        this.routeDelimiter = routeDelimiter;
         this.clientOptions = clientOptions;
     }
 
@@ -165,7 +168,9 @@ public class ModClusterService extends FilterService {
                 .setRemoveBrokenNodes(removeBrokenNodes)
                 .setTtl(connectionIdleTimeout)
                 .setMaxConnections(connectionsPerThread)
-                .setUseAlias(useAlias);
+                .setUseAlias(useAlias)
+//                .setRankedAffinityDelimiter(routeDelimiter)
+        ;
 
         if (FailoverStrategy.DETERMINISTIC.equals(failoverStrategy)) {
             modClusterBuilder.setDeterministicFailover(true);
@@ -290,6 +295,8 @@ public class ModClusterService extends FilterService {
                 ModClusterDefinition.USE_ALIAS.resolveModelAttribute(operationContext, model).asBoolean(),
                 ModClusterDefinition.MAX_RETRIES.resolveModelAttribute(operationContext, model).asInt(),
                 Enum.valueOf(FailoverStrategy.class, ModClusterDefinition.FAILOVER_STRATEGY.resolveModelAttribute(operationContext, model).asString()),
+//                ModClusterDefinition.RANKED_AFFINITY_DELIMITER.resolveModelAttribute(operationContext, model).asStringOrNull(),
+                null,
                 builder.getMap());
 
         final String mgmtSocketBindingRef = ModClusterDefinition.MANAGEMENT_SOCKET_BINDING.resolveModelAttribute(operationContext, model).asString();
