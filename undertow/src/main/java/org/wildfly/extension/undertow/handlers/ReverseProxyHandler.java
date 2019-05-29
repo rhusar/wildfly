@@ -157,6 +157,9 @@ public class ReverseProxyHandler extends Handler {
                 .setProblemServerRetry(problemServerRetry)
 //                .setRankedRoutingDelimiter(rankedAffinityDelimiter)
                 ;
+
+//        .setRouteParsingStrategy()
+
         String[] sessionIds = sessionCookieNames.split(",");
         for (String id : sessionIds) {
             lb.addSessionCookieName(id);

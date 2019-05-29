@@ -302,7 +302,7 @@ public class ModClusterService extends FilterService {
         final String mgmtSocketBindingRef = ModClusterDefinition.MANAGEMENT_SOCKET_BINDING.resolveModelAttribute(operationContext, model).asString();
         final ModelNode advertiseSocketBindingRef = ModClusterDefinition.ADVERTISE_SOCKET_BINDING.resolveModelAttribute(operationContext, model);
         final String workerRef = ModClusterDefinition.WORKER.resolveModelAttribute(operationContext, model).asString();
-        CapabilityServiceBuilder serviceBuilder = serviceTarget.addCapability(ModClusterDefinition.MOD_CLUSTER_FILTER_CAPABILITY);
+        CapabilityServiceBuilder serviceBuilder = serviceTarget.addCapability(ModClusterDefinition.Capability.MOD_CLUSTER_FILTER_CAPABILITY.getDefinition());
         serviceBuilder.setInstance(service);
         serviceBuilder.addCapabilityRequirement(Capabilities.REF_SOCKET_BINDING, SocketBinding.class, service.managementSocketBinding, mgmtSocketBindingRef);
         if (advertiseSocketBindingRef.isDefined()) {
