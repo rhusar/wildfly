@@ -24,6 +24,7 @@ package org.wildfly.extension.undertow.filters;
 
 import org.jboss.as.clustering.controller.ReloadRequiredResourceRegistration;
 import org.jboss.as.clustering.controller.ResourceDescriptor;
+import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.wildfly.extension.undertow.Constants;
 
@@ -32,8 +33,10 @@ import org.wildfly.extension.undertow.Constants;
  */
 public class SingleAffinityResourceDefinition extends AffinityResourceDefinition {
 
+    public static final PathElement PATH = pathElement(Constants.SINGLE);
+
     public SingleAffinityResourceDefinition() {
-        super(Constants.SINGLE);
+        super(PATH);
     }
 
     @Override

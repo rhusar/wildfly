@@ -25,6 +25,7 @@ package org.wildfly.extension.undertow.filters;
 import org.jboss.as.clustering.controller.ReloadRequiredResourceRegistration;
 import org.jboss.as.clustering.controller.ResourceDescriptor;
 import org.jboss.as.controller.AttributeDefinition;
+import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.dmr.ModelNode;
@@ -35,6 +36,8 @@ import org.wildfly.extension.undertow.Constants;
  * @author Radoslav Husar
  */
 public class RankedAffinityResourceDefinition extends AffinityResourceDefinition {
+
+    public static final PathElement PATH = pathElement(Constants.RANKED);
 
     public enum Attribute implements org.jboss.as.clustering.controller.Attribute {
         DELIMITER(Constants.DELIMITER, ModelType.STRING, null),
@@ -57,7 +60,7 @@ public class RankedAffinityResourceDefinition extends AffinityResourceDefinition
     }
 
     public RankedAffinityResourceDefinition() {
-        super(Constants.RANKED);
+        super(PATH);
     }
 
     @Override

@@ -38,8 +38,8 @@ public class AffinityResourceDefinition extends SimpleResourceDefinition {
         return PathElement.pathElement(Constants.AFFINITY, value);
     }
 
-    AffinityResourceDefinition(String name) {
-        super(pathElement(name), UndertowExtension.getResolver(Constants.HANDLER, Constants.AFFINITY, name), new ReloadRequiredAddStepHandler(), new ReloadRequiredRemoveStepHandler());
+    AffinityResourceDefinition(PathElement path) {
+        super(path, UndertowExtension.getResolver(Constants.HANDLER, Constants.AFFINITY, path.getValue()), new ReloadRequiredAddStepHandler(), new ReloadRequiredRemoveStepHandler());
     }
 
 }

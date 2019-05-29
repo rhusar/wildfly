@@ -36,7 +36,7 @@ public class NoAffinityResourceDefinition extends AffinityResourceDefinition {
     public static final PathElement PATH = pathElement(Constants.NONE);
 
     public NoAffinityResourceDefinition() {
-        super(Constants.NONE);
+        super(PATH);
     }
 
     @Override
