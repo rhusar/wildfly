@@ -50,6 +50,7 @@ import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
+import org.jboss.as.controller.SimpleResourceDefinition;
 import org.jboss.as.controller.access.management.SensitiveTargetAccessConstraintDefinition;
 import org.jboss.as.controller.capability.RuntimeCapability;
 import org.jboss.as.controller.client.helpers.MeasurementUnit;
@@ -65,6 +66,8 @@ import org.wildfly.extension.undertow.AbstractHandlerDefinition;
 import org.wildfly.extension.undertow.Capabilities;
 import org.wildfly.extension.undertow.Constants;
 import org.wildfly.extension.undertow.PredicateValidator;
+import org.wildfly.extension.undertow.UndertowExtension;
+import org.wildfly.extension.undertow.UndertowService;
 
 
 /**
@@ -79,9 +82,9 @@ public class ModClusterDefinition extends AbstractHandlerDefinition {
     public static final PathElement PATH = pathElement(Constants.MOD_CLUSTER);
     public static final ModClusterDefinition INSTANCE = new ModClusterDefinition();
 
-    protected ModClusterDefinition() {
-        super(Constants.MOD_CLUSTER);
-    }
+//    protected ModClusterDefinition() {
+//        super(Constants.MOD_CLUSTER);
+//    }
 
     enum Capability implements org.jboss.as.clustering.controller.Capability {
         MOD_CLUSTER_FILTER_CAPABILITY(CAPABILITY_MOD_CLUSTER_FILTER, FilterService.class),
@@ -320,18 +323,18 @@ public class ModClusterDefinition extends AbstractHandlerDefinition {
             CONNECTIONS_PER_THREAD, CACHED_CONNECTIONS_PER_THREAD, CONNECTION_IDLE_TIMEOUT, REQUEST_QUEUE_SIZE, SECURITY_REALM, SSL_CONTEXT, USE_ALIAS, ENABLE_HTTP2, MAX_AJP_PACKET_SIZE,
             HTTP2_MAX_HEADER_LIST_SIZE, HTTP2_MAX_FRAME_SIZE, HTTP2_MAX_CONCURRENT_STREAMS, HTTP2_INITIAL_WINDOW_SIZE, HTTP2_HEADER_TABLE_SIZE, HTTP2_ENABLE_PUSH, MAX_RETRIES));
 
-//    public ModClusterDefinition() {
-//        super(new SimpleResourceDefinition.Parameters(PATH, UndertowExtension.getResolver(Constants.HANDLER, Constants.MOD_CLUSTER))
-////                .setAddHandler(new ModClusterAdd())
-////                .setRemoveHandler(new ServiceRemoveStepHandler(UndertowService.FILTER, new ModClusterAdd()))
-////                .setCapabilities(MOD_CLUSTER_FILTER_CAPABILITY)
-//        );
-//    }
-
-    @Override
-    public Collection<AttributeDefinition> getAttributes() {
-        return ATTRIBUTES;
+    public ModClusterDefinition() {
+        super(new SimpleResourceDefinition.Parameters(PATH, UndertowExtension.getResolver(Constants.HANDLER, Constants.MOD_CLUSTER))
+//                .setAddHandler(new ModClusterAdd())
+//                .setRemoveHandler(new ServiceRemoveStepHandler(UndertowService.FILTER, new ModClusterAdd()))
+//                .setCapabilities(MOD_CLUSTER_FILTER_CAPABILITY)
+        );
     }
+
+//    @Override
+//    public Collection<AttributeDefinition> getAttributes() {
+//        return ATTRIBUTES;
+//    }
 
     @Override
     public Class<? extends HttpHandler> getHandlerClass() {
@@ -345,15 +348,10 @@ public class ModClusterDefinition extends AbstractHandlerDefinition {
     }
 
     @Override
-    public void registerAttributes(ManagementResourceRegistration resourceRegistration) {
-
-    }
-
-    @Override
     public void registerOperations(ManagementResourceRegistration parent) {
         ResourceDescriptor descriptor = new ResourceDescriptor(this.getResourceDescriptionResolver())
                 .addCapabilities(Capability.class)
-                .addRuntimeResourceRegistration(new ModClusterRuntimeResourceRegistration())
+//                .addRuntimeResourceRegistration(new ModClusterRuntimeResourceRegistration())
                 .addRequiredSingletonChildren(NoAffinityResourceDefinition.PATH);
 
         for (AttributeDefinition attribute : ATTRIBUTES) {
@@ -366,6 +364,7 @@ public class ModClusterDefinition extends AbstractHandlerDefinition {
         }
 
         new SimpleResourceRegistration(descriptor, new ModClusterResourceServiceHandler()).register(parent);
+//        new ReloadRequiredResourceRegistration(descriptor).register(parent);
     }
 
     @Override
@@ -379,13 +378,13 @@ public class ModClusterDefinition extends AbstractHandlerDefinition {
 
         @Override
         public void installServices(OperationContext context, ModelNode model) throws OperationFailedException {
-            final String name = context.getCurrentAddressValue();
+            String name = context.getCurrentAddressValue();
             ModClusterService.install(name, context.getCapabilityServiceTarget(), model, context);
         }
 
         @Override
         public void removeServices(OperationContext context, ModelNode model) throws OperationFailedException {
-
+            context.removeService(UndertowService.FILTER.append(Constants.MOD_CLUSTER));
         }
     }
 
@@ -399,7 +398,6 @@ public class ModClusterDefinition extends AbstractHandlerDefinition {
 
         @Override
         public void unregister(OperationContext context) throws OperationFailedException {
-
         }
     }
 
