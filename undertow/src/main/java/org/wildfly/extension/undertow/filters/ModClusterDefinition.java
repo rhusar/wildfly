@@ -39,12 +39,14 @@ import io.undertow.server.handlers.proxy.ProxyHandler;
 import org.jboss.as.clustering.controller.Attribute;
 import org.jboss.as.clustering.controller.ResourceDescriptor;
 import org.jboss.as.clustering.controller.ResourceServiceHandler;
+import org.jboss.as.clustering.controller.RuntimeResourceRegistration;
 import org.jboss.as.clustering.controller.SimpleResourceRegistration;
 import org.jboss.as.clustering.controller.UnaryCapabilityNameResolver;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.ModelVersion;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
+import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
@@ -55,6 +57,7 @@ import org.jboss.as.controller.operations.validation.EnumValidator;
 import org.jboss.as.controller.operations.validation.IntRangeValidator;
 import org.jboss.as.controller.operations.validation.StringLengthValidator;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
+import org.jboss.as.controller.registry.Resource;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.wildfly.extension.io.OptionAttributeDefinition;
@@ -350,7 +353,7 @@ public class ModClusterDefinition extends AbstractHandlerDefinition {
     public void registerOperations(ManagementResourceRegistration parent) {
         ResourceDescriptor descriptor = new ResourceDescriptor(this.getResourceDescriptionResolver())
                 .addCapabilities(Capability.class)
-//                .addRuntimeResourceRegistration()
+                .addRuntimeResourceRegistration(new ModClusterRuntimeResourceRegistration())
                 .addRequiredSingletonChildren(NoAffinityResourceDefinition.PATH);
 
         for (AttributeDefinition attribute : ATTRIBUTES) {
@@ -382,6 +385,20 @@ public class ModClusterDefinition extends AbstractHandlerDefinition {
 
         @Override
         public void removeServices(OperationContext context, ModelNode model) throws OperationFailedException {
+
+        }
+    }
+
+    private class ModClusterRuntimeResourceRegistration implements RuntimeResourceRegistration {
+        @Override
+        public void register(OperationContext context) throws OperationFailedException {
+            Resource delegate = Resource.Factory.create();
+            Resource result = new ModClusterResource(delegate, context.getCurrentAddressValue());
+            context.addResource(PathAddress.EMPTY_ADDRESS, result);
+        }
+
+        @Override
+        public void unregister(OperationContext context) throws OperationFailedException {
 
         }
     }
