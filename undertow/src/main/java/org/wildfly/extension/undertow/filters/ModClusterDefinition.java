@@ -379,7 +379,8 @@ public class ModClusterDefinition extends AbstractHandlerDefinition {
         @Override
         public void installServices(OperationContext context, ModelNode model) throws OperationFailedException {
             String name = context.getCurrentAddressValue();
-            ModClusterService.install(name, context.getCapabilityServiceTarget(), model, context);
+            ModelNode recursiveModel = Resource.Tools.readModel(context.readResourceFromRoot(context.getCurrentAddress(), true));
+            ModClusterService.install(name, context.getCapabilityServiceTarget(), recursiveModel, context);
         }
 
         @Override

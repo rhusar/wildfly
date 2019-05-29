@@ -28,6 +28,7 @@ import io.undertow.UndertowOptions;
 import io.undertow.client.UndertowClient;
 import io.undertow.predicate.PredicateParser;
 import io.undertow.protocols.ssl.UndertowXnioSsl;
+import io.undertow.server.handlers.proxy.RouteParsingStrategy;
 import org.jboss.as.controller.CapabilityServiceBuilder;
 import org.jboss.as.controller.CapabilityServiceTarget;
 import org.jboss.as.controller.OperationContext;
@@ -41,6 +42,7 @@ import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.wildfly.extension.io.IOServices;
 import org.wildfly.extension.undertow.Capabilities;
+import org.wildfly.extension.undertow.Constants;
 import org.wildfly.extension.undertow.UndertowService;
 import org.wildfly.extension.undertow.logging.UndertowLogger;
 import org.xnio.OptionMap;
@@ -60,11 +62,12 @@ import java.io.IOException;
 import java.net.InetAddress;
 
 /**
- * filter service for the mod cluster frontend. This requires various injections, and as a result can't use the
+ * Filter service for the mod_cluster frontend. This requires various injections, and as a result can't use the
  * standard filter service
  *
  * @author Stuart Douglas
  * @author <a href="mailto:ropalka@redhat.com">Richard Opalka</a>
+ * @author Radoslav Husar
  */
 public class ModClusterService extends FilterService {
 
@@ -88,30 +91,32 @@ public class ModClusterService extends FilterService {
     private final boolean useAlias;
     private final int maxRetries;
     private final FailoverStrategy failoverStrategy;
+    private final RouteParsingStrategy routeParsingStrategy;
     private final String routeDelimiter;
 
     private ModCluster modCluster;
     private MCMPConfig config;
     private final OptionMap clientOptions;
 
-    ModClusterService(ModelNode model,
-                      long healthCheckInterval,
-                      int maxRequestTime,
-                      long removeBrokenNodes,
-                      int advertiseFrequency,
-                      String advertisePath,
-                      String advertiseProtocol,
-                      String securityKey,
-                      Predicate managementAccessPredicate,
-                      int connectionsPerThread,
-                      int cachedConnections,
-                      int connectionIdleTimeout,
-                      int requestQueueSize,
-                      boolean useAlias,
-                      int maxRetries,
-                      FailoverStrategy failoverStrategy,
-                      String routeDelimiter,
-                      OptionMap clientOptions) {
+    private ModClusterService(ModelNode model,
+                              long healthCheckInterval,
+                              int maxRequestTime,
+                              long removeBrokenNodes,
+                              int advertiseFrequency,
+                              String advertisePath,
+                              String advertiseProtocol,
+                              String securityKey,
+                              Predicate managementAccessPredicate,
+                              int connectionsPerThread,
+                              int cachedConnections,
+                              int connectionIdleTimeout,
+                              int requestQueueSize,
+                              boolean useAlias,
+                              int maxRetries,
+                              FailoverStrategy failoverStrategy,
+                              RouteParsingStrategy routeParsingStrategy,
+                              String routeDelimiter,
+                              OptionMap clientOptions) {
         super(ModClusterDefinition.INSTANCE, model);
         this.healthCheckInterval = healthCheckInterval;
         this.maxRequestTime = maxRequestTime;
@@ -128,6 +133,7 @@ public class ModClusterService extends FilterService {
         this.useAlias = useAlias;
         this.maxRetries = maxRetries;
         this.failoverStrategy = failoverStrategy;
+        this.routeParsingStrategy = routeParsingStrategy;
         this.routeDelimiter = routeDelimiter;
         this.clientOptions = clientOptions;
     }
@@ -169,7 +175,8 @@ public class ModClusterService extends FilterService {
                 .setTtl(connectionIdleTimeout)
                 .setMaxConnections(connectionsPerThread)
                 .setUseAlias(useAlias)
-//                .setRankedAffinityDelimiter(routeDelimiter)
+                .setRouteParsingStrategy(routeParsingStrategy)
+                .setRankedAffinityDelimiter(routeDelimiter)
         ;
 
         if (FailoverStrategy.DETERMINISTIC.equals(failoverStrategy)) {
@@ -280,6 +287,18 @@ public class ModClusterService extends FilterService {
         ModClusterDefinition.HTTP2_MAX_FRAME_SIZE.resolveOption(operationContext, model, builder);
         ModClusterDefinition.HTTP2_MAX_HEADER_LIST_SIZE.resolveOption(operationContext, model, builder);
 
+        // Resolve affinity
+        ModelNode affinityNode = model.get(Constants.AFFINITY);
+        RouteParsingStrategy routeParsingStrategy = RouteParsingStrategy.SINGLE;
+        String routeDelimiter = null;
+        if (affinityNode.hasDefined(Constants.NONE)) {
+            routeParsingStrategy = RouteParsingStrategy.NONE;
+        } else if (affinityNode.hasDefined(Constants.RANKED)) {
+            ModelNode rankedModelNode = affinityNode.get(Constants.RANKED);
+            routeParsingStrategy = RouteParsingStrategy.RANKED;
+            routeDelimiter = RankedAffinityResourceDefinition.Attribute.DELIMITER.resolveModelAttribute(operationContext, rankedModelNode).asString();
+        }
+
         ModClusterService service = new ModClusterService(model,
                 ModClusterDefinition.HEALTH_CHECK_INTERVAL.resolveModelAttribute(operationContext, model).asInt(),
                 ModClusterDefinition.MAX_REQUEST_TIME.resolveModelAttribute(operationContext, model).asInt(),
@@ -295,9 +314,11 @@ public class ModClusterService extends FilterService {
                 ModClusterDefinition.USE_ALIAS.resolveModelAttribute(operationContext, model).asBoolean(),
                 ModClusterDefinition.MAX_RETRIES.resolveModelAttribute(operationContext, model).asInt(),
                 Enum.valueOf(FailoverStrategy.class, ModClusterDefinition.FAILOVER_STRATEGY.resolveModelAttribute(operationContext, model).asString()),
-//                ModClusterDefinition.RANKED_AFFINITY_DELIMITER.resolveModelAttribute(operationContext, model).asStringOrNull(),
-                null,
+                routeParsingStrategy,
+                routeDelimiter,
                 builder.getMap());
+
+        System.err.println("USING ROUTING " + routeParsingStrategy + " DELIMITER IS " + routeDelimiter + ".");
 
         final String mgmtSocketBindingRef = ModClusterDefinition.MANAGEMENT_SOCKET_BINDING.resolveModelAttribute(operationContext, model).asString();
         final ModelNode advertiseSocketBindingRef = ModClusterDefinition.ADVERTISE_SOCKET_BINDING.resolveModelAttribute(operationContext, model);
