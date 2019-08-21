@@ -48,6 +48,7 @@
         <module name="org.jboss.staxmapper"/>
         <module name="org.wildfly.clustering.service"/>
         <module name="org.wildfly.common"/>
+        <module name="org.wildfly.discovery"/>
         <module name="org.wildfly.mod_cluster.undertow" services="import" optional="true"/>
         <module name="java.xml"/>
     </dependencies>

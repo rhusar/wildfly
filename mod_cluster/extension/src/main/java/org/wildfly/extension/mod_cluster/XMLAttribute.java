@@ -70,6 +70,11 @@ enum XMLAttribute {
     TTL(ProxyConfigurationResourceDefinition.Attribute.TTL),
     WORKER_TIMEOUT(ProxyConfigurationResourceDefinition.Attribute.WORKER_TIMEOUT),
 
+    // Discovery
+    PROVIDER(DiscoveryResourceDefinition.Attribute.PROVIDER),
+    ABSTRACT_TYPE(DiscoveryResourceDefinition.Attribute.ABSTRACT_TYPE),
+    ABSTRACT_TYPE_AUTHORITY(DiscoveryResourceDefinition.Attribute.ABSTRACT_TYPE_AUTHORITY),
+
     // Load provider
     DECAY(DynamicLoadProviderResourceDefinition.Attribute.DECAY),
     FACTOR(SimpleLoadProviderResourceDefinition.Attribute.FACTOR),

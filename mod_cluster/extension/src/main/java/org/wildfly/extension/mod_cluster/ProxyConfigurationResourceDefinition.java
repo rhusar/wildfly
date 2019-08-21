@@ -418,6 +418,7 @@ public class ProxyConfigurationResourceDefinition extends ChildResourceDefinitio
         new ReloadRequiredResourceRegistration(descriptor).register(registration);
         new LegacyMetricOperationsRegistration().register(registration);
 
+        new DiscoveryResourceDefinition().register(registration);
         new SimpleLoadProviderResourceDefinition().register(registration);
         new DynamicLoadProviderResourceDefinition().register(registration);
 
@@ -529,6 +530,7 @@ public class ProxyConfigurationResourceDefinition extends ChildResourceDefinitio
                     .end();
         }
 
+        DiscoveryResourceDefinition.buildTransformation(version, builder);
         SimpleLoadProviderResourceDefinition.buildTransformation(version, builder);
         DynamicLoadProviderResourceDefinition.buildTransformation(version, builder);
 

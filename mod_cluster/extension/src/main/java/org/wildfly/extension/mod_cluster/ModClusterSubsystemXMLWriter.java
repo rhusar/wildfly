@@ -61,6 +61,14 @@ public final class ModClusterSubsystemXMLWriter implements XMLElementWriter<Subs
 
         writeAttributes(writer, model, ProxyConfigurationResourceDefinition.Attribute.class);
 
+        // ../discovery=wildfly
+        if (model.get(DiscoveryResourceDefinition.PATH.getKeyValuePair()).isDefined()) {
+            ModelNode discoveryModel = model.get(DiscoveryResourceDefinition.PATH.getKeyValuePair());
+            writer.writeStartElement(XMLElement.DISCOVERY.getLocalName());
+            writeAttributes(writer, discoveryModel, DiscoveryResourceDefinition.Attribute.class);
+            writer.writeEndElement();
+        }
+
         if (model.get(SimpleLoadProviderResourceDefinition.PATH.getKeyValuePair()).isDefined()) {
             ModelNode loadProviderModel = model.get(SimpleLoadProviderResourceDefinition.PATH.getKeyValuePair());
             writer.writeStartElement(XMLElement.SIMPLE_LOAD_PROVIDER.getLocalName());

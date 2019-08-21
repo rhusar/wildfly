@@ -39,7 +39,7 @@ public enum ModClusterSchema implements Schema<ModClusterSchema> {
     MODCLUSTER_3_0(3, 0), // WildFly 11 & 12 & 13, EAP 7.1
     MODCLUSTER_4_0(4, 0), // WildFly 14 & 15, EAP 7.2
     MODCLUSTER_5_0(5, 0), // WildFly 16-17
-    MODCLUSTER_6_0(6, 0), // WildFly 18
+    MODCLUSTER_6_0(6, 0), // WildFly 18, EAP 7.3
     ;
     public static final ModClusterSchema CURRENT = MODCLUSTER_6_0;
 

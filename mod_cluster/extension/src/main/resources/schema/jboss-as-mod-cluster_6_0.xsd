@@ -44,6 +44,13 @@
 
     <xs:complexType name="proxy">
         <xs:sequence>
+            <xs:element name="discovery" type="discovery" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>
+                        TODO
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
             <xs:choice minOccurs="0">
                 <xs:element name="simple-load-provider" type="simple-load-provider">
                     <xs:annotation>
@@ -270,6 +277,30 @@
             <xs:annotation>
                 <xs:documentation>
                     Number of seconds to wait for a worker to become available to handle a request.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="discovery">
+        <xs:attribute name="provider" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    The discovery provider name.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="abstract-type" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    The abstract service type.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="abstract-type-authority" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    The abstract type authority.
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>

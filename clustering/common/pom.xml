@@ -41,7 +41,7 @@
 
     <name>WildFly: Common code for clustering subsystems</name>
     <description>
-        The code in this module is not explicitly related to clustering, but rather contains resuable code used by clustering modules
+        The code in this module is not explicitly related to clustering, but rather contains reusable code used by clustering modules
         and any modules that integrate with clustering.
     </description>
 
@@ -57,6 +57,10 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>wildfly-naming</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.discovery</groupId>
+            <artifactId>wildfly-discovery-client</artifactId>
         </dependency>
         <dependency>
             <groupId>org.wildfly.core</groupId>

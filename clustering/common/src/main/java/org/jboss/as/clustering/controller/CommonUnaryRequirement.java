@@ -30,15 +30,18 @@ import javax.sql.DataSource;
 import org.jboss.as.network.OutboundSocketBinding;
 import org.jboss.as.network.SocketBinding;
 import org.wildfly.clustering.service.UnaryRequirement;
+import org.wildfly.discovery.spi.DiscoveryProvider;
 import org.wildfly.security.credential.store.CredentialStore;
 
 /**
  * Enumerates common unary requirements for clustering resources
  * @author Paul Ferraro
+ * @author Radoslav Husar
  */
 public enum CommonUnaryRequirement implements UnaryRequirement, UnaryServiceNameFactoryProvider {
     CREDENTIAL_STORE("org.wildfly.security.credential-store", CredentialStore.class),
     DATA_SOURCE("org.wildfly.data-source", DataSource.class),
+    DISCOVERY_PROVIDER("org.wildfly.discovery.provider", DiscoveryProvider.class),
     KEY_STORE("org.wildfly.security.key-store", KeyStore.class),
     OUTBOUND_SOCKET_BINDING("org.wildfly.network.outbound-socket-binding", OutboundSocketBinding.class),
     PATH("org.wildfly.management.path", String.class),

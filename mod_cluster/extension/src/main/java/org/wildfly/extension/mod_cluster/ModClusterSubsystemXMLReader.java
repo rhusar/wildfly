@@ -270,6 +270,12 @@ final class ModClusterSubsystemXMLReader implements XMLElementReader<List<ModelN
                     this.parseSSL(reader, list, address);
                     break;
                 }
+                case DISCOVERY: {
+                    if (schema.since(ModClusterSchema.MODCLUSTER_6_0)) {
+                        this.parseDiscovery(reader, list, address);
+                        break;
+                    }
+                }
                 default: {
                     throw unexpectedElement(reader);
                 }
@@ -322,6 +328,37 @@ final class ModClusterSubsystemXMLReader implements XMLElementReader<List<ModelN
             }
         }
         ParseUtils.requireNoContent(reader);
+    }
+
+    private void parseDiscovery(XMLExtendedStreamReader reader, List<ModelNode> list, PathAddress parent) throws XMLStreamException {
+        PathAddress address = parent.append(DiscoveryResourceDefinition.PATH);
+        ModelNode operation = Util.createAddOperation(address);
+
+        int count = reader.getAttributeCount();
+        for (int i = 0; i < count; i++) {
+            requireNoNamespaceAttribute(reader, i);
+            XMLAttribute attribute = XMLAttribute.forName(reader.getAttributeLocalName(i));
+            switch (attribute) {
+                case PROVIDER: {
+                    readAttribute(reader, i, operation, DiscoveryResourceDefinition.Attribute.PROVIDER);
+                    break;
+                }
+                case ABSTRACT_TYPE: {
+                    readAttribute(reader, i, operation, DiscoveryResourceDefinition.Attribute.ABSTRACT_TYPE);
+                    break;
+                }
+                case ABSTRACT_TYPE_AUTHORITY: {
+                    readAttribute(reader, i, operation, DiscoveryResourceDefinition.Attribute.ABSTRACT_TYPE_AUTHORITY);
+                    break;
+                }
+                default: {
+                    throw unexpectedAttribute(reader, i);
+                }
+            }
+        }
+        ParseUtils.requireNoContent(reader);
+
+        list.add(operation);
     }
 
     private void parseSimpleLoadProvider(XMLExtendedStreamReader reader, List<ModelNode> list, PathAddress parent) throws XMLStreamException {

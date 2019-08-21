@@ -23,9 +23,11 @@
 package org.wildfly.mod_cluster.undertow;
 
 import java.time.Duration;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.jboss.as.clustering.controller.CapabilityServiceConfigurator;
+import org.jboss.as.clustering.controller.CommonUnaryRequirement;
 import org.jboss.as.controller.capability.CapabilityServiceSupport;
 import org.jboss.as.server.suspend.SuspendController;
 import org.jboss.modcluster.container.ContainerEventHandler;
@@ -37,6 +39,7 @@ import org.wildfly.clustering.service.CompositeDependency;
 import org.wildfly.clustering.service.ServiceConfigurator;
 import org.wildfly.clustering.service.ServiceSupplierDependency;
 import org.wildfly.clustering.service.SupplierDependency;
+import org.wildfly.discovery.spi.DiscoveryProvider;
 import org.wildfly.extension.mod_cluster.ProxyConfigurationResourceDefinition;
 import org.wildfly.extension.undertow.Capabilities;
 import org.wildfly.extension.undertow.Server;
@@ -52,18 +55,20 @@ public class UndertowEventHandlerAdapterServiceConfigurator extends UndertowEven
     private final String proxyName;
     private final String listenerName;
     private final Duration statusInterval;
+    private final Optional<String> discoveryProviderName;
 
     private volatile Supplier<ContainerEventHandler> eventHandler;
     private volatile SupplierDependency<SuspendController> suspendController;
-
     private volatile SupplierDependency<UndertowService> service;
     private volatile SupplierDependency<UndertowListener> listener;
+    private volatile SupplierDependency<DiscoveryProvider> discoveryProviderDependency = null;
 
-    public UndertowEventHandlerAdapterServiceConfigurator(String proxyName, String listenerName, Duration statusInterval) {
+    public UndertowEventHandlerAdapterServiceConfigurator(String proxyName, String listenerName, Duration statusInterval, Optional<String> discoveryProviderName) {
         super(proxyName);
         this.proxyName = proxyName;
         this.listenerName = listenerName;
         this.statusInterval = statusInterval;
+        this.discoveryProviderName = discoveryProviderName;
     }
 
     @Override
@@ -71,6 +76,9 @@ public class UndertowEventHandlerAdapterServiceConfigurator extends UndertowEven
         this.service = new ServiceSupplierDependency<>(support.getCapabilityServiceName(Capabilities.CAPABILITY_UNDERTOW));
         this.listener = new ServiceSupplierDependency<>(support.getCapabilityServiceName(Capabilities.CAPABILITY_LISTENER, this.listenerName));
         this.suspendController = new ServiceSupplierDependency<>(support.getCapabilityServiceName(Capabilities.REF_SUSPEND_CONTROLLER));
+        if (discoveryProviderName.isPresent()) {
+            this.discoveryProviderDependency = new ServiceSupplierDependency<>(support.getCapabilityServiceName(CommonUnaryRequirement.DISCOVERY_PROVIDER.getName(), discoveryProviderName.get()));
+        }
         return this;
     }
 

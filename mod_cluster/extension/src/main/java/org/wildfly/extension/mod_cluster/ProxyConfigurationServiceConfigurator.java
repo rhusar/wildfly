@@ -98,6 +98,10 @@ import org.wildfly.clustering.service.FunctionalService;
 import org.wildfly.clustering.service.ServiceConfigurator;
 import org.wildfly.clustering.service.ServiceSupplierDependency;
 import org.wildfly.clustering.service.SupplierDependency;
+import org.wildfly.discovery.ServiceType;
+import org.wildfly.discovery.ServiceURL;
+import org.wildfly.discovery.spi.DiscoveryProvider;
+import org.wildfly.discovery.spi.DiscoveryResult;
 
 /**
  * @author Radoslav Husar
@@ -106,7 +110,7 @@ import org.wildfly.clustering.service.SupplierDependency;
 
     private volatile SupplierDependency<SocketBinding> advertiseSocketDependency = null;
     private final List<SupplierDependency<OutboundSocketBinding>> outboundSocketBindings = new LinkedList<>();
-    private volatile SupplierDependency<SSLContext> sslContextDependency = null;
+    private volatile SupplierDependency<SSLContext> clientSSLContextDependency = null;
 
     private final ModClusterConfigurationBuilder builder = new ModClusterConfigurationBuilder();
 
@@ -129,8 +133,15 @@ import org.wildfly.clustering.service.SupplierDependency;
         optionalString(ADVERTISE_SECURITY_KEY.resolveModelAttribute(context, model))
                 .ifPresent(securityKey -> builder.advertise().setAdvertiseSecurityKey(securityKey));
 
-        // MCMP
+        // WildFly Discovery
+        if (model.hasDefined(DiscoveryResourceDefinition.PATH.getKeyValuePair())) {
+            ModelNode discoveryModel = model.get(DiscoveryResourceDefinition.PATH.getKeyValuePair());
+            ModelNode node = DiscoveryResourceDefinition.Attribute.PROVIDER.resolveModelAttribute(context, discoveryModel);
+            if (node.isDefined()) {
+            }
+        }
 
+        // MCMP
         builder.mcmp()
                 .setAdvertise(ADVERTISE.resolveModelAttribute(context, model).asBoolean())
                 .setProxyURL(PROXY_URL.resolveModelAttribute(context, model).asString())
@@ -262,7 +273,7 @@ import org.wildfly.clustering.service.SupplierDependency;
 
         node = SSL_CONTEXT.resolveModelAttribute(context, model);
         if (node.isDefined()) {
-            this.sslContextDependency = new ServiceSupplierDependency<>(CommonUnaryRequirement.SSL_CONTEXT.getServiceName(context, node.asString()));
+            this.clientSSLContextDependency = new ServiceSupplierDependency<>(CommonUnaryRequirement.SSL_CONTEXT.getServiceName(context, node.asString()));
         }
 
         // Legacy security support
@@ -315,7 +326,7 @@ import org.wildfly.clustering.service.SupplierDependency;
     @Override
     public ServiceBuilder<?> build(ServiceTarget target) {
         ServiceBuilder<?> builder = target.addService(this.getServiceName());
-        Consumer<ModClusterConfiguration> config = new CompositeDependency(this.advertiseSocketDependency, this.sslContextDependency).register(builder).provides(this.getServiceName());
+        Consumer<ModClusterConfiguration> config = new CompositeDependency(this.advertiseSocketDependency, this.clientSSLContextDependency).register(builder).provides(this.getServiceName());
         for (Dependency dependency : this.outboundSocketBindings) {
             dependency.register(builder);
         }
@@ -325,6 +336,27 @@ import org.wildfly.clustering.service.SupplierDependency;
 
     @Override
     public ModClusterConfiguration get() {
+
+        // WildFly Discovery
+        if (discoveryProviderDependency != null) {
+            DiscoveryResult result = new DiscoveryResult() {
+                @Override
+                public void complete() {
+                    System.out.println("discovery complete");
+                }
+
+                @Override
+                public void reportProblem(Throwable description) {
+                    System.out.println("discovery problme");
+                }
+
+                @Override
+                public void addMatch(ServiceURL serviceURL) {
+                    System.out.println("discovered=" + serviceURL);
+                }
+            };
+            discoveryProviderDependency.get().discover(ServiceType.of(abstractType, abstractTypeAuthority), null, result);
+        }
 
         // Advertise
         if (advertiseSocketDependency != null) {
@@ -375,8 +407,8 @@ import org.wildfly.clustering.service.SupplierDependency;
         }
 
         // SSL
-        if (sslContextDependency != null) {
-            builder.mcmp().setSocketFactory(sslContextDependency.get().getSocketFactory());
+        if (clientSSLContextDependency != null) {
+            builder.mcmp().setSocketFactory(clientSSLContextDependency.get().getSocketFactory());
         }
 
         return builder.build();
