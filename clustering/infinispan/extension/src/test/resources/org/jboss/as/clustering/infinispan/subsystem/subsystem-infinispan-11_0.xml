@@ -127,6 +127,8 @@
                          min-idle="5"
         />
         <invalidation-near-cache max-entries="20"/>
+        <property name="a">b</property>
+        <property name="c">d</property>
         <remote-clusters>
             <remote-cluster name="primary-site" socket-bindings="jdg1 jdg2 jdg3"/>
             <remote-cluster name="failover-site" socket-bindings="jdg4 jdg5 jdg6"/>

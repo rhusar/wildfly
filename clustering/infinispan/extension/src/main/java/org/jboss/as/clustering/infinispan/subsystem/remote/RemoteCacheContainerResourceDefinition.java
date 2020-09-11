@@ -30,6 +30,7 @@ import org.jboss.as.clustering.controller.CapabilityReference;
 import org.jboss.as.clustering.controller.ChildResourceDefinition;
 import org.jboss.as.clustering.controller.ManagementResourceRegistration;
 import org.jboss.as.clustering.controller.MetricHandler;
+import org.jboss.as.clustering.controller.PropertiesAttributeDefinition;
 import org.jboss.as.clustering.controller.ResourceDescriptor;
 import org.jboss.as.clustering.controller.ResourceServiceConfigurator;
 import org.jboss.as.clustering.controller.ResourceServiceConfiguratorFactory;
@@ -105,6 +106,7 @@ public class RemoteCacheContainerResourceDefinition extends ChildResourceDefinit
                 return builder.setValidator(new ModuleIdentifierValidatorBuilder().configure(builder).build());
             }
         },
+        PROPERTIES("properties"),
         PROTOCOL_VERSION("protocol-version", ModelType.STRING, new ModelNode(ProtocolVersion.PROTOCOL_VERSION_30.toString())) {
             @Override
             public SimpleAttributeDefinitionBuilder apply(SimpleAttributeDefinitionBuilder builder) {
@@ -119,6 +121,13 @@ public class RemoteCacheContainerResourceDefinition extends ChildResourceDefinit
         ;
 
         private final AttributeDefinition definition;
+
+        Attribute(String name) {
+            this.definition = new PropertiesAttributeDefinition.Builder(name)
+                    .setAllowExpression(true)
+                    .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
+                    .build();
+        }
 
         Attribute(String name, ModelType type, ModelNode defaultValue) {
             this.definition = this.apply(new SimpleAttributeDefinitionBuilder(name, type)
@@ -147,6 +156,12 @@ public class RemoteCacheContainerResourceDefinition extends ChildResourceDefinit
         } else {
             ResourceTransformationDescriptionBuilder builder = parent.addChildResource(RemoteCacheContainerResourceDefinition.WILDCARD_PATH);
 
+            if (InfinispanModel.VERSION_13_0_0.requiresTransformation(version)) {
+                builder.getAttributeBuilder()
+                        .setDiscard(new DiscardAttributeValueChecker(false, true, ModelNode.FALSE), Attribute.PROPERTIES.getDefinition())
+                        .addRejectCheck(RejectAttributeChecker.DEFINED, Attribute.PROPERTIES.getDefinition())
+                        .end();
+            }
             if (InfinispanModel.VERSION_12_0_0.requiresTransformation(version)) {
                 builder.getAttributeBuilder().setValueConverter(AttributeConverter.DEFAULT_VALUE, Attribute.PROTOCOL_VERSION.getName());
             }
