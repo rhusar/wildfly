@@ -70,11 +70,7 @@ public abstract class AbstractHotRodWebFailoverTestCase extends AbstractWebFailo
         String readResource = String.format("/subsystem=infinispan/remote-cache-container=web/remote-cache=%s:read-resource(include-runtime=true, recursive=true)", this.deploymentName);
         String resetStatistics = String.format("/subsystem=infinispan/remote-cache-container=web/remote-cache=%s:reset-statistics", this.deploymentName);
 
-        ModelNode result;
-
-        // FIXME: checks fail with secured caches.
-        /*
-        result = execute(this.client1, readResource);
+        ModelNode result = execute(this.client1, readResource);
         Assert.assertNotEquals(0L, result.get("hits").asLong());
         Assert.assertNotEquals(0L, result.get("writes").asLong());
 
@@ -85,7 +81,6 @@ public abstract class AbstractHotRodWebFailoverTestCase extends AbstractWebFailo
         result = execute(this.client3, readResource);
         Assert.assertNotEquals(0L, result.get("hits").asLong());
         Assert.assertNotEquals(0L, result.get("writes").asLong());
-        */
 
         execute(this.client1, resetStatistics);
         execute(this.client2, resetStatistics);
