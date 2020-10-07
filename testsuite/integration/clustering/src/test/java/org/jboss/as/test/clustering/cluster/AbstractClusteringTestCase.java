@@ -21,6 +21,7 @@
  */
 package org.jboss.as.test.clustering.cluster;
 
+import java.io.File;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Map;
@@ -93,7 +94,7 @@ public abstract class AbstractClusteringTestCase {
 
     // Infinispan Server
     public static final String INFINISPAN_SERVER_HOME = System.getProperty("infinispan.server.home");
-    public static final String INFINISPAN_SERVER_PROFILE = "infinispan-server/infinispan.xml";
+    public static final String INFINISPAN_SERVER_PROFILE = "infinispan-server" + File.separator + "infinispan.xml";
     public static final String INFINISPAN_SERVER_PROTOCOL_VERSION = "3.0";
     public static final String INFINISPAN_SERVER_ADDRESS = "127.0.0.1";
     public static final int INFINISPAN_SERVER_PORT = 11222;
@@ -103,7 +104,7 @@ public abstract class AbstractClusteringTestCase {
                 .config(INFINISPAN_SERVER_PROFILE)
                 .property(TestSystemPropertyNames.INFINISPAN_SERVER_HOME, INFINISPAN_SERVER_HOME)
                 .property("infinispan.client.rest.auth_username", "testsuite-user")
-                .property("infinispan.client.rest.auth_password", "testsuite-password22222xxx")
+                .property("infinispan.client.rest.auth_password", "testsuite-password")
                 .numServers(1)
                 .runMode(ServerRunMode.FORKED)
                 .build();
