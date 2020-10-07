@@ -103,7 +103,7 @@ public abstract class AbstractClusteringTestCase {
                 .config(INFINISPAN_SERVER_PROFILE)
                 .property(TestSystemPropertyNames.INFINISPAN_SERVER_HOME, INFINISPAN_SERVER_HOME)
                 .property("infinispan.client.rest.auth_username", "testsuite-user")
-                .property("infinispan.client.rest.auth_password", "testsuite-password")
+                .property("infinispan.client.rest.auth_password", "testsuite-password22222xxx")
                 .numServers(1)
                 .runMode(ServerRunMode.FORKED)
                 .build();
