@@ -32,6 +32,8 @@ import org.jboss.as.test.clustering.single.web.SimpleServlet;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.ClassRule;
+import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
 /**
@@ -42,6 +44,9 @@ import org.junit.runner.RunWith;
 public class CoarseHotRodWebFailoverTestCase extends AbstractHotRodWebFailoverTestCase {
 
     private static final String DEPLOYMENT_NAME = CoarseHotRodWebFailoverTestCase.class.getSimpleName() + ".war";
+
+    @ClassRule
+    public static final TestRule INFINISPAN_SERVER_RULE = infinispanServerTestRule();
 
     public CoarseHotRodWebFailoverTestCase() {
         super(DEPLOYMENT_NAME);

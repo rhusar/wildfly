@@ -26,11 +26,14 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.TargetsContainer;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.as.arquillian.api.ServerSetup;
+import org.jboss.as.test.clustering.cluster.sso.AbstractSingleSignOnTestCase;
 import org.jboss.as.test.clustering.cluster.sso.ElytronSSOServerSetupTask;
 import org.jboss.as.test.clustering.cluster.sso.IdentityServerSetupTask;
 import org.jboss.as.test.integration.web.sso.SSOTestBase;
 import org.jboss.as.test.shared.CLIServerSetupTask;
 import org.jboss.shrinkwrap.api.Archive;
+import org.junit.ClassRule;
+import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
 /**
@@ -38,7 +41,10 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Arquillian.class)
 @ServerSetup({ InfinispanServerSetupTask.class, RemoteElytronSingleSignOnTestCase.ServerSetupTask.class, ElytronSSOServerSetupTask.class, IdentityServerSetupTask.class })
-public class RemoteElytronSingleSignOnTestCase extends AbstractRemoteSingleSignOnTestCase {
+public class RemoteElytronSingleSignOnTestCase extends AbstractSingleSignOnTestCase {
+
+    @ClassRule
+    public static final TestRule INFINISPAN_SERVER_RULE = infinispanServerTestRule();
 
     @Deployment(name = DEPLOYMENT_1, managed = false, testable = false)
     @TargetsContainer(NODE_1)

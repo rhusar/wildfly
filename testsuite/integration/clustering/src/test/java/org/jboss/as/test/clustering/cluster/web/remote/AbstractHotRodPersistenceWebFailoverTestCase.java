@@ -32,8 +32,6 @@ import org.jboss.as.test.shared.CLIServerSetupTask;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.ClassRule;
-import org.junit.rules.TestRule;
 
 /**
  * Variation of {@link AbstractWebFailoverTestCase} using invalidation cache with HotRod-based store implementation referencing
@@ -42,9 +40,6 @@ import org.junit.rules.TestRule;
  * @author Radoslav Husar
  */
 public abstract class AbstractHotRodPersistenceWebFailoverTestCase extends AbstractWebFailoverTestCase {
-
-    @ClassRule
-    public static final TestRule INFINISPAN_SERVER_RULE = infinispanServerTestRule();
 
     static Archive<?> getDeployment(String deploymentName, String deploymentDescriptor) {
         WebArchive war = ShrinkWrap.create(WebArchive.class, deploymentName);

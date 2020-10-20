@@ -34,8 +34,6 @@ import org.jboss.as.arquillian.container.ManagementClient;
 import org.jboss.as.test.clustering.cluster.web.AbstractWebFailoverTestCase;
 import org.jboss.dmr.ModelNode;
 import org.junit.Assert;
-import org.junit.ClassRule;
-import org.junit.rules.TestRule;
 
 /**
  * Variation of {@link AbstractWebFailoverTestCase} using hotrod-based session manager.
@@ -45,9 +43,6 @@ import org.junit.rules.TestRule;
  * @author Paul Ferraro
  */
 public abstract class AbstractHotRodWebFailoverTestCase extends AbstractWebFailoverTestCase {
-
-    @ClassRule
-    public static final TestRule INFINISPAN_SERVER_RULE = infinispanServerTestRule();
 
     @ArquillianResource @OperateOnDeployment(DEPLOYMENT_1)
     private ManagementClient client1;

@@ -31,6 +31,8 @@ import org.jboss.as.test.clustering.cluster.web.event.SessionActivationServlet;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.ClassRule;
+import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
 /**
@@ -39,6 +41,9 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 @ServerSetup({ InfinispanServerSetupTask.class, LocalRoutingServerSetup.class })
 public class CoarseHotRodSessionActivationTestCase extends AbstractHotRodSessionActivationTestCase {
+
+    @ClassRule
+    public static final TestRule INFINISPAN_SERVER_RULE = infinispanServerTestRule();
 
     private static final String MODULE_NAME = CoarseHotRodSessionActivationTestCase.class.getSimpleName();
     private static final String DEPLOYMENT_NAME = MODULE_NAME + ".war";

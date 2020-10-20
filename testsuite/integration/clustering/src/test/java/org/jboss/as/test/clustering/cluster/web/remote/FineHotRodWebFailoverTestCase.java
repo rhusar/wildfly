@@ -32,6 +32,8 @@ import org.jboss.as.test.clustering.single.web.SimpleServlet;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.ClassRule;
+import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
 /**
@@ -40,6 +42,9 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 @ServerSetup({ InfinispanServerSetupTask.class, LocalRoutingServerSetup.class })
 public class FineHotRodWebFailoverTestCase extends AbstractHotRodWebFailoverTestCase {
+
+    @ClassRule
+    public static final TestRule INFINISPAN_SERVER_RULE = infinispanServerTestRule();
 
     private static final String DEPLOYMENT_NAME = FineHotRodWebFailoverTestCase.class.getSimpleName() + ".war";
 
