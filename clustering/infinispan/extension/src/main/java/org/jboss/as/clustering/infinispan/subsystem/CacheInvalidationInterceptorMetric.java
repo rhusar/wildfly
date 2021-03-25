@@ -47,6 +47,7 @@ public enum CacheInvalidationInterceptorMetric implements Metric<InvalidationInt
 
     CacheInvalidationInterceptorMetric(String name, ModelType type, AttributeAccess.Flag metricType) {
         this.definition = new SimpleAttributeDefinitionBuilder(name, type)
+                .setFlags(metricType)
                 .setStorageRuntime()
                 .build();
     }
