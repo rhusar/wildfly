@@ -60,7 +60,7 @@ public class OffHeapMemoryResourceDefinition extends MemoryResourceDefinition {
         SIZE_UNIT(SharedAttribute.SIZE_UNIT) {
             @Override
             public SimpleAttributeDefinitionBuilder apply(SimpleAttributeDefinitionBuilder builder) {
-                return builder.setValidator(new EnumValidator<>(MemorySizeUnit.class));
+                return builder.setAllowExpression(true).setValidator(new EnumValidator<>(MemorySizeUnit.class));
             }
         },
         ;
