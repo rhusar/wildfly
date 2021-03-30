@@ -180,6 +180,7 @@ public class CacheContainerResourceDefinition extends ChildResourceDefinition<Ma
 
         ListAttribute(String name) {
             this.definition = this.apply(new StringListAttributeDefinition.Builder(name)
+                    .setAllowExpression(true)
                     .setRequired(false)
                     .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
                     ).build();
