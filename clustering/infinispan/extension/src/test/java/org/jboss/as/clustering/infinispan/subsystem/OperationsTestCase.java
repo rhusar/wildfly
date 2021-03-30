@@ -115,7 +115,7 @@ public class OperationsTestCase extends OperationTestCaseBase {
         Assert.assertEquals(stringKeyedTable.asPropertyList().size(), result.get(RESULT).asPropertyList().size());
         for (Property property : stringKeyedTable.asPropertyList()) {
             Assert.assertTrue(property.getName(), result.get(RESULT).hasDefined(property.getName()));
-            Assert.assertEquals(property.getValue(), result.get(RESULT).get(property.getName()));
+            Assert.assertEquals(property.getValue().resolve().asString(), result.get(RESULT).get(property.getName()).resolve().asString());
         }
     }
 

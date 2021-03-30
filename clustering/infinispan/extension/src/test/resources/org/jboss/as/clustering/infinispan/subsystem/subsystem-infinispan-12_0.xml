@@ -23,43 +23,43 @@
     <cache-container name="minimal" default-cache="local">
         <local-cache name="local"/>
     </cache-container>
-    <cache-container name="maximal" aliases="alias1 alias2" default-cache="local" modules="org.infinispan org.infinispan.commons" statistics-enabled="true">
-        <transport channel="maximal-channel" lock-timeout="120000"/>
-        <blocking-thread-pool min-threads="11"
-                              max-threads="12"
-                              queue-length="13"
-                              keepalive-time="14"/>
+    <cache-container name="maximal" aliases="${exp:alias1} alias2" default-cache="local" modules="${exp:org.infinispan} org.infinispan.commons" statistics-enabled="${exp.boolean:true}">
+        <transport channel="maximal-channel" lock-timeout="${infinispan.maximal.transport.lock-timeout:120000}"/>
+        <blocking-thread-pool min-threads="${exp.int:11}"
+                              max-threads="${exp.int:12}"
+                              queue-length="${exp.int:13}"
+                              keepalive-time="${exp.int:14}"/>
         <listener-thread-pool min-threads="21"
                               max-threads="22"
                               queue-length="23"
                               keepalive-time="24"/>
-        <non-blocking-thread-pool min-threads="31"
-                              max-threads="32"
-                              queue-length="33"
-                              keepalive-time="34"/>
+        <non-blocking-thread-pool min-threads="${exp.int:31}"
+                              max-threads="${exp.int:32}"
+                              queue-length="${exp.int:33}"
+                              keepalive-time="${exp.int:34}"/>
         <expiration-thread-pool min-threads="41"
                                 keepalive-time="42"/>
         <local-cache name="local" modules="org.infinispan org.infinispan.commons" statistics-enabled="true">
-            <locking acquire-timeout="30000" concurrency-level="2000" isolation="NONE" striping="true"/>
-            <transaction mode="BATCH" stop-timeout="60000" locking="OPTIMISTIC"/>
-            <heap-memory size="20000"/>
-            <expiration interval="10000" lifespan="10" max-idle="10"/>
-            <file-store fetch-state="false" passivation="false" path="path" preload="true" purge="false" relative-to="jboss.server.temp.dir" shared="true" singleton="false">
-                <write-behind modification-queue-size="2048"/>
+            <locking acquire-timeout="${exp.long:30000}" concurrency-level="${exp.int:2000}" isolation="${exp.isolation:NONE}" striping="${exp.boolean:true}"/>
+            <transaction mode="${exp.transaction:BATCH}" stop-timeout="${exp.long:60000}" locking="${exp.locking:OPTIMISTIC}"/>
+            <heap-memory size="${exp.long:20000}" size-unit="ENTRIES"/>
+            <expiration interval="${exp.long:10000}" lifespan="${exp.long:10}" max-idle="${exp.long:10}"/>
+            <file-store fetch-state="${exp.boolean:false}" passivation="${exp.boolean:false}" path="${exp:path}" preload="${exp.boolean:true}" purge="${exp.boolean:false}" relative-to="jboss.server.temp.dir" shared="${exp.boolean:true}" singleton="${exp.boolean:false}">
+                <write-behind modification-queue-size="${exp.int:2048}"/>
             </file-store>
         </local-cache>
         <invalidation-cache name="invalid" modules="org.infinispan" statistics-enabled="true">
             <locking acquire-timeout="30000" concurrency-level="2000" isolation="READ_UNCOMMITTED" striping="true"/>
             <transaction mode="NON_XA" stop-timeout="60000" locking="OPTIMISTIC"/>
-            <off-heap-memory size="20000" size-unit="BYTES"/>
+            <off-heap-memory size="${exp.long:20000}" size-unit="${exp.size-unit:BYTES}"/>
             <expiration interval="10000" lifespan="10" max-idle="10"/>
-            <remote-store cache="default" remote-servers="hotrod-server-1 hotrod-server-2" socket-timeout="60000" tcp-no-delay="true" fetch-state="false" passivation="false" preload="true" purge="false" shared="false" singleton="true">
+            <remote-store cache="${exp:default}" remote-servers="hotrod-server-1 hotrod-server-2" socket-timeout="${exp.long:60000}" tcp-no-delay="${exp.boolean:true}" fetch-state="${exp.boolean:false}" passivation="${exp.bolean:false}" preload="${exp.boolean:true}" purge="${exp.boolean:false}" shared="${exp.boolean:false}" singleton="${exp.boolean:true}">
                 <write-behind modification-queue-size="2048"/>
                 <property name="valueSizeEstimate">100</property>
             </remote-store>
         </invalidation-cache>
         <invalidation-cache name="invalidation-hotrod">
-            <hotrod-store cache-configuration="transactional" remote-cache-container="my-remote-container"/>
+            <hotrod-store cache-configuration="${exp:transactional}" remote-cache-container="my-remote-container"/>
         </invalidation-cache>
         <replicated-cache name="repl" statistics-enabled="true">
             <locking acquire-timeout="30000" concurrency-level="2000" isolation="SERIALIZABLE" striping="true"/>
@@ -70,27 +70,27 @@
                 <write-behind modification-queue-size="2048"/>
                 <property name="location">${java.io.tmpdir}</property>
             </store>
-            <partition-handling enabled="false"/>
-            <state-transfer timeout="0" chunk-size="10000"/>
+            <partition-handling enabled="${exp.boolean:false}"/>
+            <state-transfer timeout="${exp.int:0}" chunk-size="${exp.int:10000}"/>
         </replicated-cache>
-        <distributed-cache name="dist" l1-lifespan="1200000" owners="4" remote-timeout="35000" segments="2" capacity-factor="1.0" consistent-hash-strategy="INTRA_CACHE" statistics-enabled="true">
+        <distributed-cache name="dist" l1-lifespan="${exp.long:1200000}" owners="${exp.int:4}" remote-timeout="${exp.long:35000}" segments="${exp.int:2}" capacity-factor="${exp.double:1.0}" consistent-hash-strategy="${exp.consistent-hash-strategy:INTRA_CACHE}" statistics-enabled="true">
             <locking acquire-timeout="30000" concurrency-level="2000" isolation="READ_COMMITTED" striping="true"/>
             <transaction mode="FULL_XA" stop-timeout="60000" locking="OPTIMISTIC"/>
             <heap-memory size="100"/>
             <expiration interval="10000" lifespan="10" max-idle="10"/>
-            <jdbc-store data-source="ExampleDS" dialect="MARIA_DB" fetch-state="false" passivation="false" preload="true" purge="false" shared="false" singleton="false" max-batch-size="100">
+            <jdbc-store data-source="ExampleDS" dialect="${exp.dialect:MARIA_DB}" fetch-state="false" passivation="false" preload="true" purge="false" shared="false" singleton="false" max-batch-size="100">
                 <write-behind modification-queue-size="2048"/>
-                <table prefix="ispn_bucket" fetch-size="100" create-on-start="false" drop-on-stop="true">
-                    <id-column name="id" type="VARCHAR"/>
-                    <data-column name="datum" type="BINARY"/>
-                    <segment-column name="segment" type="INTEGER"/>
-                    <timestamp-column name="version" type="BIGINT"/>
+                <table prefix="ispn_bucket" fetch-size="100" create-on-start="${exp.boolean:false}" drop-on-stop="${exp.boolean:true}">
+                    <id-column name="${exp:id}" type="${exp:VARCHAR"/>
+                    <data-column name="${exp:datum}" type="BINARY"/>
+                    <segment-column name="${exp:segment}" type="INTEGER"/>
+                    <timestamp-column name="${exp:version}" type="BIGINT"/>
                 </table>
             </jdbc-store>
             <partition-handling enabled="true"/>
             <state-transfer timeout="60000" chunk-size="10000"/>
             <backups>
-                <backup site="NYC" failure-policy="WARN" strategy="SYNC" timeout="12000" enabled="false"/>
+                <backup site="NYC" failure-policy="${exp.backup-failure-policy:WARN}" strategy="${exp.backup-strategy:SYNC}" timeout="${exp.long:12000}" enabled="${exp.boolean:false}"/>
                 <backup site="SFO" failure-policy="WARN" strategy="SYNC" timeout="12000" enabled="true"/>
                 <backup site="LON" failure-policy="WARN" strategy="SYNC" timeout="12000" enabled="true">
                     <take-offline after-failures="3" min-wait="10000"/>
@@ -105,35 +105,35 @@
             <state-transfer timeout="60000" chunk-size="10000"/>
         </scattered-cache>
     </cache-container>
-    <remote-cache-container connection-timeout="1000"
+    <remote-cache-container connection-timeout="${exp.int:1000}"
                             default-remote-cluster="primary-site"
-                            key-size-estimate="512"
-                            max-retries="2"
-                            modules="org.infinispan org.infinispan.commons"
+                            key-size-estimate="${exp.int:512}"
+                            max-retries="${exp.int:2}"
+                            modules="${exp:org.infinispan} org.infinispan.commons"
                             name="my-remote-container"
-                            protocol-version="2.5"
-                            socket-timeout="1000"
-                            tcp-no-delay="false"
-                            tcp-keep-alive="true"
-                            value-size-estimate="1234">
-        <async-thread-pool min-threads="90"
-                           max-threads="100"
-                           queue-length="500"
-                           keepalive-time="1000"/>
-        <connection-pool exhausted-action="EXCEPTION"
-                         max-active="1"
-                         max-wait="3"
-                         min-evictable-idle-time="4"
-                         min-idle="5"
+                            protocol-version="${exp.protocol-version:2.5}"
+                            socket-timeout="${exp.long:1000}"
+                            tcp-no-delay="${exp.boolean:false}"
+                            tcp-keep-alive="${exp.boolean:true}"
+                            value-size-estimate="${exp.int:1234}">
+        <async-thread-pool min-threads="${exp.int:90}"
+                           max-threads="${exp.int:100}"
+                           queue-length="${exp.int:500}"
+                           keepalive-time="${exp.int:1000}"/>
+        <connection-pool exhausted-action="${exp.exhausted-action:EXCEPTION}"
+                         max-active="${exp.int:1}"
+                         max-wait="${exp.int:3}"
+                         min-evictable-idle-time="${exp.long:4}"
+                         min-idle="${exp.int:5}"
         />
-        <invalidation-near-cache max-entries="20"/>
-        <property name="infinispan.client.hotrod.auth_username">username</property>
+        <invalidation-near-cache max-entries="${exp.int:20}"/>
+        <property name="infinispan.client.hotrod.auth_username">${exp:username}</property>
         <property name="infinispan.client.hotrod.auth_password">password</property>
         <remote-clusters>
             <remote-cluster name="primary-site" socket-bindings="jdg1 jdg2 jdg3"/>
             <remote-cluster name="failover-site" socket-bindings="jdg4 jdg5 jdg6"/>
         </remote-clusters>
         <security ssl-context="hotrod-elytron"/>
-        <transaction mode="BATCH" timeout="1000"/>
+        <transaction mode="${exp.transaction-mode:BATCH}" timeout="${exp.long:1000}"/>
     </remote-cache-container>
 </subsystem>
