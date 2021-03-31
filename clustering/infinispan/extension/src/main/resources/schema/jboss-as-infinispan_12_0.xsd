@@ -1487,7 +1487,8 @@
         <xs:attribute name="mode" type="tns:remote-transaction-mode" default="NONE">
             <xs:annotation>
                 <xs:documentation>
-                    Reference to the Elytron-managed SSLContext to be used for connecting to the remote cluster.
+                    Transaction configuration.
+                    Hot Rod transactions cannot use FULL_XA because it degrades performance.
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
