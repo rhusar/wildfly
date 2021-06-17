@@ -23,6 +23,8 @@ package org.jboss.as.test.clustering.cluster;
 
 import static org.wildfly.common.Assert.checkNotNullArrayParam;
 
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Map;
@@ -96,14 +98,21 @@ public abstract class AbstractClusteringTestCase {
 
     // Infinispan Server
     public static final String INFINISPAN_SERVER_HOME = System.getProperty("infinispan.server.home");
-    public static final String INFINISPAN_SERVER_PROFILE = "infinispan.xml";
+//    public static final String INFINISPAN_SERVER_PROFILE = AbstractClusteringTestCase.class.getClassLoader().getResource("infinispan.xml").toURI().toString();
     public static final String INFINISPAN_SERVER_PROTOCOL_VERSION = ProtocolVersion.DEFAULT_PROTOCOL_VERSION.toString();
     public static final String INFINISPAN_SERVER_ADDRESS = "127.0.0.1";
     public static final int INFINISPAN_SERVER_PORT = 11222;
     public static final String INFINISPAN_APPLICATION_USER = "testsuite-application-user";
     public static final String INFINISPAN_APPLICATION_PASSWORD = "testsuite-application-password";
 
-    public static TestRule infinispanServerTestRule() {
+    public static TestRule infinispanServerTestRule()  {
+        String INFINISPAN_SERVER_PROFILE = null;
+        try {
+            INFINISPAN_SERVER_PROFILE = Paths.get(AbstractClusteringTestCase.class.getClassLoader().getResource("infinispan.xml").toURI()).toFile().toString();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+
         return InfinispanServerRuleBuilder
                 .config(INFINISPAN_SERVER_PROFILE)
                 .property(TestSystemPropertyNames.INFINISPAN_TEST_SERVER_DIR, INFINISPAN_SERVER_HOME)
