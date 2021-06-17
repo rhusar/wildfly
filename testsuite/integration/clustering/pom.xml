@@ -404,7 +404,7 @@
                                     <outputDirectory>${basedir}/target/infinispan-server-${version.org.infinispan.server}/server/conf</outputDirectory>
                                     <resources>
                                         <resource>
-                                            <directory>src/test/resources/infinispan-server</directory>
+                                            <directory>src/test/resources/infinispan-server-overlay</directory>
                                             <filtering>true</filtering>
                                         </resource>
                                     </resources>
