@@ -12,6 +12,8 @@
             <property name="waitForPorts">9990</property>
             <property name="waitForPortsTimeoutInSeconds">10</property>
             <property name="allowConnectingToRunningServer">true</property>
+            <property name="jbossArguments">${jboss.args}</property>
+
         </configuration>
     </container>
 </arquillian>
