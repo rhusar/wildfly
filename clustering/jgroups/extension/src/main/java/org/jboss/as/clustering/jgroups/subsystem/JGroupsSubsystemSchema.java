@@ -29,9 +29,10 @@ public enum JGroupsSubsystemSchema implements SubsystemSchema<JGroupsSubsystemSc
     VERSION_6_0(6, 0), // WildFly 12-16, EAP 7.2
     VERSION_7_0(7, 0), // WildFly 17-19, EAP 7.3
     VERSION_8_0(8, 0), // WildFly 20-26, EAP 7.4
-    VERSION_9_0(9, 0), // WildFly 27-present
+    VERSION_9_0(9, 0), // WildFly 27-32, EAP 8.0
+    VERSION_10_0(10, 0), // WildFly 33-present
     ;
-    static final JGroupsSubsystemSchema CURRENT = VERSION_9_0;
+    static final JGroupsSubsystemSchema CURRENT = VERSION_10_0;
 
     private final VersionedNamespace<IntVersion, JGroupsSubsystemSchema> namespace;
 
