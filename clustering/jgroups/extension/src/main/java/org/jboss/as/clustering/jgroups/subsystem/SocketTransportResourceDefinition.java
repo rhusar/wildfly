@@ -31,6 +31,14 @@ public class SocketTransportResourceDefinition extends TransportResourceDefiniti
                         .setCapabilityReference(new CapabilityReference(Capability.TRANSPORT, CommonUnaryRequirement.SOCKET_BINDING));
             }
         },
+        SSL_CONTEXT("ssl-context", ModelType.STRING) {
+            @Override
+            public SimpleAttributeDefinitionBuilder apply(SimpleAttributeDefinitionBuilder builder) {
+                return builder
+                        .setAccessConstraints(SensitiveTargetAccessConstraintDefinition.SSL_REF)
+                        .setCapabilityReference(CommonUnaryRequirement.SSL_CONTEXT.getName());
+            }
+        },
         ;
         private final AttributeDefinition definition;
 

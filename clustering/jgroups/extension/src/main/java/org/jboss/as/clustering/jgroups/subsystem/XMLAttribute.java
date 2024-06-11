@@ -37,6 +37,7 @@ public enum XMLAttribute {
     RACK(TransportResourceDefinition.Attribute.RACK),
     @Deprecated SHARED("shared"),
     SITE(TransportResourceDefinition.Attribute.SITE),
+    SSL_CONTEXT(SocketTransportResourceDefinition.Attribute.SSL_CONTEXT),
     SOCKET_BINDING(MulticastProtocolResourceDefinition.Attribute.SOCKET_BINDING),
     STACK(ChannelResourceDefinition.Attribute.STACK),
     STATISTICS_ENABLED(ChannelResourceDefinition.Attribute.STATISTICS_ENABLED),

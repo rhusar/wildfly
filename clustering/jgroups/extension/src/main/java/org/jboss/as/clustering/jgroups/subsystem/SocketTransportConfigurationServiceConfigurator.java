@@ -5,7 +5,7 @@
 
 package org.jboss.as.clustering.jgroups.subsystem;
 
-import static org.jboss.as.clustering.jgroups.subsystem.SocketTransportResourceDefinition.Attribute.*;
+import static org.jboss.as.clustering.jgroups.subsystem.SocketTransportResourceDefinition.Attribute.CLIENT_SOCKET_BINDING;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
@@ -30,6 +30,7 @@ import org.wildfly.clustering.service.SupplierDependency;
 public class SocketTransportConfigurationServiceConfigurator<TP extends BasicTCP> extends TransportConfigurationServiceConfigurator<TP> {
 
     private volatile SupplierDependency<SocketBinding> clientBinding;
+//    private volatile SupplierDependency<SSLContext> sslContext;
 
     public SocketTransportConfigurationServiceConfigurator(PathAddress address) {
         super(address);
@@ -44,6 +45,10 @@ public class SocketTransportConfigurationServiceConfigurator<TP extends BasicTCP
     public ServiceConfigurator configure(OperationContext context, ModelNode model) throws OperationFailedException {
         String bindingName = CLIENT_SOCKET_BINDING.resolveModelAttribute(context, model).asStringOrNull();
         this.clientBinding = (bindingName != null) ? new ServiceSupplierDependency<>(CommonUnaryRequirement.SOCKET_BINDING.getServiceName(context, bindingName)) : new SimpleSupplierDependency<>(null);
+
+//        String sslContextName = SSL_CONTEXT.resolveModelAttribute(context, model).asStringOrNull();
+//        this.sslContext = (sslContextName != null) ? new ServiceSupplierDependency<>(CommonUnaryRequirement.SSL_CONTEXT.getServiceName(context, sslContextName)) : new SimpleSupplierDependency<>(null);
+
         return super.configure(context, model);
     }
 
@@ -56,6 +61,11 @@ public class SocketTransportConfigurationServiceConfigurator<TP extends BasicTCP
         }
         return bindings;
     }
+
+//    @Override
+//    public SSLContext getSSLContext() {
+//        return this.sslContext.get();
+//    }
 
     @Override
     public void accept(TP protocol) {

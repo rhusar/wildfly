@@ -24,6 +24,7 @@ public class StackResourceTransformer implements Consumer<ModelVersion> {
 
     @Override
     public void accept(ModelVersion version) {
+        new SocketTransportResourceTransformer(this.builder).accept(version);
         new ProtocolTransformer(this.builder).accept(version);
     }
 }

@@ -45,7 +45,7 @@ public class JGroupsTransformersTestCase extends OperationTestCaseBase {
     private static String[] getDependencies(ModelTestControllerVersion version) {
         switch (version) {
             case EAP_7_4_0:
-                return new String[] {
+                return new String[]{
                         formatArtifact("org.jboss.eap:wildfly-clustering-jgroups-extension:%s", version),
                         formatArtifact("org.jboss.eap:wildfly-clustering-api:%s", version),
                         formatArtifact("org.jboss.eap:wildfly-clustering-common:%s", version),
@@ -64,6 +64,7 @@ public class JGroupsTransformersTestCase extends OperationTestCaseBase {
                 .require(CommonUnaryRequirement.SOCKET_BINDING, "jgroups-tcp", "jgroups-udp", "jgroups-udp-fd", "some-binding", "client-binding", "jgroups-diagnostics", "jgroups-mping", "jgroups-tcp-fd", "jgroups-client-fd", "jgroups-state-xfr")
                 .require(CommonUnaryRequirement.KEY_STORE, "my-key-store")
                 .require(CommonUnaryRequirement.CREDENTIAL_STORE, "my-credential-store")
+                .require(CommonUnaryRequirement.SSL_CONTEXT, "my-ssl-context")
                 ;
     }
 
@@ -136,6 +137,13 @@ public class JGroupsTransformersTestCase extends OperationTestCaseBase {
         FailedOperationTransformationConfig config = new FailedOperationTransformationConfig();
 
         PathAddress subsystemAddress = PathAddress.pathAddress(JGroupsSubsystemResourceDefinition.PATH);
+
+        if (JGroupsSubsystemModel.VERSION_10_0_0.requiresTransformation(version)) {
+            PathAddress addr=subsystemAddress.append(StackResourceDefinition.pathElement("maximal")).append(TransportResourceDefinition.pathElement("TCP"));
+            config.addFailedAttribute(addr,
+                    new FailedOperationTransformationConfig.NewAttributesConfig(SocketTransportResourceDefinition.Attribute.SSL_CONTEXT.getDefinition())
+            );
+        }
 
         if (JGroupsSubsystemModel.VERSION_8_0_0.requiresTransformation(version)) {
             config.addFailedAttribute(subsystemAddress.append(StackResourceDefinition.pathElement("credentialReference1")).append(ProtocolResourceDefinition.pathElement("SYM_ENCRYPT")),

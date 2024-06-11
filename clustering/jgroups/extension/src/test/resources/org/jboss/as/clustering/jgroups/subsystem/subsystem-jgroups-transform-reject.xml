@@ -14,6 +14,7 @@
                        module="org.jgroups"
                        socket-binding="jgroups-tcp"
                        diagnostics-socket-binding="jgroups-diagnostics"
+                       ssl-context="my-ssl-context"
                        machine="machine1"
                        rack="rack1"
                        site="site1">

@@ -400,6 +400,12 @@ public class JGroupsSubsystemXMLReader implements XMLElementReader<List<ModelNod
                         break;
                     }
                 }
+                case SSL_CONTEXT: {
+                    if (this.schema.since(JGroupsSubsystemSchema.VERSION_10_0)) {
+                        readAttribute(reader, i, operation, SocketTransportResourceDefinition.Attribute.SSL_CONTEXT);
+                        break;
+                    }
+                }
                 default: {
                     this.parseProtocolAttribute(reader, i, operation);
                 }
