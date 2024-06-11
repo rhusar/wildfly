@@ -6,6 +6,8 @@ package org.wildfly.clustering.jgroups.spi;
 
 import java.util.Map;
 
+import javax.net.ssl.SSLContext;
+
 import org.jboss.as.network.SocketBinding;
 import org.jgroups.stack.Protocol;
 
@@ -21,5 +23,9 @@ public interface ProtocolConfiguration<P extends Protocol> {
 
     default Map<String, SocketBinding> getSocketBindings() {
         return Map.of();
+    }
+
+    default SSLContext getSSLContext() {
+        return null;
     }
 }

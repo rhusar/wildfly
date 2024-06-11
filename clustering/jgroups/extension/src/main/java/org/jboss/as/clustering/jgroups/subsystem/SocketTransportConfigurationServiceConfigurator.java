@@ -6,10 +6,13 @@
 package org.jboss.as.clustering.jgroups.subsystem;
 
 import static org.jboss.as.clustering.jgroups.subsystem.SocketTransportResourceDefinition.Attribute.CLIENT_SOCKET_BINDING;
+import static org.jboss.as.clustering.jgroups.subsystem.SocketTransportResourceDefinition.Attribute.SSL_CONTEXT;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.Set;
+
+import javax.net.ssl.SSLContext;
 
 import org.jboss.as.clustering.controller.CommonUnaryRequirement;
 import org.jboss.as.controller.OperationContext;
@@ -19,6 +22,7 @@ import org.jboss.as.network.SocketBinding;
 import org.jboss.dmr.ModelNode;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jgroups.protocols.BasicTCP;
+import org.wildfly.clustering.service.CompositeDependency;
 import org.wildfly.clustering.service.ServiceConfigurator;
 import org.wildfly.clustering.service.ServiceSupplierDependency;
 import org.wildfly.clustering.service.SimpleSupplierDependency;
@@ -30,7 +34,7 @@ import org.wildfly.clustering.service.SupplierDependency;
 public class SocketTransportConfigurationServiceConfigurator<TP extends BasicTCP> extends TransportConfigurationServiceConfigurator<TP> {
 
     private volatile SupplierDependency<SocketBinding> clientBinding;
-//    private volatile SupplierDependency<SSLContext> sslContext;
+    private volatile SupplierDependency<SSLContext> sslContext;
 
     public SocketTransportConfigurationServiceConfigurator(PathAddress address) {
         super(address);
@@ -38,7 +42,7 @@ public class SocketTransportConfigurationServiceConfigurator<TP extends BasicTCP
 
     @Override
     public <B> ServiceBuilder<B> register(ServiceBuilder<B> builder) {
-        return super.register(this.clientBinding.register(builder));
+        return super.register(new CompositeDependency(this.clientBinding, this.sslContext).register(builder));
     }
 
     @Override
@@ -46,8 +50,8 @@ public class SocketTransportConfigurationServiceConfigurator<TP extends BasicTCP
         String bindingName = CLIENT_SOCKET_BINDING.resolveModelAttribute(context, model).asStringOrNull();
         this.clientBinding = (bindingName != null) ? new ServiceSupplierDependency<>(CommonUnaryRequirement.SOCKET_BINDING.getServiceName(context, bindingName)) : new SimpleSupplierDependency<>(null);
 
-//        String sslContextName = SSL_CONTEXT.resolveModelAttribute(context, model).asStringOrNull();
-//        this.sslContext = (sslContextName != null) ? new ServiceSupplierDependency<>(CommonUnaryRequirement.SSL_CONTEXT.getServiceName(context, sslContextName)) : new SimpleSupplierDependency<>(null);
+        String sslContextName = SSL_CONTEXT.resolveModelAttribute(context, model).asStringOrNull();
+        this.sslContext = (sslContextName != null) ? new ServiceSupplierDependency<>(CommonUnaryRequirement.SSL_CONTEXT.getServiceName(context, sslContextName)) : new SimpleSupplierDependency<>(null);
 
         return super.configure(context, model);
     }
@@ -62,10 +66,10 @@ public class SocketTransportConfigurationServiceConfigurator<TP extends BasicTCP
         return bindings;
     }
 
-//    @Override
-//    public SSLContext getSSLContext() {
-//        return this.sslContext.get();
-//    }
+    @Override
+    public SSLContext getSSLContext() {
+        return this.sslContext.get();
+    }
 
     @Override
     public void accept(TP protocol) {

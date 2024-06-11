@@ -175,4 +175,5 @@ public class TransportConfigurationServiceConfigurator<T extends TP> extends Abs
     public SocketBinding getSocketBinding() {
         return this.socketBinding.get();
     }
+
 }

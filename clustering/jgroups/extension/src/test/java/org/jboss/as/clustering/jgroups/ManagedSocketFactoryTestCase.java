@@ -49,7 +49,7 @@ public class ManagedSocketFactoryTestCase {
     private final SocketBindingManager manager = mock(SocketBindingManager.class);
     private final SelectorProvider provider = mock(SelectorProvider.class);
 
-    private final SocketFactory subject = new org.jboss.as.clustering.jgroups.ManagedSocketFactory(this.provider, this.manager, Map.of("known-service", new SocketBinding("binding", 0, false, null, 0, null, this.manager, List.of())));
+    private final SocketFactory subject = new org.jboss.as.clustering.jgroups.ManagedSocketFactory(this.provider, this.manager, Map.of("known-service", new SocketBinding("binding", 0, false, null, 0, null, this.manager, List.of())), null);
 
     @Test
     public void createSocket() throws IOException {

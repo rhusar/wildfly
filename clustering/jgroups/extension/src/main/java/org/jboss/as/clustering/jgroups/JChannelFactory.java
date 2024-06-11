@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.net.ssl.SSLContext;
+
 import org.jboss.as.network.SocketBinding;
 import org.jgroups.EmptyMessage;
 import org.jgroups.JChannel;
@@ -97,7 +99,8 @@ public class JChannelFactory implements ChannelFactory {
 
         // Override the SocketFactory of the transport
         TP transport = (TP) protocols.get(0);
-        transport.setSocketFactory(new ManagedSocketFactory(SelectorProvider.provider(), this.configuration.getSocketBindingManager(), bindings));
+        SSLContext sslContext = transports.get(0).getSSLContext();
+        transport.setSocketFactory(new ManagedSocketFactory(SelectorProvider.provider(), this.configuration.getSocketBindingManager(), bindings, sslContext));
 
         JChannel channel = createChannel(protocols);
 

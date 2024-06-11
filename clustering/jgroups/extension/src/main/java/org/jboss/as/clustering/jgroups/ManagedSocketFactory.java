@@ -21,6 +21,8 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 
+import javax.net.ssl.SSLContext;
+
 import org.jboss.as.network.SocketBinding;
 import org.jboss.as.network.SocketBindingManager;
 import org.jgroups.util.Util;
@@ -38,25 +40,37 @@ public class ManagedSocketFactory implements SocketFactory {
     private final Map<String, SocketBinding> bindings;
     // Store references to managed socket-binding registrations
     private final Map<NetworkChannel, Closeable> channels = Collections.synchronizedMap(new IdentityHashMap<>());
+    private final SSLContext sslContext;
 
-    public ManagedSocketFactory(SelectorProvider provider, SocketBindingManager manager, Map<String, SocketBinding> socketBindings) {
+    public ManagedSocketFactory(SelectorProvider provider, SocketBindingManager manager, Map<String, SocketBinding> socketBindings, SSLContext sslContext) {
         this.provider = provider;
         this.manager = manager;
         this.bindings = socketBindings;
+        this.sslContext = sslContext;
     }
 
     @Override
     public Socket createSocket(String name) throws IOException {
         SocketBinding binding = this.bindings.get(name);
-        org.jboss.as.network.ManagedSocketFactory factory = this.manager.getSocketFactory();
-        return (binding != null) ? factory.createSocket(binding.getName()) : factory.createSocket();
+        if (sslContext==null) {
+            org.jboss.as.network.ManagedSocketFactory factory = this.manager.getSocketFactory();
+            return (binding != null) ? factory.createSocket(binding.getName()) : factory.createSocket();
+        } else {
+            // TODO register binding manually
+            return sslContext.getSocketFactory().createSocket();
+        }
     }
 
     @Override
     public ServerSocket createServerSocket(String name) throws IOException {
         SocketBinding binding = this.bindings.get(name);
-        org.jboss.as.network.ManagedServerSocketFactory factory = this.manager.getServerSocketFactory();
-        return (binding != null) ? factory.createServerSocket(binding.getName()) : factory.createServerSocket();
+        if (sslContext == null) {
+            org.jboss.as.network.ManagedServerSocketFactory factory = this.manager.getServerSocketFactory();
+            return (binding != null) ? factory.createServerSocket(binding.getName()) : factory.createServerSocket();
+        } else {
+            // TODO register binding manually
+            return sslContext.getServerSocketFactory().createServerSocket();
+        }
     }
 
     @Override
