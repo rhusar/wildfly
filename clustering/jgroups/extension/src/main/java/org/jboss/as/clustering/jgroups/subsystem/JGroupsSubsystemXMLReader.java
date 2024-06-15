@@ -400,12 +400,6 @@ public class JGroupsSubsystemXMLReader implements XMLElementReader<List<ModelNod
                         break;
                     }
                 }
-                case SSL_CONTEXT: {
-                    if (this.schema.since(JGroupsSubsystemSchema.VERSION_10_0)) {
-                        readAttribute(reader, i, operation, SocketTransportResourceDefinition.Attribute.SSL_CONTEXT);
-                        break;
-                    }
-                }
                 default: {
                     this.parseProtocolAttribute(reader, i, operation);
                 }
@@ -415,6 +409,12 @@ public class JGroupsSubsystemXMLReader implements XMLElementReader<List<ModelNod
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
             XMLElement element = XMLElement.forName(reader.getLocalName());
             switch (element) {
+                case SSL: {
+                    if (this.schema.since(JGroupsSubsystemSchema.VERSION_10_0)) {
+                        this.parseSsl(operation, reader, address, operations);
+                        break;
+                    }
+                }
                 case DEFAULT_THREAD_POOL: {
                     if (this.schema.since(JGroupsSubsystemSchema.VERSION_3_0)) {
                         this.parseThreadPool(ThreadPoolResourceDefinition.DEFAULT, reader, address, operations);
@@ -807,6 +807,27 @@ public class JGroupsSubsystemXMLReader implements XMLElementReader<List<ModelNod
                     break;
                 case KEEPALIVE_TIME:
                     readAttribute(reader, i, operation, pool.getKeepAliveTime());
+                    break;
+                default:
+                    throw ParseUtils.unexpectedAttribute(reader, i);
+            }
+        }
+
+        ParseUtils.requireNoContent(reader);
+    }
+
+    private void parseSsl(ModelNode operation, XMLExtendedStreamReader reader, PathAddress parentAddress, Map<PathAddress, ModelNode> operations) throws XMLStreamException {
+//        PathAddress address = parentAddress.append(pool.getPathElement());
+//        operations.put(address, operation);
+
+        for (int i = 0; i < reader.getAttributeCount(); i++) {
+            XMLAttribute attribute = XMLAttribute.forName(reader.getAttributeLocalName(i));
+            switch (attribute) {
+                case CLIENT_SSL_CONTEXT:
+                    readAttribute(reader, i, operation, SocketTransportResourceDefinition.Attribute.CLIENT_SSL_CONTEXT);
+                    break;
+                case SERVER_SSL_CONTEXT:
+                    readAttribute(reader, i, operation, SocketTransportResourceDefinition.Attribute.SERVER_SSL_CONTEXT);
                     break;
                 default:
                     throw ParseUtils.unexpectedAttribute(reader, i);

@@ -27,6 +27,7 @@ public enum XMLElement {
     CHANNEL(ChannelResourceDefinition.WILDCARD_PATH),
     CHANNELS("channels"),
     DEFAULT_THREAD_POOL("default-thread-pool"),
+    SSL("ssl"),
     DIGEST_TOKEN("digest-token"),
     ENCRYPT_PROTOCOL("encrypt-protocol"),
     FORK(ForkResourceDefinition.WILDCARD_PATH),

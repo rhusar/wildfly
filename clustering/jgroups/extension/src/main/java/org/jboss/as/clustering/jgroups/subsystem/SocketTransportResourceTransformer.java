@@ -29,8 +29,8 @@ public class SocketTransportResourceTransformer implements Consumer<ModelVersion
     public void accept(ModelVersion version) {
         if (JGroupsSubsystemModel.VERSION_11_0_0.requiresTransformation(version)) {
             this.builder.getAttributeBuilder()
-                    .addRejectCheck(RejectAttributeChecker.DEFINED, SocketTransportResourceDefinition.Attribute.SSL_CONTEXT.getName())
-                    .setDiscard(DiscardAttributeChecker.UNDEFINED, SocketTransportResourceDefinition.Attribute.SSL_CONTEXT.getName())
+                    .addRejectCheck(RejectAttributeChecker.DEFINED, SocketTransportResourceDefinition.Attribute.CLIENT_SSL_CONTEXT.getName())
+                    .setDiscard(DiscardAttributeChecker.UNDEFINED, SocketTransportResourceDefinition.Attribute.CLIENT_SSL_CONTEXT.getName())
                     .end();
         }
     }

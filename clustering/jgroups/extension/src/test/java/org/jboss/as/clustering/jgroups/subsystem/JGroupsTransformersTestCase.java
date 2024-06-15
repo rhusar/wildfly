@@ -141,7 +141,7 @@ public class JGroupsTransformersTestCase extends OperationTestCaseBase {
         if (JGroupsSubsystemModel.VERSION_10_0_0.requiresTransformation(version)) {
             PathAddress addr=subsystemAddress.append(StackResourceDefinition.pathElement("maximal")).append(TransportResourceDefinition.pathElement("TCP"));
             config.addFailedAttribute(addr,
-                    new FailedOperationTransformationConfig.NewAttributesConfig(SocketTransportResourceDefinition.Attribute.SSL_CONTEXT.getDefinition())
+                    new FailedOperationTransformationConfig.NewAttributesConfig(SocketTransportResourceDefinition.Attribute.CLIENT_SSL_CONTEXT.getDefinition())
             );
         }
 

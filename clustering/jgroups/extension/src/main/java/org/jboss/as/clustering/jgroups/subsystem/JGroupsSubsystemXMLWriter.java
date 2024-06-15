@@ -91,10 +91,11 @@ public class JGroupsSubsystemXMLWriter implements XMLElementWriter<SubsystemMars
         ModelNode transport = property.getValue();
         writeAttributes(writer, transport, TransportResourceDefinition.Attribute.class);
         if (containsName(TransportResourceRegistrar.SocketTransport.class, property.getName())) {
-            writeAttributes(writer, property.getValue(), SocketTransportResourceDefinition.Attribute.class);
+            writeAttributes(writer, property.getValue(), EnumSet.complementOf(EnumSet.of(SocketTransportResourceDefinition.Attribute.CLIENT_SSL_CONTEXT, SocketTransportResourceDefinition.Attribute.SERVER_SSL_CONTEXT)));
         }
         writeElement(writer, transport, AbstractProtocolResourceDefinition.Attribute.PROPERTIES);
         writeThreadPoolElements(XMLElement.DEFAULT_THREAD_POOL, ThreadPoolResourceDefinition.DEFAULT, writer, transport);
+        writeSslElement(writer, transport);
         writer.writeEndElement();
     }
 
@@ -163,6 +164,14 @@ public class JGroupsSubsystemXMLWriter implements XMLElementWriter<SubsystemMars
                 writeAttributes(writer, threadPool, pool.getAttributes());
                 writer.writeEndElement();
             }
+        }
+    }
+
+    private static void writeSslElement(XMLExtendedStreamWriter writer, ModelNode transport) throws XMLStreamException {
+        if (transport.hasDefined(SocketTransportResourceDefinition.Attribute.CLIENT_SSL_CONTEXT.getName()) || transport.hasDefined(SocketTransportResourceDefinition.Attribute.SERVER_SSL_CONTEXT.getName()))  {
+            writer.writeStartElement(XMLElement.SSL.getLocalName());
+            writeAttributes(writer, transport, EnumSet.of(SocketTransportResourceDefinition.Attribute.CLIENT_SSL_CONTEXT, SocketTransportResourceDefinition.Attribute.SERVER_SSL_CONTEXT));
+            writer.writeEndElement();
         }
     }
 

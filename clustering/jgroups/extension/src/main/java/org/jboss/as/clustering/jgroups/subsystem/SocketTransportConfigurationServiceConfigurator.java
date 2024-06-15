@@ -6,7 +6,7 @@
 package org.jboss.as.clustering.jgroups.subsystem;
 
 import static org.jboss.as.clustering.jgroups.subsystem.SocketTransportResourceDefinition.Attribute.CLIENT_SOCKET_BINDING;
-import static org.jboss.as.clustering.jgroups.subsystem.SocketTransportResourceDefinition.Attribute.SSL_CONTEXT;
+import static org.jboss.as.clustering.jgroups.subsystem.SocketTransportResourceDefinition.Attribute.CLIENT_SSL_CONTEXT;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
@@ -50,7 +50,7 @@ public class SocketTransportConfigurationServiceConfigurator<TP extends BasicTCP
         String bindingName = CLIENT_SOCKET_BINDING.resolveModelAttribute(context, model).asStringOrNull();
         this.clientBinding = (bindingName != null) ? new ServiceSupplierDependency<>(CommonUnaryRequirement.SOCKET_BINDING.getServiceName(context, bindingName)) : new SimpleSupplierDependency<>(null);
 
-        String sslContextName = SSL_CONTEXT.resolveModelAttribute(context, model).asStringOrNull();
+        String sslContextName = CLIENT_SSL_CONTEXT.resolveModelAttribute(context, model).asStringOrNull();
         this.sslContext = (sslContextName != null) ? new ServiceSupplierDependency<>(CommonUnaryRequirement.SSL_CONTEXT.getServiceName(context, sslContextName)) : new SimpleSupplierDependency<>(null);
 
         return super.configure(context, model);
