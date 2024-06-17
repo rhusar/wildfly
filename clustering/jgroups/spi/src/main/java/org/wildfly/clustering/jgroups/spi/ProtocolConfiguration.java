@@ -25,7 +25,11 @@ public interface ProtocolConfiguration<P extends Protocol> {
         return Map.of();
     }
 
-    default SSLContext getSSLContext() {
+    default SSLContext getSslClientContext() {
+        return null;
+    }
+
+    default SSLContext getSslServerContext() {
         return null;
     }
 }

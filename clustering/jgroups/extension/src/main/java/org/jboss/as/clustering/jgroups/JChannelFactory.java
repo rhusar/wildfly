@@ -99,8 +99,9 @@ public class JChannelFactory implements ChannelFactory {
 
         // Override the SocketFactory of the transport
         TP transport = (TP) protocols.get(0);
-        SSLContext sslContext = transports.get(0).getSSLContext();
-        transport.setSocketFactory(new ManagedSocketFactory(SelectorProvider.provider(), this.configuration.getSocketBindingManager(), bindings, sslContext));
+        SSLContext sslClientContext = transports.get(0).getSslClientContext();
+        SSLContext sslServerContext = transports.get(0).getSslServerContext();
+        transport.setSocketFactory(new ManagedSocketFactory(SelectorProvider.provider(), this.configuration.getSocketBindingManager(), bindings, sslClientContext, sslServerContext));
 
         JChannel channel = createChannel(protocols);
 

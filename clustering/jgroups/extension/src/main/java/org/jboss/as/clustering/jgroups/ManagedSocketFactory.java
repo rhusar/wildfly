@@ -40,36 +40,38 @@ public class ManagedSocketFactory implements SocketFactory {
     private final Map<String, SocketBinding> bindings;
     // Store references to managed socket-binding registrations
     private final Map<NetworkChannel, Closeable> channels = Collections.synchronizedMap(new IdentityHashMap<>());
-    private final SSLContext sslContext;
+    private final SSLContext sslClientContext;
+    private final SSLContext sslServerContext;
 
-    public ManagedSocketFactory(SelectorProvider provider, SocketBindingManager manager, Map<String, SocketBinding> socketBindings, SSLContext sslContext) {
+    public ManagedSocketFactory(SelectorProvider provider, SocketBindingManager manager, Map<String, SocketBinding> socketBindings, SSLContext sslClientContext, SSLContext sslServerContext) {
         this.provider = provider;
         this.manager = manager;
         this.bindings = socketBindings;
-        this.sslContext = sslContext;
+        this.sslClientContext = sslClientContext;
+        this.sslServerContext = sslServerContext;
     }
 
     @Override
     public Socket createSocket(String name) throws IOException {
         SocketBinding binding = this.bindings.get(name);
-        if (sslContext==null) {
+        if (sslClientContext == null) {
             org.jboss.as.network.ManagedSocketFactory factory = this.manager.getSocketFactory();
             return (binding != null) ? factory.createSocket(binding.getName()) : factory.createSocket();
         } else {
             // TODO register binding manually
-            return sslContext.getSocketFactory().createSocket();
+            return sslClientContext.getSocketFactory().createSocket();
         }
     }
 
     @Override
     public ServerSocket createServerSocket(String name) throws IOException {
         SocketBinding binding = this.bindings.get(name);
-        if (sslContext == null) {
+        if (sslServerContext == null) {
             org.jboss.as.network.ManagedServerSocketFactory factory = this.manager.getServerSocketFactory();
             return (binding != null) ? factory.createServerSocket(binding.getName()) : factory.createServerSocket();
         } else {
             // TODO register binding manually
-            return sslContext.getServerSocketFactory().createServerSocket();
+            return sslServerContext.getServerSocketFactory().createServerSocket();
         }
     }
 
