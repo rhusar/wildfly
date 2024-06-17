@@ -5,6 +5,7 @@
 package org.jboss.as.test.clustering;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.jboss.arquillian.container.test.api.ContainerController;
 import org.jboss.arquillian.container.test.api.Deployer;
@@ -21,7 +22,8 @@ public final class NodeUtil {
     private static final Logger log = Logger.getLogger(NodeUtil.class);
 
     public static void deploy(Deployer deployer, Set<String> deployments) {
-        for (String deployment : deployments) {
+        // Fix order
+        for (String deployment : deployments.stream().sorted().collect(Collectors.toList())) {
             deploy(deployer, deployment);
         }
     }
