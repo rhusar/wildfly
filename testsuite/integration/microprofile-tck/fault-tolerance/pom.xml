@@ -24,7 +24,7 @@
         <jbossas.ts.dir>${jbossas.ts.integ.dir}/..</jbossas.ts.dir>
         <jbossas.ts.integ.dir>${basedir}/../..</jbossas.ts.integ.dir>
         <ts.microprofile-tck-tests-dependency>org.eclipse.microprofile.fault-tolerance:microprofile-fault-tolerance-tck</ts.microprofile-tck-tests-dependency>
-        <ts.microprofile-tck-glow.expected-discovery>[cdi, datasources, ee-integration, microprofile-config, microprofile-fault-tolerance]==>ee-core-profile-server,datasources,microprofile-fault-tolerance</ts.microprofile-tck-glow.expected-discovery>
+        <ts.microprofile-tck-glow.expected-discovery>[cdi, datasources, ee-integration, microprofile-config, microprofile-fault-tolerance, microprofile-telemetry, opentelemetry]==>ee-core-profile-server,datasources,microprofile-fault-tolerance,microprofile-telemetry</ts.microprofile-tck-glow.expected-discovery>
     </properties>
 
     <dependencies>
@@ -81,7 +81,6 @@
                     </systemPropertyVariables>
                     <excludes>
                         <exclude>**/metrics/**</exclude>
-                        <exclude>**/telemetryMetrics/**</exclude>
                     </excludes>
                 </configuration>
             </plugin>

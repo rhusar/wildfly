@@ -123,6 +123,8 @@
                     <config-name>${ts.microprofile-tck-glow.config.name}</config-name>
                     <dependenciesToScan>
                         <dependency>${ts.microprofile-tck-tests-dependency}</dependency>
+                        <!-- TODO debug-only: replace this with something else and move this to mp-ft directly -->
+                        <dependency>org.eclipse.microprofile.telemetry:microprofile-telemetry-tracing-tck</dependency>
                     </dependenciesToScan>
                     <surefire-execution-for-included-classes>default-test</surefire-execution-for-included-classes>
                     <verbose>${ts.microprofile-tck-glow.verbose}</verbose>
