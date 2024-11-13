@@ -24,6 +24,7 @@ import org.jboss.as.arquillian.api.ServerSetup;
 import org.jboss.as.arquillian.api.ServerSetupTask;
 import org.jboss.as.test.integration.common.HttpRequest;
 import org.jboss.as.test.shared.observability.containers.OpenTelemetryCollectorContainer;
+import org.jboss.as.test.shared.observability.setuptasks.MicrometerSetupTask;
 import org.jboss.as.test.shared.observability.setuptasks.OpenTelemetryWithCollectorSetupTask;
 import org.jboss.as.test.shared.observability.signals.PrometheusMetric;
 import org.jboss.shrinkwrap.api.Archive;
@@ -47,7 +48,7 @@ import org.wildfly.test.integration.microprofile.faulttolerance.micrometer.deplo
 @RunWith(Arquillian.class)
 @RunAsClient
 @DockerRequired(AssumptionViolatedException.class)
-@ServerSetup(OpenTelemetryWithCollectorSetupTask.class)
+@ServerSetup({OpenTelemetryWithCollectorSetupTask.class, MicrometerSetupTask.class})
 public class FaultToleranceOpenTelemetryIntegrationTestCase {
 
     @Testcontainer
@@ -87,7 +88,8 @@ public class FaultToleranceOpenTelemetryIntegrationTestCase {
         List<PrometheusMetric> metrics = otelCollector.fetchMetrics("ft_invocations_total");
 
         // Uncomment the following line for debugging:
-        //metrics.forEach(metric -> System.out.println(metric.toString()));
+        System.out.println("XXX collected:");
+        metrics.forEach(metric -> System.out.println(metric.toString()));
 
         // First verify total invocation count for the method + value returned + fallback applied
         Optional<PrometheusMetric> prometheusMetric = metrics.stream().filter(metric -> metric.getKey().equals("ft_invocations_total")).findFirst();

@@ -35,7 +35,6 @@ import org.junit.Assert;
 import org.junit.AssumptionViolatedException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.wildfly.test.integration.microprofile.faulttolerance.DisableTelemetryServerSetupTask;
 import org.wildfly.test.integration.microprofile.faulttolerance.micrometer.deployment.FaultTolerantApplication;
 import org.wildfly.test.integration.microprofile.faulttolerance.micrometer.deployment.TimeoutService;
 
@@ -47,7 +46,7 @@ import org.wildfly.test.integration.microprofile.faulttolerance.micrometer.deplo
  * @author Radoslav Husar
  */
 @RunWith(Arquillian.class)
-@ServerSetup({MicrometerSetupTask.class, DisableTelemetryServerSetupTask.class})
+@ServerSetup({MicrometerSetupTask.class})
 @DockerRequired(AssumptionViolatedException.class)
 public class FaultToleranceMicrometerIntegrationTestCase {
 
