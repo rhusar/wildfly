@@ -3230,40 +3230,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.jboss.mod_cluster</groupId>
-                <artifactId>mod_cluster-container-spi</artifactId>
-                <version>${version.org.jboss.mod_cluster}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>*</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.jboss.mod_cluster</groupId>
-                <artifactId>mod_cluster-core</artifactId>
-                <version>${version.org.jboss.mod_cluster}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>*</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.jboss.mod_cluster</groupId>
-                <artifactId>mod_cluster-load-spi</artifactId>
-                <version>${version.org.jboss.mod_cluster}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>*</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
                 <groupId>org.jboss.narayana</groupId>
                 <artifactId>jbosstxbridge</artifactId>
                 <version>${version.org.jboss.narayana}</version>
@@ -4396,6 +4362,14 @@
 
             <!-- BOM imports. These go last so individual artifacts can be overriden above, with earlier
                  declarations taking precedence. -->
+
+            <dependency>
+                <groupId>org.jboss.mod_cluster</groupId>
+                <artifactId>mod_cluster-bom</artifactId>
+                <version>${version.org.jboss.mod_cluster}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
 
             <!-- Import the core parent to get all the managed dependencies from core -->
             <dependency>
