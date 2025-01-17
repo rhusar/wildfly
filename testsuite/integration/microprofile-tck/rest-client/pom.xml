@@ -242,6 +242,11 @@
             <version>${version.org.testng.mp.rest.client}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-core-testsuite-shared</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
         <finalName>microprofile-rest-client-${project.version}</finalName>
