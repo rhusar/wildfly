@@ -43,10 +43,8 @@ session replication or transmission of SSO contexts around the cluster).
 [[jgroups-configuration-example]]
 == Configuration example
 
-What follows is a sample JGroups subsystem configuration showing all of
-the possible elements and attributes which may be configured. We shall
-use this example to explain the meaning of the various elements and
-attributes.
+What follows is a sample JGroups subsystem configuration showing all the possible elements and attributes which may be configured.
+We shall use this example to explain the meaning of the various elements and attributes.
 
 [IMPORTANT]
 
@@ -56,39 +54,41 @@ directory.
 
 [source,xml,options="nowrap"]
 ----
-<subsystem xmlns="urn:jboss:domain:jgroups:6.0">
+<subsystem xmlns="urn:jboss:domain:jgroups:9.0">
     <channels default="ee">
         <channel name="ee" stack="udp" cluster="ejb"/>
     </channels>
     <stacks>
         <stack name="udp">
             <transport type="UDP" socket-binding="jgroups-udp"/>
+            <protocol type="RED"/>
             <protocol type="PING"/>
             <protocol type="MERGE3"/>
-            <protocol type="FD_SOCK"/>
-            <protocol type="FD_ALL"/>
-            <protocol type="VERIFY_SUSPECT"/>
+            <socket-protocol type="FD_SOCK2" socket-binding="jgroups-udp-fd"/>
+            <protocol type="FD_ALL3"/>
+            <protocol type="VERIFY_SUSPECT2"/>
             <protocol type="pbcast.NAKACK2"/>
             <protocol type="UNICAST3"/>
             <protocol type="pbcast.STABLE"/>
             <protocol type="pbcast.GMS"/>
             <protocol type="UFC"/>
             <protocol type="MFC"/>
-            <protocol type="FRAG3"/>
+            <protocol type="FRAG4"/>
         </stack>
         <stack name="tcp">
             <transport type="TCP" socket-binding="jgroups-tcp"/>
+            <protocol type="RED"/>
             <socket-protocol type="MPING" socket-binding="jgroups-mping"/>
             <protocol type="MERGE3"/>
-            <protocol type="FD_SOCK"/>
-            <protocol type="FD_ALL"/>
-            <protocol type="VERIFY_SUSPECT"/>
+            <protocol type="FD_ALL3"/>
+            <protocol type="VERIFY_SUSPECT2"/>
             <protocol type="pbcast.NAKACK2"/>
             <protocol type="UNICAST3"/>
             <protocol type="pbcast.STABLE"/>
             <protocol type="pbcast.GMS"/>
+            <protocol type="UFC"/>
             <protocol type="MFC"/>
-            <protocol type="FRAG3"/>
+            <protocol type="FRAG4"/>
         </stack>
     </stacks>
 </subsystem>
@@ -171,7 +171,7 @@ This element is used to configure a (non-transport) protocol layer in
 the JGroups stack. Protocol layers are ordered within the stack.
 
 * `type` This attribute specifies the name of the JGroups protocol
-implementation (e.g. MPING, pbcast.GMS), with the package prefix
+implementation (e.g. `MPING`, `pbcast.GMS`), with the package prefix
 org.jgroups.protocols removed.
 * `socket-binding` This attribute references a defined socket binding in
 the server profile. It is used when JGroups needs to create general
@@ -219,7 +219,7 @@ The key use cases covered are:
 
 * adding a stack
 * adding a protocol to an existing stack
-* adding a property to a protocol
+* configuring a property of a protocol
 
 [IMPORTANT]
 
@@ -228,7 +228,9 @@ used to provide extensive information on the attributes and commands
 available in the JGroups subsystem interface used in these examples.
 
 [[add-a-stack]]
-=== Add a stack
+=== Creating a new stack
+
+
 
 [source,options="nowrap"]
 ----
@@ -236,22 +238,27 @@ available in the JGroups subsystem interface used in these examples.
 ----
 
 [[add-a-protocol-to-a-stack]]
-=== Add a protocol to a stack
+=== Adding a protocol to a stack
+
+While the order of management resources in WildFly typically is not a concern,
+ordering is essential when configuring JGroups protocols.
+Protocols can be inserted into existing stacks at any point using `add-index` attribute of the `add` protocol.
+Following is an example of adding the `RED` protocol which always operates at the top of the stack,
+hence it is added at index of zero.
 
 [source,options="nowrap"]
 ----
-/subsystem=jgroups/stack=mystack/transport=TRANSPORT:add(type=<type>, socket-binding=<socketbinding>)
-----
-
-[source,options="nowrap"]
-----
-/subsystem=jgroups/stack=mystack:add-protocol(type=<type>, socket-binding=<socketbinding>)
+/subsystem=jgroups/stack=udp/protocol=RED:add(add-index=0)
 ----
 
 [[add-a-property-to-a-protocol]]
-=== Add a property to a protocol
+=== Configuring a property of protocol
+
+Most JGroups protocols support configuration options that are not exposed as management attributed within WildFly subsystem.
+These can be configured via protocols' properties.
+Following is an example of fine-tuning the `RED` protocol's `min_treshold` to increase from default to `0.6`.
 
 [source,options="nowrap"]
 ----
-/subsystem=jgroups/stack=mystack/transport=TRANSPORT/property=<property>:add(value=<value>)
+/subsystem=jgroups/stack=udp/protocol=RED:map-put(name=properties, key=min_threshold, value=0.6)
 ----
