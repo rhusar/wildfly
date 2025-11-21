@@ -19,7 +19,9 @@ import org.jboss.as.controller.ResourceRegistration;
 import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
 import org.jboss.as.controller.operations.global.MapOperations;
 import org.jboss.dmr.ModelNode;
+import org.jgroups.protocols.FILE_PING;
 import org.jgroups.protocols.JDBC_PING;
+import org.jgroups.protocols.JDBC_PING2;
 import org.wildfly.clustering.jgroups.spi.ProtocolConfiguration;
 import org.wildfly.clustering.jgroups.spi.ChannelFactoryConfiguration;
 import org.wildfly.subsystem.resource.ResourceDescriptor;
@@ -29,12 +31,14 @@ import org.wildfly.subsystem.resource.operation.ResourceOperationRuntimeHandler;
 import org.wildfly.subsystem.service.ServiceDependency;
 
 /**
- * Registers a resource definition for a shared database discovery protocol, i.e. JDBC_PING.
+ * Registers a resource definition for a shared database discovery protocol, i.e. JDBC_PING and JDBC_PING2.
  * @author Paul Ferraro
  */
-public class JDBCProtocolResourceDefinitionRegistrar extends AbstractProtocolResourceDefinitionRegistrar<JDBC_PING> {
+public class JDBCProtocolResourceDefinitionRegistrar<T extends FILE_PING> extends AbstractProtocolResourceDefinitionRegistrar<T> {
     enum Protocol implements ResourceRegistration {
-        JDBC_PING;
+        JDBC_PING,
+        JDBC_PING2,
+        ;
 
         private final PathElement path = StackResourceDefinitionRegistrar.Component.PROTOCOL.pathElement(this.name());
 
@@ -70,14 +74,21 @@ public class JDBCProtocolResourceDefinitionRegistrar extends AbstractProtocolRes
     }
 
     @Override
-    public ServiceDependency<ProtocolConfiguration<JDBC_PING>> resolve(OperationContext context, ModelNode model) throws OperationFailedException {
+    public ServiceDependency<ProtocolConfiguration<T>> resolve(OperationContext context, ModelNode model) throws OperationFailedException {
         return super.resolve(context, model).combine(DATA_SOURCE.resolve(context, model), new BiFunction<>() {
             @Override
-            public ProtocolConfiguration<JDBC_PING> apply(ProtocolConfiguration<JDBC_PING> config, DataSource dataSource) {
+            public ProtocolConfiguration<T> apply(ProtocolConfiguration<T> config, DataSource dataSource) {
                 return new ProtocolConfigurationDecorator<>(config) {
                     @Override
-                    public JDBC_PING createProtocol(ChannelFactoryConfiguration stackConfiguration) {
-                        return super.createProtocol(stackConfiguration).setDataSource(dataSource);
+                    public T createProtocol(ChannelFactoryConfiguration stackConfiguration) {
+                        T protocol = super.createProtocol(stackConfiguration);
+                        if (protocol instanceof JDBC_PING) {
+                            ((JDBC_PING) protocol).setDataSource(dataSource);
+                        } else if (protocol instanceof JDBC_PING2) {
+                            // These don't implement a common interface that would expose setDataSource(..) :(
+                            ((JDBC_PING2) protocol).setDataSource(dataSource);
+                        }
+                        return protocol;
                     }
                 };
             }
