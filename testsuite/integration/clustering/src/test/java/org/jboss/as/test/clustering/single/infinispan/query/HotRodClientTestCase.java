@@ -8,9 +8,7 @@ package org.jboss.as.test.clustering.single.infinispan.query;
 import static org.jboss.as.test.clustering.cluster.AbstractClusteringTestCase.INFINISPAN_APPLICATION_PASSWORD;
 import static org.jboss.as.test.clustering.cluster.AbstractClusteringTestCase.INFINISPAN_APPLICATION_USER;
 import static org.jboss.as.test.clustering.cluster.AbstractClusteringTestCase.INFINISPAN_SERVER_ADDRESS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 import java.util.ServiceLoader;
@@ -24,7 +22,7 @@ import org.infinispan.protostream.GeneratedSchema;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.as.test.clustering.single.infinispan.query.data.Person;
 import org.jboss.as.test.clustering.single.infinispan.query.data.PersonSchema;
 import org.jboss.shrinkwrap.api.Archive;
@@ -33,9 +31,9 @@ import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.descriptor.api.Descriptors;
 import org.jboss.shrinkwrap.descriptor.api.spec.se.manifest.ManifestDescriptor;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Test the Infinispan AS remote client module integration.
@@ -45,7 +43,7 @@ import org.junit.runner.RunWith;
  * @author Pedro Ruivo
  * @since 27
  */
-@RunWith(Arquillian.class)
+@ExtendWith(ArquillianExtension.class)
 public class HotRodClientTestCase {
 
     private RemoteCache<String, Person> remoteCache;
@@ -60,8 +58,8 @@ public class HotRodClientTestCase {
                 ;
     }
 
-    @Before
-    public void initialize() {
+    @BeforeEach
+    void initialize() {
         List<GeneratedSchema> schemas = ServiceLoader.load(SerializationContextInitializer.class, this.getClass().getClassLoader()).stream().map(ServiceLoader.Provider::get).filter(GeneratedSchema.class::isInstance).map(GeneratedSchema.class::cast).collect(Collectors.toList());
 
         ConfigurationBuilder config = new ConfigurationBuilder();
@@ -84,7 +82,7 @@ public class HotRodClientTestCase {
     }
 
     @Test
-    public void testPutGetCustomObject() {
+    void putGetCustomObject() {
         String key = "k1";
         Person expected = new Person("Martin");
         this.remoteCache.put(key, expected);

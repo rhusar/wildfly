@@ -8,10 +8,7 @@ package org.jboss.as.test.clustering.single.infinispan.query;
 import static org.jboss.as.test.clustering.cluster.AbstractClusteringTestCase.INFINISPAN_APPLICATION_PASSWORD;
 import static org.jboss.as.test.clustering.cluster.AbstractClusteringTestCase.INFINISPAN_APPLICATION_USER;
 import static org.jboss.as.test.clustering.cluster.AbstractClusteringTestCase.INFINISPAN_SERVER_ADDRESS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 import java.util.ServiceLoader;
@@ -29,7 +26,7 @@ import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryFactory;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.as.test.clustering.single.infinispan.query.data.Book;
 import org.jboss.as.test.clustering.single.infinispan.query.data.BookSchema;
 import org.jboss.as.test.clustering.single.infinispan.query.data.Person;
@@ -40,9 +37,8 @@ import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.descriptor.api.Descriptors;
 import org.jboss.shrinkwrap.descriptor.api.spec.se.manifest.ManifestDescriptor;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Test remote query.
@@ -52,7 +48,7 @@ import org.junit.runner.RunWith;
  * @author Adrian Nistor
  * @since 27
  */
-@RunWith(Arquillian.class)
+@ExtendWith(ArquillianExtension.class)
 public class RemoteQueryTestCase {
 
     @Deployment
@@ -66,7 +62,7 @@ public class RemoteQueryTestCase {
     }
 
     @Test
-    public void testIndexed() {
+    void indexed() {
         try (RemoteCacheManager container = this.createRemoteCacheManager()) {
             String xmlConfig =
                     "<local-cache name=\"books\">\n" +
@@ -94,7 +90,7 @@ public class RemoteQueryTestCase {
     }
 
     @Test
-    public void testRemoteQuery() throws Exception {
+    void remoteQuery() throws Exception {
         try (RemoteCacheManager container = this.createRemoteCacheManager()) {
             RemoteCache<String, Person> cache = container.getCache();
             cache.clear();
@@ -116,14 +112,14 @@ public class RemoteQueryTestCase {
      * Sorting on a field that does not contain DocValues so Hibernate Search is forced to uninvert it - ISPN-5729
      */
     @Test
-    public void testUninverting() throws Exception {
+    void uninverting() throws Exception {
         try (RemoteCacheManager container = this.createRemoteCacheManager()) {
             RemoteCache<String, Person> cache = container.getCache();
             cache.clear();
 
             QueryFactory factory = Search.getQueryFactory(cache);
             Query<Person> query = factory.create("FROM Person WHERE name='John' ORDER BY id");
-            Assert.assertEquals(0, query.execute().list().size());
+            assertEquals(0, query.execute().list().size());
         }
     }
 
