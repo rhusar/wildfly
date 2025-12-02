@@ -5,6 +5,8 @@
 
 package org.jboss.as.ejb3.subsystem;
 
+import java.time.Duration;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.ServiceLoader;
 
@@ -14,8 +16,10 @@ import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.ServiceNameFactory;
 import org.jboss.dmr.ModelNode;
 import org.wildfly.clustering.ejb.bean.BeanManagementProvider;
+import org.wildfly.clustering.ejb.bean.BeanPassivationConfiguration;
 import org.wildfly.clustering.ejb.bean.LegacyBeanManagementConfiguration;
 import org.wildfly.clustering.ejb.bean.LegacyBeanManagementProviderFactory;
+import org.wildfly.security.manager.WildFlySecurityManager;
 import org.wildfly.subsystem.service.ServiceInstaller;
 
 /**
@@ -49,6 +53,11 @@ public class PassivationStoreAdd extends AbstractAddStepHandler {
             @Override
             public OptionalInt getMaxActiveBeans() {
                 return OptionalInt.of(maxSize);
+            }
+
+            @Override
+            public Optional<Duration> getMaxIdle() {
+                return Optional.empty();
             }
         };
         ServiceInstaller.builder(LEGACY_PROVIDER_FACTORY.createBeanManagementProvider(context.getCurrentAddressValue(), config))

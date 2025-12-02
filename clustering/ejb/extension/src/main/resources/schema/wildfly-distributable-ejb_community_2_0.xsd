@@ -68,6 +68,11 @@
                 <xs:documentation>The maximum number active beans to retain in memory at a time, after which the least recently used will passivate.</xs:documentation>
             </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="max-idle" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>The duration in ISO 8601 format after which an idle bean will passivate.</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
     </xs:complexType>
 
     <xs:complexType name="infinispan-client-mappings-registry">

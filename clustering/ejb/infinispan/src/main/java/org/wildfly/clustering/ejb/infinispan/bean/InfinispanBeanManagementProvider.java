@@ -4,8 +4,10 @@
  */
 package org.wildfly.clustering.ejb.infinispan.bean;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.OptionalInt;
 
 import org.infinispan.Cache;
@@ -196,12 +198,16 @@ public class InfinispanBeanManagementProvider<K, V extends BeanInstance<K>> impl
         }
 
         OptionalInt size = InfinispanBeanManagementProvider.this.configuration.getMaxActiveBeans();
+        Optional<Duration> maxIdle = InfinispanBeanManagementProvider.this.configuration.getMaxIdle();
         EvictionStrategy strategy = size.isPresent() ? EvictionStrategy.REMOVE : EvictionStrategy.MANUAL;
-        builder.memory().storage(StorageType.HEAP).whenFull(strategy).maxCount(size.orElse(0));
+        builder.memory().storage(StorageType.HEAP).whenFull(strategy);
         if (strategy.isEnabled()) {
+            builder.memory().maxCount(size.orElse(0));
             // Only evict bean group entries
             // We will cascade eviction to the associated beans
-            builder.addModule(DataContainerConfigurationBuilder.class).evictable(InfinispanBeanGroupKey.class::isInstance);
+            DataContainerConfigurationBuilder container = builder.addModule(DataContainerConfigurationBuilder.class);
+            container.evictable(InfinispanBeanGroupKey.class::isInstance);
+            maxIdle.ifPresent(container::idleTimeout);
         }
         return builder;
     }

@@ -5,12 +5,14 @@
 
 package org.wildfly.extension.clustering.ejb;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
+import org.jboss.as.clustering.controller.ISO8601DurationAttributeDefinition;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
@@ -42,6 +44,7 @@ import org.wildfly.subsystem.service.ResourceServiceConfigurator;
 /**
  * Registers a resource definition for a bean management provider.
  * @author Paul Ferraro
+ * @author Radoslav Husar
  */
 public abstract class BeanManagementResourceDefinitionRegistrar implements ChildResourceDefinitionRegistrar, ResourceServiceConfigurator, ResourceModelResolver<BeanManagementConfiguration>, UnaryOperator<ResourceDescriptor.Builder> {
 
@@ -57,6 +60,10 @@ public abstract class BeanManagementResourceDefinitionRegistrar implements Child
             .setValidator(new IntRangeValidator(1))
             .build();
 
+    static final ISO8601DurationAttributeDefinition MAX_IDLE = new ISO8601DurationAttributeDefinition.Builder("max-idle")
+            .setRequired(false)
+            .build();
+
     private final ResourceRegistration registration;
 
     BeanManagementResourceDefinitionRegistrar(ResourceRegistration registration) {
@@ -66,7 +73,7 @@ public abstract class BeanManagementResourceDefinitionRegistrar implements Child
     @Override
     public ResourceDescriptor.Builder apply(ResourceDescriptor.Builder builder) {
         return builder.addCapability(CAPABILITY)
-                .addAttributes(List.of(MAX_ACTIVE_BEANS))
+                .addAttributes(List.of(MAX_ACTIVE_BEANS, MAX_IDLE))
                 .withRuntimeHandler(ResourceOperationRuntimeHandler.configureService(this))
                 ;
     }
@@ -83,10 +90,16 @@ public abstract class BeanManagementResourceDefinitionRegistrar implements Child
     @Override
     public BeanManagementConfiguration resolve(OperationContext context, ModelNode model) throws OperationFailedException {
         OptionalInt maxActiveBeans = Optional.ofNullable(MAX_ACTIVE_BEANS.resolveModelAttribute(context, model).asIntOrNull()).map(OptionalInt::of).orElse(OptionalInt.empty());
+        Optional<Duration> idleTimeout = Optional.ofNullable(MAX_IDLE.resolve(context, model));
         return new BeanManagementConfiguration() {
             @Override
             public OptionalInt getMaxActiveBeans() {
                 return maxActiveBeans;
+            }
+
+            @Override
+            public Optional<Duration> getMaxIdle() {
+                return idleTimeout;
             }
 
             @Override

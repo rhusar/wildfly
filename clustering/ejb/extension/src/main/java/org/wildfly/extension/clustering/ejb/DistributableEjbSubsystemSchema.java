@@ -86,9 +86,13 @@ public enum DistributableEjbSubsystemSchema implements SubsystemResourceXMLSchem
     }
 
     NamedResourceRegistrationXMLElement.Builder beanManagementElementBuilder(ResourceRegistration registration) {
-        return this.factory.namedElement(registration)
+        NamedResourceRegistrationXMLElement.Builder builder = this.factory.namedElement(registration)
                 .addAttribute(BeanManagementResourceDefinitionRegistrar.MAX_ACTIVE_BEANS)
                 ;
+        if (this.since(VERSION_2_0_COMMUNITY)) {
+            builder.addAttribute(BeanManagementResourceDefinitionRegistrar.MAX_IDLE);
+        }
+        return builder;
     }
 
     SingletonResourceRegistrationXMLChoice clientMappingsRegistryChoice() {

@@ -4,6 +4,8 @@
  */
 package org.wildfly.clustering.ejb.infinispan.bean;
 
+import java.time.Duration;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Function;
 
@@ -32,6 +34,11 @@ public class InfinispanLegacyBeanManagementProviderFactory implements LegacyBean
             @Override
             public OptionalInt getMaxActiveBeans() {
                 return config.getMaxActiveBeans();
+            }
+
+            @Override
+            public Optional<Duration> getMaxIdle() {
+                return config.getMaxIdle();
             }
 
             @Override
