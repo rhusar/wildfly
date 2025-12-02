@@ -8,6 +8,6 @@
         <infinispan-bean-management name="default" cache-container="foo" cache="bar" max-active-beans="${exp.max-active-beans:10000}" max-idle="PT10M"/>
     </bean-management>
     <local-client-mappings-registry/>
-    <infinispan-timer-management name="distributed" cache-container="foo" cache="bar" max-active-timers="${exp.max-active-distributed-timers:100}"/>
+    <infinispan-timer-management name="distributed" cache-container="foo" cache="bar" max-active-timers="${exp.max-active-distributed-timers:100}" max-idle="PT10M"/>
     <infinispan-timer-management name="transient" cache-container="foo" cache="bar" max-active-timers="${exp.max-active-transient-timers:1000}"/>
 </subsystem>

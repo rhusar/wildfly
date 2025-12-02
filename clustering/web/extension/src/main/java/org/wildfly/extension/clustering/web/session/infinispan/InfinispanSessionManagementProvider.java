@@ -5,8 +5,11 @@
 
 package org.wildfly.extension.clustering.web.session.infinispan;
 
+import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
@@ -60,9 +63,16 @@ public class InfinispanSessionManagementProvider extends AbstractSessionManageme
         UnaryOperator<ConfigurationBuilder> configurator = new UnaryOperator<>() {
             @Override
             public ConfigurationBuilder apply(ConfigurationBuilder builder) {
-                // Ensure expiration is not enabled on cache
+                // Ensure expiration is not enabled on cache, unless max-idle eviction is configured
                 ExpirationConfiguration expiration = builder.expiration().create();
-                if ((expiration.lifespan() >= 0) || (expiration.maxIdle() >= 0)) {
+                Optional<Duration> maxIdle = getSessionManagementConfiguration().getIdleThreshold();
+                System.out.println("XXX max idle is = " + maxIdle);
+                if (maxIdle.isPresent()) {
+                    // Configure max-idle based eviction
+                    builder.expiration().lifespan(-1).maxIdle(maxIdle.get().toMillis(), TimeUnit.MILLISECONDS);
+                    builder.expiration().enableReaper().wakeUpInterval(1,TimeUnit.SECONDS);
+                } else if ((expiration.lifespan() >= 0) || (expiration.maxIdle() >= 0)) {
+                    // Disable any expiration configured at cache level
                     builder.expiration().lifespan(-1).maxIdle(-1);
                 }
 
@@ -79,7 +89,7 @@ public class InfinispanSessionManagementProvider extends AbstractSessionManageme
                 }
                 PersistenceConfiguration persistence = builder.persistence().create();
                 // If cache is configured to passivate and purge on startup, but application does not define a passivation threshold, then remove useless stores
-                if (size.isEmpty() && persistence.passivation() && persistence.stores().stream().allMatch(StoreConfiguration::purgeOnStartup)) {
+                if (size.isEmpty() && maxIdle.isEmpty() && persistence.passivation() && persistence.stores().stream().allMatch(StoreConfiguration::purgeOnStartup)) {
                     builder.persistence().passivation(false).clearStores();
                 }
                 return builder;

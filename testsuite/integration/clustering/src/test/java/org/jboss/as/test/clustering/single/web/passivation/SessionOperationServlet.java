@@ -5,6 +5,7 @@
 package org.jboss.as.test.clustering.single.web.passivation;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -33,6 +34,7 @@ import org.wildfly.clustering.web.annotation.Immutable;
 
 @WebServlet(urlPatterns = SessionOperationServlet.SERVLET_PATH)
 public class SessionOperationServlet extends HttpServlet {
+    @Serial
     private static final long serialVersionUID = -1769104491085299700L;
     private static final String SERVLET_NAME = "listener";
     static final String SERVLET_PATH = "/" + SERVLET_NAME;
@@ -103,6 +105,17 @@ public class SessionOperationServlet extends HttpServlet {
     }
 
     @Override
+    protected void doHead(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
+        // Return queued events without accessing any session
+        // This is useful for time-based passivation tests where we need to check
+        // if passivation occurred without triggering activation
+        List<Map.Entry<String, EventType>> events = new LinkedList<>();
+        if (EVENTS.drainTo(events) > 0) {
+            events.forEach(entry -> resp.addHeader(entry.getKey(), entry.getValue().name()));
+        }
+    }
+
+    @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
         HttpSession session = req.getSession(false);
         if (session != null) {
@@ -124,6 +137,7 @@ public class SessionOperationServlet extends HttpServlet {
 
     @Immutable
     public static class SessionAttributeValue implements Serializable, HttpSessionActivationListener {
+        @Serial
         private static final long serialVersionUID = -8824497321979784527L;
 
         private final String value;

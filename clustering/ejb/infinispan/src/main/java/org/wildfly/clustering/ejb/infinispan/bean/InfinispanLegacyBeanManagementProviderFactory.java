@@ -32,13 +32,13 @@ public class InfinispanLegacyBeanManagementProviderFactory implements LegacyBean
     public BeanManagementProvider createBeanManagementProvider(String name, LegacyBeanManagementConfiguration config) {
         return new InfinispanBeanManagementProvider<>(name, new BeanManagementConfiguration() {
             @Override
-            public OptionalInt getMaxActiveBeans() {
-                return config.getMaxActiveBeans();
+            public OptionalInt getMaxSize() {
+                return config.getMaxSize();
             }
 
             @Override
-            public Optional<Duration> getMaxIdle() {
-                return config.getMaxIdle();
+            public Optional<Duration> getIdleTimeout() {
+                return config.getIdleTimeout();
             }
 
             @Override

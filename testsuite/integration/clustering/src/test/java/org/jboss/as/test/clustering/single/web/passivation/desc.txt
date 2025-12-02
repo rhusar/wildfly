@@ -1,0 +1,5 @@
+for both course+fine
+
+max-idle + listen to callbacks
+
+reuse the logic = just change conditions

@@ -197,9 +197,12 @@ public class InfinispanBeanManagementProvider<K, V extends BeanInstance<K>> impl
             InfinispanEjbLogger.ROOT_LOGGER.expirationDisabled(InfinispanBeanManagementProvider.this.cacheConfiguration.getChildName());
         }
 
-        OptionalInt size = InfinispanBeanManagementProvider.this.configuration.getMaxActiveBeans();
-        Optional<Duration> maxIdle = InfinispanBeanManagementProvider.this.configuration.getMaxIdle();
-        EvictionStrategy strategy = size.isPresent() ? EvictionStrategy.REMOVE : EvictionStrategy.MANUAL;
+        OptionalInt size = InfinispanBeanManagementProvider.this.configuration.getMaxSize();
+        Optional<Duration> maxIdle = InfinispanBeanManagementProvider.this.configuration.getIdleTimeout();
+
+        System.out.println("XXX EJB maxIdle = " + maxIdle);
+
+        EvictionStrategy strategy = (size.isPresent() || maxIdle.isPresent()) ? EvictionStrategy.REMOVE : EvictionStrategy.MANUAL;
         builder.memory().storage(StorageType.HEAP).whenFull(strategy);
         if (strategy.isEnabled()) {
             builder.memory().maxCount(size.orElse(0));

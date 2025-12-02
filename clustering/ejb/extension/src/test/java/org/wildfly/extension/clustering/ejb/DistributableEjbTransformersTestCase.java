@@ -128,6 +128,7 @@ public class DistributableEjbTransformersTestCase extends AbstractSubsystemTest 
 
         if (DistributableEjbSubsystemModel.VERSION_2_0_0.requiresTransformation(version)) {
             config.addFailedAttribute(subsystemAddress.append(PathElement.pathElement(BeanManagementResourceRegistration.INFINISPAN.getPathElement().getKey(), "default")), new FailedOperationTransformationConfig.NewAttributesConfig(BeanManagementResourceDefinitionRegistrar.MAX_IDLE));
+            config.addFailedAttribute(subsystemAddress.append(PathElement.pathElement(InfinispanTimerManagementResourceDefinitionRegistrar.REGISTRATION.getPathElement().getKey(), "distributed")), new FailedOperationTransformationConfig.NewAttributesConfig(InfinispanTimerManagementResourceDefinitionRegistrar.MAX_IDLE));
         }
 
         return config;

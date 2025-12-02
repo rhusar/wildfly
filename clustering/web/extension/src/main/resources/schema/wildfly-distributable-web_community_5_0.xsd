@@ -120,6 +120,14 @@
                         </xs:annotation>
                     </xs:element>
                 </xs:choice>
+                <xs:attribute name="max-idle" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            The maximum time in ISO8601 format that a session can remain idle before being evicted from memory.
+                            If unspecified, sessions will not be evicted based on idle time.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
                 <xs:attributeGroup ref="tns:infinispan"/>
             </xs:extension>
         </xs:complexContent>

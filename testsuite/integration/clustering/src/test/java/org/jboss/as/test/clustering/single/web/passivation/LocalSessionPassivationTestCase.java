@@ -61,7 +61,7 @@ public abstract class LocalSessionPassivationTestCase {
         try (CloseableHttpClient client1 = HttpClients.createDefault()) {
             try (CloseableHttpClient client2 = HttpClients.createDefault()) {
                 try {
-                    String session1 = null;
+                    String session1;
 
                     // This should not trigger any passivation/activation events
                     try (CloseableHttpResponse response = client1.execute(new HttpPut(SessionOperationServlet.createURI(baseURL, "a", "1")))) {
@@ -79,7 +79,7 @@ public abstract class LocalSessionPassivationTestCase {
                     Thread.sleep(COMMIT_DURATION.toMillis());
 
                     Instant start = Instant.now();
-                    String session2 = null;
+                    String session2;
 
                     // This will trigger passivation of session1
                     try (CloseableHttpResponse response = client2.execute(new HttpPut(SessionOperationServlet.createURI(baseURL, "a", "2")))) {

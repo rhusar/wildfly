@@ -24,6 +24,10 @@ public class DistributableEjbSubsystemResourceTransformer implements Function<Mo
         ResourceTransformationDescriptionBuilder beanManagementBuilder = builder.addChildResource(BeanManagementResourceRegistration.INFINISPAN.getPathElement());
         new BeanManagementResourceTransformer(beanManagementBuilder).accept(version);
 
+        // Transform infinispan-timer-management resource
+        ResourceTransformationDescriptionBuilder timerManagementBuilder = builder.addChildResource(InfinispanTimerManagementResourceDefinitionRegistrar.REGISTRATION.getPathElement());
+        new TimerManagementResourceTransformer(timerManagementBuilder).accept(version);
+
         return builder;
     }
 }

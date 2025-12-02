@@ -5,7 +5,9 @@
 
 package org.wildfly.clustering.ejb.infinispan.timer;
 
+import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.UnaryOperator;
 
@@ -114,12 +116,15 @@ public class InfinispanTimerManagementProvider implements TimerManagementProvide
         }
 
         OptionalInt size = this.configuration.getMaxActiveTimers();
+        Optional<Duration> maxIdle = this.configuration.getMaxIdle();
         EvictionStrategy strategy = size.isPresent() ? EvictionStrategy.REMOVE : EvictionStrategy.NONE;
         builder.memory().storage(StorageType.HEAP).whenFull(strategy).maxCount(size.orElse(0));
         if (strategy.isEnabled()) {
             // Only evict creation meta-data entries
             // We will cascade eviction to the remaining entries for a given session
-            builder.addModule(DataContainerConfigurationBuilder.class).evictable(TimerMetaDataKey.class::isInstance);
+            DataContainerConfigurationBuilder container = builder.addModule(DataContainerConfigurationBuilder.class);
+            container.evictable(TimerMetaDataKey.class::isInstance);
+            maxIdle.ifPresent(container::idleTimeout);
         }
 
         builder.transaction().transactionMode(TransactionMode.TRANSACTIONAL).transactionManagerLookup(EmbeddedTransactionManager::getInstance).lockingMode(LockingMode.PESSIMISTIC).locking().isolationLevel(IsolationLevel.REPEATABLE_READ);

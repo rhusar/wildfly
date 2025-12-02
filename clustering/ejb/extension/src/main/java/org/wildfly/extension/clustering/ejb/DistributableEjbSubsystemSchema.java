@@ -122,9 +122,12 @@ public enum DistributableEjbSubsystemSchema implements SubsystemResourceXMLSchem
                 .build();
     }
     NamedResourceRegistrationXMLElement infinispanTimerManagementElement() {
-        return this.factory.namedElement(InfinispanTimerManagementResourceDefinitionRegistrar.REGISTRATION)
+        NamedResourceRegistrationXMLElement.Builder builder = this.factory.namedElement(InfinispanTimerManagementResourceDefinitionRegistrar.REGISTRATION)
                 .addAttributes(InfinispanTimerManagementResourceDefinitionRegistrar.CACHE_ATTRIBUTE_GROUP.getAttributes())
-                .addAttributes(List.of(InfinispanTimerManagementResourceDefinitionRegistrar.MARSHALLER, InfinispanTimerManagementResourceDefinitionRegistrar.MAX_ACTIVE_TIMERS))
-                .build();
+                .addAttributes(List.of(InfinispanTimerManagementResourceDefinitionRegistrar.MARSHALLER, InfinispanTimerManagementResourceDefinitionRegistrar.MAX_ACTIVE_TIMERS));
+        if (this.since(VERSION_2_0_COMMUNITY)) {
+            builder.addAttribute(InfinispanTimerManagementResourceDefinitionRegistrar.MAX_IDLE);
+        }
+        return builder.build();
     }
 }

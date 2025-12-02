@@ -4,6 +4,7 @@
  */
 package org.jboss.as.test.clustering.single.ejb.bean;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -11,6 +12,7 @@ import java.io.Serializable;
  * @author Paul Ferraro
  */
 public class Result<T> implements Serializable {
+    @Serial
     private static final long serialVersionUID = -1079933234795356933L;
 
     private final T value;

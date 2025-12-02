@@ -25,6 +25,7 @@ import org.jboss.as.controller.descriptions.ResourceDescriptionResolver;
 import org.jboss.as.controller.operations.validation.IntRangeValidator;
 import org.jboss.as.controller.registry.AttributeAccess.Flag;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
+import org.jboss.as.version.Stability;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.wildfly.clustering.ejb.bean.BeanDeploymentMarshallingContext;
@@ -62,6 +63,7 @@ public abstract class BeanManagementResourceDefinitionRegistrar implements Child
 
     static final ISO8601DurationAttributeDefinition MAX_IDLE = new ISO8601DurationAttributeDefinition.Builder("max-idle")
             .setRequired(false)
+            .setStability(Stability.COMMUNITY)
             .build();
 
     private final ResourceRegistration registration;
@@ -90,16 +92,16 @@ public abstract class BeanManagementResourceDefinitionRegistrar implements Child
     @Override
     public BeanManagementConfiguration resolve(OperationContext context, ModelNode model) throws OperationFailedException {
         OptionalInt maxActiveBeans = Optional.ofNullable(MAX_ACTIVE_BEANS.resolveModelAttribute(context, model).asIntOrNull()).map(OptionalInt::of).orElse(OptionalInt.empty());
-        Optional<Duration> idleTimeout = Optional.ofNullable(MAX_IDLE.resolve(context, model));
+        Optional<Duration> maxIdle = Optional.ofNullable(MAX_IDLE.resolve(context, model));
         return new BeanManagementConfiguration() {
             @Override
-            public OptionalInt getMaxActiveBeans() {
+            public OptionalInt getMaxSize() {
                 return maxActiveBeans;
             }
 
             @Override
-            public Optional<Duration> getMaxIdle() {
-                return idleTimeout;
+            public Optional<Duration> getIdleTimeout() {
+                return maxIdle;
             }
 
             @Override
