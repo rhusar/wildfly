@@ -86,7 +86,7 @@ public class InfinispanTimerManagementResourceDefinitionRegistrar implements Chi
     @Override
     public ResourceServiceInstaller configure(OperationContext context, ModelNode model) throws OperationFailedException {
         OptionalInt maxActiveTimers = Optional.ofNullable(MAX_ACTIVE_TIMERS.resolveModelAttribute(context, model).asIntOrNull()).map(OptionalInt::of).orElse(OptionalInt.empty());
-        Optional<Duration> maxIdle = Optional.ofNullable(MAX_IDLE.resolve(context, model));
+        Optional<Duration> idleThreshold = Optional.ofNullable(MAX_IDLE.resolve(context, model));
         Function<Module, ByteBufferMarshaller> marshallerFactory = MARSHALLER.resolve(context, model);
         TimerManagementConfiguration config = new TimerManagementConfiguration() {
             @Override
@@ -95,13 +95,13 @@ public class InfinispanTimerManagementResourceDefinitionRegistrar implements Chi
             }
 
             @Override
-            public OptionalInt getMaxActiveTimers() {
+            public OptionalInt getMaxSize() {
                 return maxActiveTimers;
             }
 
             @Override
-            public Optional<Duration> getMaxIdle() {
-                return maxIdle;
+            public Optional<Duration> getIdleTimeout() {
+                return idleThreshold;
             }
         };
         return CapabilityServiceInstaller.builder(CAPABILITY, new InfinispanTimerManagementProvider(config, CACHE_ATTRIBUTE_GROUP.resolve(context, model))).build();

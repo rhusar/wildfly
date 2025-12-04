@@ -115,16 +115,16 @@ public class InfinispanTimerManagementProvider implements TimerManagementProvide
             builder.expiration().lifespan(-1).maxIdle(-1);
         }
 
-        OptionalInt size = this.configuration.getMaxActiveTimers();
-        Optional<Duration> maxIdle = this.configuration.getMaxIdle();
+        OptionalInt size = this.configuration.getMaxSize();
+        Optional<Duration> idleThreshold = this.configuration.getIdleTimeout();
         EvictionStrategy strategy = size.isPresent() ? EvictionStrategy.REMOVE : EvictionStrategy.NONE;
         builder.memory().storage(StorageType.HEAP).whenFull(strategy).maxCount(size.orElse(0));
-        if (strategy.isEnabled()) {
+        if (strategy.isEnabled() || idleThreshold.isPresent()) {
             // Only evict creation meta-data entries
             // We will cascade eviction to the remaining entries for a given session
             DataContainerConfigurationBuilder container = builder.addModule(DataContainerConfigurationBuilder.class);
             container.evictable(TimerMetaDataKey.class::isInstance);
-            maxIdle.ifPresent(container::idleTimeout);
+            idleThreshold.ifPresent(container::idleTimeout);
         }
 
         builder.transaction().transactionMode(TransactionMode.TRANSACTIONAL).transactionManagerLookup(EmbeddedTransactionManager::getInstance).lockingMode(LockingMode.PESSIMISTIC).locking().isolationLevel(IsolationLevel.REPEATABLE_READ);

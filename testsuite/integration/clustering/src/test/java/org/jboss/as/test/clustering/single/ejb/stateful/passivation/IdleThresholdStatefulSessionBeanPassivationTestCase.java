@@ -110,7 +110,7 @@ public class IdleThresholdStatefulSessionBeanPassivationTestCase {
             super(createContainerConfigurationBuilder()
                     .setupScript(createScriptBuilder()
                             .startBatch()
-                            .add("/subsystem=infinispan/cache-container=ejb/local-cache=passivation/component=expiration:write-attribute(name=interval, value=500)")
+                            //.add("/subsystem=infinispan/cache-container=ejb/local-cache=passivation/component=expiration:write-attribute(name=interval, value=500)")
                             //.add("/subsystem=infinispan/cache-container=ejb/local-cache=passivation/component=expiration:remove")
                             .add("/subsystem=ejb3:write-attribute(name=default-sfsb-cache, value=distributable)")
                             .add("/subsystem=distributable-ejb/infinispan-bean-management=default:undefine-attribute(name=max-active-beans)")

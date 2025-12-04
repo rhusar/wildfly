@@ -4,8 +4,8 @@
  */
 package org.jboss.as.test.clustering.single.ejb.timer.passivation.bean;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.Duration;
+import java.util.Map.Entry;
 
 import jakarta.annotation.Resource;
 import jakarta.ejb.Remote;
@@ -33,23 +33,12 @@ public class TimerTrackingBean implements TimerTracker {
     private TimerService timerService;
 
     @Override
-    public void createTimer(TimerInfo info, long duration) {
-        TimerConfig config = new TimerConfig(info, true); // persistent timer
-        this.timerService.createSingleActionTimer(duration, config);
-        System.out.println("Created timer with info: " + info + ", duration: " + duration + " ms");
-    }
+    public void createTimer(String name, boolean persistent, Duration duration) {
+        TimerInfo info = new TimerInfo(name);
+        TimerConfig config = new TimerConfig(info, persistent);
+        this.timerService.createSingleActionTimer(duration.toMillis(), config);
 
-    @Override
-    public List<TimerInfo> getTimerInfos() {
-        List<TimerInfo> infos = new ArrayList<>();
-        for (Timer timer : this.timerService.getTimers()) {
-            Object info = timer.getInfo();
-            if (info instanceof TimerInfo) {
-                infos.add((TimerInfo) info);
-            }
-        }
-        System.out.println("getTimerInfos() = " + infos);
-        return infos;
+        System.out.printf("Created timer on server with info: %s, persistent? %s, duration %d ms.%n", info, persistent, duration.toMillis());
     }
 
     @Override
@@ -68,34 +57,32 @@ public class TimerTrackingBean implements TimerTracker {
     }
 
     @Override
-    public boolean wasPassivated() {
-        // Singleton beans don't passivate
-        return false;
+    public void clearTimerEvents() {
+        TimerInfo.EVENTS.clear();
+        System.out.println("clearTimerEvents()");
     }
 
     @Override
-    public boolean wasActivated() {
-        // Singleton beans don't activate
-        return false;
-    }
-
-    @Override
-    public void resetFlags() {
-        // No-op for Singleton beans
-        System.out.println("resetFlags()");
+    public String[] pollTimerEvent() {
+        Entry<String, TimerInfo.EventType> event = TimerInfo.EVENTS.poll();
+        if (event == null) {
+            System.out.println("pollTimerEvent() = null");
+            return null;
+        }
+        String[] result = new String[] { event.getKey(), event.getValue().name() };
+        System.out.println("pollTimerEvent() = [" + result[0] + ", " + result[1] + "]");
+        return result;
     }
 
     @Timeout
     public void timeout(Timer timer) {
-        // Timer callback - we don't need to do anything here for passivation testing
-        // The test verifies that timer info is preserved, not that timeouts actually fire
-        System.out.println("@Timeout for timer with info: " + timer.getInfo());
+        System.out.println("@Timeout fired for timer with info: " + timer.getInfo());
     }
 
     @Remove
     @Override
     public void remove() {
-        System.out.println("@Remove");
+        System.out.println("Called @Remove");
         // Cancel any remaining timers before removal
         this.cancelAllTimers();
     }

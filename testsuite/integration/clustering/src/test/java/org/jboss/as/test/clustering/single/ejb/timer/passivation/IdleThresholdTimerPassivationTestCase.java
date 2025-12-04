@@ -6,7 +6,7 @@ package org.jboss.as.test.clustering.single.ejb.timer.passivation;
 
 import static org.junit.Assert.*;
 
-import java.util.List;
+import java.time.Duration;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -19,6 +19,7 @@ import org.jboss.as.test.clustering.single.ejb.timer.passivation.bean.TimerInfo;
 import org.jboss.as.test.clustering.single.ejb.timer.passivation.bean.TimerTracker;
 import org.jboss.as.test.clustering.single.ejb.timer.passivation.bean.TimerTrackingBean;
 import org.jboss.as.test.shared.ManagementServerSetupTask;
+import org.jboss.as.test.shared.TimeoutUtil;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -28,14 +29,19 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
- * Tests that EJB timers with serializable info objects work correctly with the
- * distributable timer service configuration.
+ * Tests that EJB timers are passivated after the configured idle threshold and that
+ * serializable TimerInfo objects are correctly preserved through passivation/activation cycles.
  *
  * @author Radoslav Husar
  */
 @RunWith(Arquillian.class)
 @ServerSetup(IdleThresholdTimerPassivationTestCase.ServerSetupTask.class)
 public class IdleThresholdTimerPassivationTestCase {
+
+    // Max idle time configured via ManagementServerSetupTask is PT1S (1 second)
+    private static final Duration IDLE_THRESHOLD_DURATION = Duration.ofSeconds(TimeoutUtil.adjust(1));
+    // Wait a bit longer than max-idle to ensure passivation has occurred
+    private static final Duration IDLE_GRACE_TIME = IDLE_THRESHOLD_DURATION.plusSeconds(TimeoutUtil.adjust(10));
 
     static class ServerSetupTask extends ManagementServerSetupTask {
         ServerSetupTask() {
@@ -62,7 +68,7 @@ public class IdleThresholdTimerPassivationTestCase {
     @Deployment(testable = false)
     public static Archive<?> deployment() {
         return ShrinkWrap.create(JavaArchive.class, APPLICATION_NAME)
-                .addPackage(TimerInfo.class.getPackage())
+                .addPackage(TimerTracker.class.getPackage())
                 ;
     }
 
@@ -79,30 +85,42 @@ public class IdleThresholdTimerPassivationTestCase {
     }
 
     @Test
-    public void testTimerInfoSerialization(@ArquillianResource ManagementClient managementClient) throws Exception {
+    public void testTimerPassivationWithSerializableInfo(@ArquillianResource ManagementClient managementClient) throws Exception {
         TimerTracker bean = this.directory.lookupSingleton(TimerTrackingBean.class, TimerTracker.class);
 
+        // First, clear any existing events on the server; e.g. from previous failed run
+        bean.clearTimerEvents();
+
         // Step 1: Create a timer with serializable info
-        TimerInfo originalInfo = new TimerInfo("test-timer", 42);
-        // Create timer that won't expire during the test (30 minutes)
-        bean.createTimer(originalInfo, 1800000);
+        // n.b. TimerInfo is created server-side and never sent to the client
+        String timerName = "test-timer";
+        bean.createTimer(timerName, false, Duration.ofDays(1));
 
-        // Verify timer was created and info is correct
+        // Verify timer was created
         assertEquals("Should have 1 timer", 1, bean.getTimerCount());
-        List<TimerInfo> infos = bean.getTimerInfos();
-        assertEquals("Should have 1 timer info", 1, infos.size());
-        assertEquals("Timer info should match", originalInfo, infos.get(0));
 
-        // Step 2: Create a second timer with different info
-        TimerInfo secondInfo = new TimerInfo("second-timer", 100);
-        bean.createTimer(secondInfo, 1800000);
+        // Step 2: Wait for idle timeout - timer should be passivated
+        System.out.println("Waiting " + IDLE_GRACE_TIME.getSeconds() + " seconds for timer passivation...");
+        Thread.sleep(IDLE_GRACE_TIME.toMillis());
 
-        // Verify both timers exist with correct info
-        assertEquals("Should have 2 timers", 2, bean.getTimerCount());
-        infos = bean.getTimerInfos();
-        assertEquals("Should have 2 timer infos", 2, infos.size());
-        assertTrue("Should contain original timer info", infos.contains(originalInfo));
-        assertTrue("Should contain second timer info", infos.contains(secondInfo));
+        // Step 3: Poll for PASSIVATION event from the server (without accessing the timer)
+        String[] event = bean.pollTimerEvent();
+        //TODO as expected this fails here! !!! [ERROR]   IdleThresholdTimerPassivationTestCase.testTimerPassivationWithSerializableInfo:108 Should have passivation event
+        assertNotNull("Should have passivation event", event);
+        assertEquals("Event should be for correct timer", timerName, event[0]);
+        assertEquals("Event should be PASSIVATION", TimerInfo.EventType.PASSIVATION.name(), event[1]);
+        System.out.println("✓ Verified: Timer was passivated after idle timeout");
+
+        // Step 4: Access timer to trigger activation
+        System.out.println("Accessing timer after idle period - should trigger activation");
+        assertEquals("Timer count should be preserved after passivation", 1, bean.getTimerCount());
+
+        // Step 5: Poll for ACTIVATION event from the server
+        event = bean.pollTimerEvent();
+        assertNotNull("Should have activation event", event);
+        assertEquals("Event should be for correct timer", timerName, event[0]);
+        assertEquals("Event should be ACTIVATION", TimerInfo.EventType.ACTIVATION.name(), event[1]);
+        System.out.println("✓ Verified: Timer was activated when accessed");
 
         // Cleanup
         bean.cancelAllTimers();
