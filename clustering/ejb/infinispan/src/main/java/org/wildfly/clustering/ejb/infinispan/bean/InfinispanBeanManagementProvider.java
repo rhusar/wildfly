@@ -13,7 +13,6 @@ import java.util.OptionalInt;
 import org.infinispan.Cache;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.cache.ExpirationConfiguration;
-import org.infinispan.configuration.cache.StorageType;
 import org.infinispan.eviction.EvictionStrategy;
 import org.jboss.msc.service.ServiceName;
 import org.wildfly.clustering.cache.CacheEntryCreator;
@@ -203,9 +202,9 @@ public class InfinispanBeanManagementProvider<K, V extends BeanInstance<K>> impl
         System.out.println("XXX EJB maxIdle = " + maxIdle);
 
         EvictionStrategy strategy = (size.isPresent() || maxIdle.isPresent()) ? EvictionStrategy.REMOVE : EvictionStrategy.MANUAL;
-        builder.memory().storage(StorageType.HEAP).whenFull(strategy);
+//        builder.memory().storage(StorageType.HEAP).whenFull(strategy);
         if (strategy.isEnabled()) {
-            builder.memory().maxCount(size.orElse(0));
+//            builder.memory().maxCount(size.orElse(0));
             // Only evict bean group entries
             // We will cascade eviction to the associated beans
             DataContainerConfigurationBuilder container = builder.addModule(DataContainerConfigurationBuilder.class);

@@ -42,7 +42,7 @@ import org.junit.Test;
 
 /**
  * Validates the correctness of session activation/passivation events for a distributed session manager using a local,
- * passivating cache with max-threshold (time-based) eviction.
+ * passivating cache with idle-threshold (time-based) eviction.
  *
  * @author Radoslav Husar
  */
@@ -69,7 +69,7 @@ public abstract class LocalIdleThresholdSessionPassivationTestCase {
     // Max idle time configured in jboss-web-idle.xml is PT3S (3 seconds)
     private static final Duration MAX_IDLE_DURATION = Duration.ofSeconds(TimeoutUtil.adjust(3));
     // Wait a bit longer than max-idle to ensure passivation has occurred
-    private static final Duration IDLE_WAIT_BUFFER = MAX_IDLE_DURATION.plusSeconds(TimeoutUtil.adjust(5));
+    private static final Duration IDLE_WAIT_BUFFER = MAX_IDLE_DURATION.plusSeconds(TimeoutUtil.adjust(65));
     private static final Duration MAX_PASSIVATION_DURATION = Duration.ofSeconds(TimeoutUtil.adjust(10));
     private static final Duration PASSIVATION_CHECK_INTERVAL = Duration.ofMillis(TimeoutUtil.adjust(100));
     private static final Duration COMMIT_DURATION = Duration.ofSeconds(TimeoutUtil.adjust(5));

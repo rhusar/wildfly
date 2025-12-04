@@ -2,7 +2,7 @@
  * Copyright The WildFly Authors
  * SPDX-License-Identifier: Apache-2.0
  */
-package org.jboss.as.test.clustering.single.ejb;
+package org.jboss.as.test.clustering.single.ejb.stateful;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -14,10 +14,10 @@ import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
 import org.jboss.as.controller.operations.common.Util;
 import org.jboss.as.test.clustering.ejb.RemoteEJBDirectory;
-import org.jboss.as.test.clustering.single.ejb.bean.Incrementor;
-import org.jboss.as.test.clustering.single.ejb.bean.Result;
-import org.jboss.as.test.clustering.single.ejb.bean.StatefulIncrementorBean;
-import org.jboss.as.test.clustering.single.ejb.bean.TransientStatefulIncrementorBean;
+import org.jboss.as.test.clustering.single.ejb.stateful.bean.Incrementor;
+import org.jboss.as.test.clustering.single.ejb.stateful.bean.Result;
+import org.jboss.as.test.clustering.single.ejb.stateful.bean.StatefulIncrementorBean;
+import org.jboss.as.test.clustering.single.ejb.stateful.bean.TransientStatefulIncrementorBean;
 import org.jboss.as.test.clustering.ejb.EJBDirectory;
 import org.jboss.as.test.shared.ManagementServerSetupTask;
 import org.jboss.dmr.ModelNode;

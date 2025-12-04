@@ -2,7 +2,7 @@
  * Copyright The WildFly Authors
  * SPDX-License-Identifier: Apache-2.0
  */
-package org.jboss.as.test.clustering.single.ejb.passivation.bean;
+package org.jboss.as.test.clustering.single.ejb.stateful.passivation.bean;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.ejb.PostActivate;
@@ -10,7 +10,6 @@ import jakarta.ejb.PrePassivate;
 import jakarta.ejb.Remote;
 import jakarta.ejb.Remove;
 import jakarta.ejb.Stateful;
-import org.jboss.logging.Logger;
 
 /**
  * A stateful session bean that tracks passivation and activation events.
@@ -21,7 +20,6 @@ import org.jboss.logging.Logger;
 @Stateful
 @Remote(PassivationTracker.class)
 public class PassivationTrackingBean implements PassivationTracker {
-    private static final Logger log = Logger.getLogger(PassivationTrackingBean.class);
 
     private int value;
     private volatile boolean beenPassivated = false;
@@ -30,12 +28,12 @@ public class PassivationTrackingBean implements PassivationTracker {
     @Override
     public void setValue(int value) {
         this.value = value;
-        log.tracef("setValue(%d)", value);
+        System.out.printf("setValue(%d)%n", value);
     }
 
     @Override
     public int getValue() {
-        log.tracef("getValue() = %d", this.value);
+        System.out.printf("getValue() = %d%n", this.value);
         return this.value;
     }
 

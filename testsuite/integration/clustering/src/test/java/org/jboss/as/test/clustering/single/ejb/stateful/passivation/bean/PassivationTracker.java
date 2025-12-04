@@ -2,7 +2,7 @@
  * Copyright The WildFly Authors
  * SPDX-License-Identifier: Apache-2.0
  */
-package org.jboss.as.test.clustering.single.ejb.passivation.bean;
+package org.jboss.as.test.clustering.single.ejb.stateful.passivation.bean;
 
 import jakarta.ejb.Remove;
 

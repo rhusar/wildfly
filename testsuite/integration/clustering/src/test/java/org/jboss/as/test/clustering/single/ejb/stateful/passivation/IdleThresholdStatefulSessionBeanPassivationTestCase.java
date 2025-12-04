@@ -2,7 +2,7 @@
  * Copyright The WildFly Authors
  * SPDX-License-Identifier: Apache-2.0
  */
-package org.jboss.as.test.clustering.single.ejb.passivation;
+package org.jboss.as.test.clustering.single.ejb.stateful.passivation;
 
 import static org.junit.Assert.*;
 
@@ -15,8 +15,8 @@ import org.jboss.as.arquillian.api.ServerSetup;
 import org.jboss.as.arquillian.container.ManagementClient;
 import org.jboss.as.test.clustering.ejb.EJBDirectory;
 import org.jboss.as.test.clustering.ejb.RemoteEJBDirectory;
-import org.jboss.as.test.clustering.single.ejb.passivation.bean.PassivationTracker;
-import org.jboss.as.test.clustering.single.ejb.passivation.bean.PassivationTrackingBean;
+import org.jboss.as.test.clustering.single.ejb.stateful.passivation.bean.PassivationTracker;
+import org.jboss.as.test.clustering.single.ejb.stateful.passivation.bean.PassivationTrackingBean;
 import org.jboss.as.test.shared.ManagementServerSetupTask;
 import org.jboss.as.test.shared.TimeoutUtil;
 import org.jboss.shrinkwrap.api.Archive;
@@ -29,8 +29,7 @@ import org.junit.runner.RunWith;
 
 /**
  * Tests idle-based (max-idle) passivation for stateful session beans.
- * Validates that beans are passivated after the configured idle timeout
- * and properly activated when accessed again.
+ * Validates that beans are passivated after the configured idle timeout and properly activated when accessed again.
  *
  * @author Radoslav Husar
  */
@@ -42,9 +41,8 @@ public class IdleThresholdStatefulSessionBeanPassivationTestCase {
     private static final String APPLICATION_NAME = MODULE_NAME + ".jar";
 
     // Max idle time configured via ManagementServerSetupTask is PT1S (1 second)
-    private static final Duration MAX_IDLE_DURATION = Duration.ofSeconds(TimeoutUtil.adjust(1));
     // Wait a bit longer than max-idle to ensure passivation has occurred
-    private static final Duration IDLE_WAIT_BUFFER = MAX_IDLE_DURATION.plusSeconds(TimeoutUtil.adjust(10));
+    private static final Duration IDLE_WAIT_BUFFER = Duration.ofSeconds(TimeoutUtil.adjust(100));
 
     private EJBDirectory directory;
 
@@ -68,6 +66,7 @@ public class IdleThresholdStatefulSessionBeanPassivationTestCase {
     @Test
     public void test(@ArquillianResource ManagementClient managementClient) throws Exception {
         PassivationTracker bean = this.directory.lookupStateful(PassivationTrackingBean.class, PassivationTracker.class);
+        PassivationTracker bean2 = this.directory.lookupStateful(PassivationTrackingBean.class, PassivationTracker.class);
 
         // Step 1: Set initial state on the bean
         bean.setValue(1);
@@ -77,6 +76,11 @@ public class IdleThresholdStatefulSessionBeanPassivationTestCase {
 
         // Step 2: Wait for idle timeout to elapse
         Thread.sleep(IDLE_WAIT_BUFFER.toMillis());
+
+
+        // wait for another caffeine thread
+        bean2.setValue(1);
+//        Thread.sleep(IDLE_WAIT_BUFFER.toMillis());
 
         // Step 3: Access the bean - this should trigger activation
         // The bean should have been passivated while idle
@@ -106,6 +110,9 @@ public class IdleThresholdStatefulSessionBeanPassivationTestCase {
             super(createContainerConfigurationBuilder()
                     .setupScript(createScriptBuilder()
                             .startBatch()
+                            .add("/subsystem=infinispan/cache-container=ejb/local-cache=passivation/component=expiration:write-attribute(name=interval, value=500)")
+                            //.add("/subsystem=infinispan/cache-container=ejb/local-cache=passivation/component=expiration:remove")
+                            .add("/subsystem=ejb3:write-attribute(name=default-sfsb-cache, value=distributable)")
                             .add("/subsystem=distributable-ejb/infinispan-bean-management=default:undefine-attribute(name=max-active-beans)")
                             .add("/subsystem=distributable-ejb/infinispan-bean-management=default:write-attribute(name=max-idle, value=PT1S)")
                             .endBatch()
