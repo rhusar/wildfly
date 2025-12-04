@@ -62,7 +62,8 @@ public class CacheConfigurationServiceInstaller implements ServiceInstaller {
             @Override
             public org.infinispan.configuration.cache.Configuration apply(ConfigurationBuilder builder) {
                 // Auto-enable simple cache optimization if cache is local, on-heap, non-transactional, and non-persistent, and statistics are disabled
-                //builder.simpleCache(!builder.clustering().cacheMode().isClustered() && builder.memory().storage().canStoreReferences() && !builder.transaction().transactionMode().isTransactional() && builder.persistence().stores().isEmpty() && !builder.statistics().create().enabled());
+                // TODO what if this is disabling some of the mechanisms that we indeed rely on?
+                builder.simpleCache(!builder.clustering().cacheMode().isClustered() && builder.memory().storage().canStoreReferences() && !builder.transaction().transactionMode().isTransactional() && builder.persistence().stores().isEmpty() && !builder.statistics().create().enabled());
 
                 // Set media-type appropriate for the configured memory store
                 builder.encoding().mediaType(builder.memory().storage().canStoreReferences() ? MediaType.APPLICATION_OBJECT : MediaType.APPLICATION_OCTET_STREAM);

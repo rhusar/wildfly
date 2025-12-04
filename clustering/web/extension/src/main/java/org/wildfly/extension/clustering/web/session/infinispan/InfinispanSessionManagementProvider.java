@@ -62,10 +62,9 @@ public class InfinispanSessionManagementProvider extends AbstractSessionManageme
         UnaryOperator<ConfigurationBuilder> configurator = new UnaryOperator<>() {
             @Override
             public ConfigurationBuilder apply(ConfigurationBuilder builder) {
-                // Ensure expiration is not enabled on cache, unless max-idle eviction is configured
+                // Ensure expiration is not enabled on cache
                 ExpirationConfiguration expiration = builder.expiration().create();
                 if ((expiration.lifespan() >= 0) || (expiration.maxIdle() >= 0)) {
-                    // Disable any expiration configured at cache level
                     builder.expiration().lifespan(-1).maxIdle(-1);
                 }
 
@@ -76,18 +75,18 @@ public class InfinispanSessionManagementProvider extends AbstractSessionManageme
                         .maxCount(size.orElse(0))
                         ;
 
-                Optional<Duration> maxIdle = getSessionManagementConfiguration().getIdleThreshold();
-                System.out.println("XXX max idle is = " + maxIdle);
-                if (strategy.isEnabled() || maxIdle.isPresent()) {
+                Optional<Duration> idleThreshold = getSessionManagementConfiguration().getIdleThreshold();
+                System.out.println("XXX idleThreshold is = " + idleThreshold);
+                if (strategy.isEnabled() || idleThreshold.isPresent()) {
                     // Only evict creation meta-data entries
                     // We will cascade eviction to the remaining entries for a given session
                     DataContainerConfigurationBuilder container = builder.addModule(DataContainerConfigurationBuilder.class);
                     container.evictable(SessionMetaDataKey.class::isInstance);
-                    maxIdle.ifPresent(container::idleTimeout);
+                    idleThreshold.ifPresent(container::idleTimeout);
                 }
                 PersistenceConfiguration persistence = builder.persistence().create();
                 // If cache is configured to passivate and purge on startup, but application does not define a passivation threshold, then remove useless stores
-                if (size.isEmpty() && maxIdle.isEmpty() && persistence.passivation() && persistence.stores().stream().allMatch(StoreConfiguration::purgeOnStartup)) {
+                if (size.isEmpty() && idleThreshold.isEmpty() && persistence.passivation() && persistence.stores().stream().allMatch(StoreConfiguration::purgeOnStartup)) {
                     builder.persistence().passivation(false).clearStores();
                 }
                 return builder;

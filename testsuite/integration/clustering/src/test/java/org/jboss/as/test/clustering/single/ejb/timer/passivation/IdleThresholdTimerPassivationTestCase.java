@@ -85,7 +85,7 @@ public class IdleThresholdTimerPassivationTestCase {
     }
 
     @Test
-    public void testTimerPassivationWithSerializableInfo(@ArquillianResource ManagementClient managementClient) throws Exception {
+    public void test() throws Exception {
         TimerTracker bean = this.directory.lookupSingleton(TimerTrackingBean.class, TimerTracker.class);
 
         // First, clear any existing events on the server; e.g. from previous failed run
