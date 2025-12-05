@@ -6,19 +6,17 @@ package org.jboss.as.test.clustering.single.web.passivation;
 
 import java.io.IOException;
 import java.io.Serial;
-import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
+
+import org.jboss.as.test.clustering.PassivationEventTracker;
+import org.wildfly.clustering.web.annotation.Immutable;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -29,8 +27,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpSessionActivationListener;
 import jakarta.servlet.http.HttpSessionEvent;
-
-import org.wildfly.clustering.web.annotation.Immutable;
 
 @WebServlet(urlPatterns = SessionOperationServlet.SERVLET_PATH)
 public class SessionOperationServlet extends HttpServlet {
@@ -63,8 +59,6 @@ public class SessionOperationServlet extends HttpServlet {
         return builder.append('&').append(parameter).append('=').append(value);
     }
 
-    static final BlockingQueue<Map.Entry<String, EventType>> EVENTS = new LinkedBlockingQueue<>();
-
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         Map<String, String> cookies = Optional.ofNullable(req.getCookies()).map(Arrays::asList).orElse(List.of()).stream().collect(Collectors.toMap(Cookie::getName, Cookie::getValue));
@@ -84,10 +78,8 @@ public class SessionOperationServlet extends HttpServlet {
             }
         }
 
-        List<Map.Entry<String, EventType>> events = new LinkedList<>();
-        if (EVENTS.drainTo(events) > 0) {
-            events.forEach(entry -> resp.addHeader(entry.getKey(), entry.getValue().name()));
-        }
+        PassivationEventTracker.drainEvents(entry ->
+            resp.addHeader(entry.getKey().toString(), entry.getValue().name()));
     }
 
     @Override
@@ -98,10 +90,8 @@ public class SessionOperationServlet extends HttpServlet {
         String value = req.getParameter(VALUE);
         session.setAttribute(name, (value != null) ? new SessionAttributeValue(value) : null);
 
-        List<Map.Entry<String, EventType>> events = new LinkedList<>();
-        if (EVENTS.drainTo(events) > 0) {
-            events.forEach(entry -> resp.addHeader(entry.getKey(), entry.getValue().name()));
-        }
+        PassivationEventTracker.drainEvents(entry ->
+            resp.addHeader(entry.getKey().toString(), entry.getValue().name()));
     }
 
     @Override
@@ -109,10 +99,8 @@ public class SessionOperationServlet extends HttpServlet {
         // Return queued events without accessing any session
         // This is useful for time-based passivation tests where we need to check
         // if passivation occurred without triggering activation
-        List<Map.Entry<String, EventType>> events = new LinkedList<>();
-        if (EVENTS.drainTo(events) > 0) {
-            events.forEach(entry -> resp.addHeader(entry.getKey(), entry.getValue().name()));
-        }
+        PassivationEventTracker.drainEvents(entry ->
+            resp.addHeader(entry.getKey().toString(), entry.getValue().name()));
     }
 
     @Override
@@ -131,12 +119,8 @@ public class SessionOperationServlet extends HttpServlet {
         return value;
     }
 
-    public enum EventType {
-        PASSIVATION, ACTIVATION;
-    }
-
     @Immutable
-    public static class SessionAttributeValue implements Serializable, HttpSessionActivationListener {
+    public static class SessionAttributeValue extends PassivationEventTracker implements HttpSessionActivationListener {
         @Serial
         private static final long serialVersionUID = -8824497321979784527L;
 
@@ -153,13 +137,13 @@ public class SessionOperationServlet extends HttpServlet {
         @Override
         public void sessionWillPassivate(HttpSessionEvent event) {
             System.out.println("HttpSessionActivationListener.sessionWillPassivate(" + event.getSession().getId() + ")");
-            EVENTS.add(new SimpleImmutableEntry<>(event.getSession().getId(), EventType.PASSIVATION));
+            recordPassivation(event.getSession().getId());
         }
 
         @Override
         public void sessionDidActivate(HttpSessionEvent event) {
             System.out.println("HttpSessionActivationListener.sessionDidActivate(" + event.getSession().getId() + ")");
-            EVENTS.add(new SimpleImmutableEntry<>(event.getSession().getId(), EventType.ACTIVATION));
+            recordActivation(event.getSession().getId());
         }
     }
 }

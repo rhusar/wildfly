@@ -35,6 +35,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.jboss.arquillian.container.test.api.OperateOnDeployment;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.as.arquillian.api.ServerSetup;
+import org.jboss.as.test.clustering.PassivationEventTracker;
 import org.jboss.as.test.clustering.cluster.AbstractClusteringTestCase;
 import org.jboss.as.test.clustering.cluster.web.DistributableTestCase;
 import org.jboss.as.test.clustering.cluster.web.EnableUndertowStatisticsSetupTask;
@@ -79,17 +80,17 @@ public abstract class SessionPassivationTestCase extends AbstractClusteringTestC
                 Thread.sleep(GRACE_TIME_TO_REPLICATE);
 
                 Instant start = Instant.now();
-                Map<String, Queue<SessionOperationServlet.EventType>> events = new HashMap<>();
-                Map<String, SessionOperationServlet.EventType> expectedEvents = new HashMap<>();
+                Map<String, Queue<PassivationEventTracker.EventType>> events = new HashMap<>();
+                Map<String, PassivationEventTracker.EventType> expectedEvents = new HashMap<>();
                 events.put(session1, new LinkedList<>());
-                expectedEvents.put(session1, SessionOperationServlet.EventType.PASSIVATION);
+                expectedEvents.put(session1, PassivationEventTracker.EventType.PASSIVATION);
 
                 // This will trigger passivation of session1
                 try (CloseableHttpResponse response = client2.execute(new HttpPut(SessionOperationServlet.createURI(baseURL, "a", "2")))) {
                     assertEquals(HttpServletResponse.SC_OK, response.getStatusLine().getStatusCode());
                     session2 = getRequiredHeaderValue(response, SessionOperationServlet.SESSION_ID);
                     events.put(session2, new LinkedList<>());
-                    expectedEvents.put(session2, SessionOperationServlet.EventType.PASSIVATION);
+                    expectedEvents.put(session2, PassivationEventTracker.EventType.PASSIVATION);
                     collectEvents(response, events);
                 }
 
@@ -119,7 +120,7 @@ public abstract class SessionPassivationTestCase extends AbstractClusteringTestC
                     assertEquals("1", getRequiredHeaderValue(response, SessionOperationServlet.RESULT));
                     collectEvents(response, events);
                     assertFalse(events.get(session1).isEmpty());
-                    assertTrue(events.get(session1).contains(SessionOperationServlet.EventType.ACTIVATION));
+                    assertTrue(events.get(session1).contains(PassivationEventTracker.EventType.ACTIVATION));
                 }
 
                 // Verify session2 was passivated
@@ -148,7 +149,7 @@ public abstract class SessionPassivationTestCase extends AbstractClusteringTestC
                     assertEquals("2", getRequiredHeaderValue(response, SessionOperationServlet.RESULT));
                     collectEvents(response, events);
                     assertFalse(events.get(session2).isEmpty());
-                    assertTrue(events.get(session2).contains(SessionOperationServlet.EventType.ACTIVATION));
+                    assertTrue(events.get(session2).contains(PassivationEventTracker.EventType.ACTIVATION));
                 }
 
                 // Verify session1 was passivated
@@ -178,26 +179,26 @@ public abstract class SessionPassivationTestCase extends AbstractClusteringTestC
         }
     }
 
-    private static void collectEvents(HttpResponse response, Map<String, Queue<SessionOperationServlet.EventType>> events) {
-        events.entrySet().forEach((Map.Entry<String, Queue<SessionOperationServlet.EventType>> entry) -> {
+    private static void collectEvents(HttpResponse response, Map<String, Queue<PassivationEventTracker.EventType>> events) {
+        events.entrySet().forEach((Map.Entry<String, Queue<PassivationEventTracker.EventType>> entry) -> {
             String sessionId = entry.getKey();
             if (response.containsHeader(sessionId)) {
                 Stream.of(response.getHeaders(sessionId)).forEach((Header header) -> {
-                    entry.getValue().add(SessionOperationServlet.EventType.valueOf(header.getValue()));
+                    entry.getValue().add(PassivationEventTracker.EventType.valueOf(header.getValue()));
                 });
             }
         });
     }
 
-    private static void validateEvents(String sessionId, Map<String, Queue<SessionOperationServlet.EventType>> events, Map<String, SessionOperationServlet.EventType> expectedEvents) {
-        Queue<SessionOperationServlet.EventType> types = events.get(sessionId);
-        SessionOperationServlet.EventType type = types.poll();
-        SessionOperationServlet.EventType expected = expectedEvents.get(sessionId);
+    private static void validateEvents(String sessionId, Map<String, Queue<PassivationEventTracker.EventType>> events, Map<String, PassivationEventTracker.EventType> expectedEvents) {
+        Queue<PassivationEventTracker.EventType> types = events.get(sessionId);
+        PassivationEventTracker.EventType type = types.poll();
+        PassivationEventTracker.EventType expected = expectedEvents.get(sessionId);
         while (type != null) {
             assertSame(expected, type);
             type = types.poll();
             // ACTIVATE event must follow PASSIVATE event and vice versa
-            expected = SessionOperationServlet.EventType.values()[(expected.ordinal() + 1) % 2];
+            expected = PassivationEventTracker.EventType.values()[(expected.ordinal() + 1) % 2];
         }
         expectedEvents.put(sessionId, expected);
     }
