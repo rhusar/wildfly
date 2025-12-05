@@ -5,23 +5,23 @@
 package org.jboss.as.test.clustering.single.ejb.timer.passivation.bean;
 
 import java.time.Duration;
+import java.util.Map;
 
 import jakarta.ejb.Remove;
 
+import org.jboss.as.test.clustering.PassivationEventTracker;
+
 /**
  * Remote interface for a singleton bean that manages timers.
- * TimerInfo objects are created and managed entirely on the server side
- * to ensure that serialization tracking only measures timer passivation,
- * not EJB remoting serialization.
+ * TimerInfo objects are created and managed entirely on the server side to ensure that serialization tracking only measures timer passivation, not EJB remoting serialization.
  *
  * @author Radoslav Husar
  */
 public interface TimerTracker {
 
     /**
-     * Creates a persistent timer with a server-generated TimerInfo.
-     * The TimerInfo is created on the server and never sent to the client,
-     * ensuring that serialization only occurs during timer passivation.
+     * Creates a transient or persistent timer with a TimerInfo.
+     * The TimerInfo is created on the server and never sent to the client, ensuring that serialization only occurs during timer passivation.
      *
      * @param name the name for the timer
      * @param persistent whether the timer is persistent
@@ -31,13 +31,9 @@ public interface TimerTracker {
 
     /**
      * Gets the number of active timers.
+     * Call with caution as this might deserialize the timer.
      */
     int getTimerCount();
-
-    /**
-     * Cancels all timers.
-     */
-    void cancelAllTimers();
 
     /**
      * Clears the static event queue on the server.
@@ -50,7 +46,13 @@ public interface TimerTracker {
      *
      * @return array with [0]=timer name, [1]=event type name, or null if no events
      */
-    String[] pollTimerEvent();
+    Map.Entry<Object, PassivationEventTracker.EventType> pollTimerEvent();
+
+    /**
+     * Cancels all timers.
+     * Use to clean up resources after test run.
+     */
+    void cancelAllTimers();
 
     /**
      * Removes the bean. Used for test cleanup.

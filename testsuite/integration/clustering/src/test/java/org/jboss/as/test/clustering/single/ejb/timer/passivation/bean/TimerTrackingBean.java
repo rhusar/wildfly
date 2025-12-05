@@ -7,6 +7,8 @@ package org.jboss.as.test.clustering.single.ejb.timer.passivation.bean;
 import java.time.Duration;
 import java.util.Map.Entry;
 
+import org.jboss.as.test.clustering.PassivationEventTracker;
+
 import jakarta.annotation.Resource;
 import jakarta.ejb.Remote;
 import jakarta.ejb.Remove;
@@ -24,8 +26,8 @@ import jakarta.ejb.TimerService;
  *
  * @author Radoslav Husar
  */
-@Singleton
 @Startup
+@Singleton
 @Remote(TimerTracker.class)
 public class TimerTrackingBean implements TimerTracker {
 
@@ -58,20 +60,19 @@ public class TimerTrackingBean implements TimerTracker {
 
     @Override
     public void clearTimerEvents() {
-        TimerInfo.EVENTS.clear();
+        PassivationEventTracker.clearEvents();
         System.out.println("clearTimerEvents()");
     }
 
     @Override
-    public String[] pollTimerEvent() {
-        Entry<String, TimerInfo.EventType> event = TimerInfo.EVENTS.poll();
+    public Entry<Object, PassivationEventTracker.EventType> pollTimerEvent() {
+        Entry<Object, PassivationEventTracker.EventType> event = PassivationEventTracker.pollEvent();
         if (event == null) {
             System.out.println("pollTimerEvent() = null");
             return null;
         }
-        String[] result = new String[] { event.getKey(), event.getValue().name() };
-        System.out.println("pollTimerEvent() = [" + result[0] + ", " + result[1] + "]");
-        return result;
+        System.out.println("pollTimerEvent() = [" + event.getKey() + ", " + event.getValue() + "]");
+        return event;
     }
 
     @Timeout

@@ -7,13 +7,14 @@ package org.jboss.as.test.clustering.single.ejb.timer.passivation;
 import static org.junit.Assert.*;
 
 import java.time.Duration;
+import java.util.Map;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.as.arquillian.api.ServerSetup;
+import org.jboss.as.test.clustering.PassivationEventTracker;
 import org.jboss.as.test.clustering.ejb.EJBDirectory;
 import org.jboss.as.test.clustering.ejb.RemoteEJBDirectory;
-import org.jboss.as.test.clustering.single.ejb.timer.passivation.bean.TimerInfo;
 import org.jboss.as.test.clustering.single.ejb.timer.passivation.bean.TimerTracker;
 import org.jboss.as.test.clustering.single.ejb.timer.passivation.bean.TimerTrackingBean;
 import org.jboss.as.test.shared.ManagementServerSetupTask;
@@ -67,6 +68,7 @@ public class IdleThresholdTimerPassivationTestCase {
     public static Archive<?> deployment() {
         return ShrinkWrap.create(JavaArchive.class, APPLICATION_NAME)
                 .addPackage(TimerTracker.class.getPackage())
+                .addClasses(PassivationEventTracker.class)
                 ;
     }
 
@@ -103,11 +105,11 @@ public class IdleThresholdTimerPassivationTestCase {
         Thread.sleep(IDLE_GRACE_TIME.toMillis());
 
         // Step 3: Poll for PASSIVATION event from the server (without accessing the timer)
-        String[] event = bean.pollTimerEvent();
+        Map.Entry<Object, PassivationEventTracker.EventType> event = bean.pollTimerEvent();
         //TODO as expected this fails here! !!! [ERROR]   IdleThresholdTimerPassivationTestCase.testTimerPassivationWithSerializableInfo:108 Should have passivation event
         assertNotNull("Should have passivation event", event);
-        assertEquals("Event should be for correct timer", timerName, event[0]);
-        assertEquals("Event should be PASSIVATION", TimerInfo.EventType.PASSIVATION.name(), event[1]);
+        assertEquals("Event should be for correct timer", timerName, event.getKey());
+        assertEquals("Event should be PASSIVATION", PassivationEventTracker.EventType.PASSIVATION, event.getValue());
         System.out.println("✓ Verified: Timer was passivated after idle timeout");
 
         // Step 4: Access timer to trigger activation
@@ -117,8 +119,8 @@ public class IdleThresholdTimerPassivationTestCase {
         // Step 5: Poll for ACTIVATION event from the server
         event = bean.pollTimerEvent();
         assertNotNull("Should have activation event", event);
-        assertEquals("Event should be for correct timer", timerName, event[0]);
-        assertEquals("Event should be ACTIVATION", TimerInfo.EventType.ACTIVATION.name(), event[1]);
+        assertEquals("Event should be for correct timer", timerName, event.getKey());
+        assertEquals("Event should be ACTIVATION", PassivationEventTracker.EventType.ACTIVATION.name(), event.getValue());
         System.out.println("✓ Verified: Timer was activated when accessed");
 
         // Cleanup
