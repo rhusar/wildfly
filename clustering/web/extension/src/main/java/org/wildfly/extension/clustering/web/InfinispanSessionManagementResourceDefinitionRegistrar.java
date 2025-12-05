@@ -6,7 +6,7 @@ package org.wildfly.extension.clustering.web;
 
 import java.util.List;
 
-import org.jboss.as.clustering.controller.ISO8601DurationAttributeDefinition;
+import org.jboss.as.clustering.controller.ISOStandardDurationAttributeDefinition;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.version.Stability;
 import org.wildfly.clustering.infinispan.service.InfinispanCacheConfigurationAttributeGroup;
@@ -23,7 +23,7 @@ public class InfinispanSessionManagementResourceDefinitionRegistrar extends Sess
 
     static final CacheConfigurationAttributeGroup CACHE_ATTRIBUTE_GROUP = new InfinispanCacheConfigurationAttributeGroup(CAPABILITY);
 
-    static final ISO8601DurationAttributeDefinition MAX_IDLE = new ISO8601DurationAttributeDefinition.Builder("max-idle")
+    static final ISOStandardDurationAttributeDefinition MAX_IDLE = new ISOStandardDurationAttributeDefinition.Builder("max-idle")
             .setRequired(false)
             .setStability(Stability.COMMUNITY)
             .build();

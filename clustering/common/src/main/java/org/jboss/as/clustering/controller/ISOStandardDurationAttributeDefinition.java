@@ -16,14 +16,15 @@ import org.jboss.dmr.ModelType;
 import org.wildfly.subsystem.resource.ResourceModelResolver;
 
 /**
- * Attribute definition for ISO 8601 duration strings that resolves to a {@link Duration}.
+ * Attribute definition for ISO 8601 standard duration strings that resolves to a {@link Duration}.
+ * This directly maps to the XSD type {@code xs:duration}.
+ * Values are validated by calling {@link Duration#parse(CharSequence)}.
  *
  * @author Radoslav Husar
- * @see <a href="https://www.iso.org/obp/ui/#iso:std:iso:8601:-1:ed-1:v1:en">ISO 8601</a>
  */
-public class ISO8601DurationAttributeDefinition extends SimpleAttributeDefinition implements ResourceModelResolver<Duration> {
+public class ISOStandardDurationAttributeDefinition extends SimpleAttributeDefinition implements ResourceModelResolver<Duration> {
 
-    ISO8601DurationAttributeDefinition(Builder builder) {
+    ISOStandardDurationAttributeDefinition(Builder builder) {
         super(builder);
     }
 
@@ -33,7 +34,7 @@ public class ISO8601DurationAttributeDefinition extends SimpleAttributeDefinitio
         return (value != null) ? Duration.parse(value) : null;
     }
 
-    public static class Builder extends AbstractAttributeDefinitionBuilder<Builder, ISO8601DurationAttributeDefinition> {
+    public static class Builder extends AbstractAttributeDefinitionBuilder<Builder, ISOStandardDurationAttributeDefinition> {
 
         public Builder(String attributeName) {
             super(attributeName, ModelType.STRING);
@@ -45,13 +46,13 @@ public class ISO8601DurationAttributeDefinition extends SimpleAttributeDefinitio
                     try {
                         Duration.parse(stringValue);
                     } catch (Exception e) {
-                        throw new OperationFailedException("Invalid ISO 8601 duration format for " + parameterName + ": " + stringValue, e);
+                        throw new OperationFailedException("Invalid ISO 8601 standard duration format for " + parameterName + ": " + stringValue, e);
                     }
                 }
             });
         }
 
-        public Builder(String attributeName, ISO8601DurationAttributeDefinition basis) {
+        public Builder(String attributeName, ISOStandardDurationAttributeDefinition basis) {
             super(attributeName, basis);
         }
 
@@ -64,8 +65,8 @@ public class ISO8601DurationAttributeDefinition extends SimpleAttributeDefinitio
         }
 
         @Override
-        public ISO8601DurationAttributeDefinition build() {
-            return new ISO8601DurationAttributeDefinition(this);
+        public ISOStandardDurationAttributeDefinition build() {
+            return new ISOStandardDurationAttributeDefinition(this);
         }
     }
 }

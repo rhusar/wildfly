@@ -12,7 +12,7 @@ import java.util.OptionalInt;
 import java.util.function.Function;
 
 import org.jboss.as.clustering.controller.EnumAttributeDefinition;
-import org.jboss.as.clustering.controller.ISO8601DurationAttributeDefinition;
+import org.jboss.as.clustering.controller.ISOStandardDurationAttributeDefinition;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
@@ -64,7 +64,7 @@ public class InfinispanTimerManagementResourceDefinitionRegistrar implements Chi
             .setValidator(new IntRangeValidator(1))
             .build();
 
-    static final ISO8601DurationAttributeDefinition MAX_IDLE = new ISO8601DurationAttributeDefinition.Builder("max-idle")
+    static final ISOStandardDurationAttributeDefinition MAX_IDLE = new ISOStandardDurationAttributeDefinition.Builder("max-idle")
             .setRequired(false)
             .setStability(Stability.COMMUNITY)
             .build();

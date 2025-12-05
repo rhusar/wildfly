@@ -10,9 +10,7 @@ import java.time.Duration;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.as.arquillian.api.ServerSetup;
-import org.jboss.as.arquillian.container.ManagementClient;
 import org.jboss.as.test.clustering.ejb.EJBDirectory;
 import org.jboss.as.test.clustering.ejb.RemoteEJBDirectory;
 import org.jboss.as.test.clustering.single.ejb.timer.passivation.bean.TimerInfo;
@@ -92,6 +90,7 @@ public class IdleThresholdTimerPassivationTestCase {
         bean.clearTimerEvents();
 
         // Step 1: Create a timer with serializable info
+        // n.b. This cannot be a persistent timer because it would be immediately serialized
         // n.b. TimerInfo is created server-side and never sent to the client
         String timerName = "test-timer";
         bean.createTimer(timerName, false, Duration.ofDays(1));
