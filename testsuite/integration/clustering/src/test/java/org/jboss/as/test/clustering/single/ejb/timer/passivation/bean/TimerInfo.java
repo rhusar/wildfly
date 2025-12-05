@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serial;
+import java.io.Serializable;
 import java.util.Objects;
 
 import org.jboss.as.test.clustering.PassivationEventTracker;
@@ -20,7 +21,7 @@ import org.jboss.as.test.clustering.PassivationEventTracker;
  *
  * @author Radoslav Husar
  */
-public class TimerInfo extends PassivationEventTracker {
+public class TimerInfo implements Serializable {
     @Serial
     private static final long serialVersionUID = -3314782443771710521L;
 
@@ -28,7 +29,7 @@ public class TimerInfo extends PassivationEventTracker {
 
     public TimerInfo(String name) {
         this.name = name;
-        clearEvents();
+        PassivationEventTracker.clearEvents();
     }
 
     public String getName() {
@@ -38,7 +39,7 @@ public class TimerInfo extends PassivationEventTracker {
     @Serial
     private void writeObject(ObjectOutputStream out) throws IOException {
         // Record passivation event
-        recordPassivation(this.name);
+        PassivationEventTracker.recordPassivation(this.name);
 
         System.out.println("TimerInfo.writeObject() called for: " + this.name);
 
@@ -52,7 +53,7 @@ public class TimerInfo extends PassivationEventTracker {
         in.defaultReadObject();
 
         // Record activation event
-        recordActivation(this.name);
+        PassivationEventTracker.recordActivation(this.name);
 
         System.out.println("TimerInfo.readObject() called for: " + this.name);
     }

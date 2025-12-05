@@ -117,9 +117,13 @@ public class InfinispanTimerManagementProvider implements TimerManagementProvide
 
         OptionalInt size = this.configuration.getMaxSize();
         Optional<Duration> idleThreshold = this.configuration.getIdleTimeout();
-        EvictionStrategy strategy = size.isPresent() ? EvictionStrategy.REMOVE : EvictionStrategy.NONE;
-        builder.memory().storage(StorageType.HEAP).whenFull(strategy).maxCount(size.orElse(0));
-        if (strategy.isEnabled() || idleThreshold.isPresent()) {
+
+        System.out.println("XXX EJB idleThreshold = " + idleThreshold);
+
+        EvictionStrategy strategy = (size.isPresent() || idleThreshold.isPresent()) ? EvictionStrategy.REMOVE : EvictionStrategy.NONE;
+        long maxCount = (size.isEmpty() && idleThreshold.isPresent()) ? Long.MAX_VALUE : size.orElse(0);
+        builder.memory().storage(StorageType.HEAP).whenFull(strategy).maxCount(maxCount);
+        if (strategy.isEnabled()) {
             // Only evict creation meta-data entries
             // We will cascade eviction to the remaining entries for a given session
             DataContainerConfigurationBuilder container = builder.addModule(DataContainerConfigurationBuilder.class);

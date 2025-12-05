@@ -69,21 +69,21 @@ public class InfinispanSessionManagementProvider extends AbstractSessionManageme
                 }
 
                 OptionalInt size = configuration.getMaxSize();
-                EvictionStrategy strategy = size.isPresent() ? EvictionStrategy.REMOVE : EvictionStrategy.NONE;
-                builder.memory().storage(StorageType.HEAP)
-                        .whenFull(strategy)
-                        .maxCount(size.orElse(0))
-                        ;
-
                 Optional<Duration> idleThreshold = getSessionManagementConfiguration().getIdleThreshold();
                 System.out.println("XXX idleThreshold is = " + idleThreshold);
-                if (strategy.isEnabled() || idleThreshold.isPresent()) {
+
+                long maxCount = (size.isEmpty() && idleThreshold.isPresent()) ? Long.MAX_VALUE : size.orElse(0);
+                EvictionStrategy strategy = size.isPresent() ? EvictionStrategy.REMOVE : EvictionStrategy.NONE;
+                builder.memory().storage(StorageType.HEAP).whenFull(strategy).maxCount(maxCount);
+
+                if (strategy.isEnabled()) {
                     // Only evict creation meta-data entries
                     // We will cascade eviction to the remaining entries for a given session
                     DataContainerConfigurationBuilder container = builder.addModule(DataContainerConfigurationBuilder.class);
                     container.evictable(SessionMetaDataKey.class::isInstance);
                     idleThreshold.ifPresent(container::idleTimeout);
                 }
+
                 PersistenceConfiguration persistence = builder.persistence().create();
                 // If cache is configured to passivate and purge on startup, but application does not define a passivation threshold, then remove useless stores
                 if (size.isEmpty() && idleThreshold.isEmpty() && persistence.passivation() && persistence.stores().stream().allMatch(StoreConfiguration::purgeOnStartup)) {

@@ -50,12 +50,13 @@ public interface TimerTracker {
 
     /**
      * Cancels all timers.
-     * Use to clean up resources after test run.
+     * Used for test cleanup.
      */
     void cancelAllTimers();
 
     /**
-     * Removes the bean. Used for test cleanup.
+     * Removes the bean.
+     * Used for test cleanup.
      */
     @Remove
     void remove();

@@ -203,9 +203,9 @@ public class InfinispanBeanManagementProvider<K, V extends BeanInstance<K>> impl
         System.out.println("XXX EJB idleThreshold = " + idleThreshold);
 
         EvictionStrategy strategy = (size.isPresent() || idleThreshold.isPresent()) ? EvictionStrategy.REMOVE : EvictionStrategy.MANUAL;
-        builder.memory().storage(StorageType.HEAP).whenFull(strategy);
-        if (strategy.isEnabled() || idleThreshold.isPresent()) {
-            builder.memory().maxCount(size.orElse(0));
+        long maxCount = (size.isEmpty() && idleThreshold.isPresent()) ? Long.MAX_VALUE : size.orElse(0);
+        builder.memory().storage(StorageType.HEAP).whenFull(strategy).maxCount(maxCount);
+        if (strategy.isEnabled()) {
             // Only evict bean group entries
             // We will cascade eviction to the associated beans
             DataContainerConfigurationBuilder container = builder.addModule(DataContainerConfigurationBuilder.class);

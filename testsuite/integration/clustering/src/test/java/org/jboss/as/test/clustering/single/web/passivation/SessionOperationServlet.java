@@ -6,6 +6,7 @@ package org.jboss.as.test.clustering.single.web.passivation;
 
 import java.io.IOException;
 import java.io.Serial;
+import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -120,7 +121,7 @@ public class SessionOperationServlet extends HttpServlet {
     }
 
     @Immutable
-    public static class SessionAttributeValue extends PassivationEventTracker implements HttpSessionActivationListener {
+    public static class SessionAttributeValue implements HttpSessionActivationListener, Serializable {
         @Serial
         private static final long serialVersionUID = -8824497321979784527L;
 
@@ -137,13 +138,13 @@ public class SessionOperationServlet extends HttpServlet {
         @Override
         public void sessionWillPassivate(HttpSessionEvent event) {
             System.out.println("HttpSessionActivationListener.sessionWillPassivate(" + event.getSession().getId() + ")");
-            recordPassivation(event.getSession().getId());
+            PassivationEventTracker.recordPassivation(event.getSession().getId());
         }
 
         @Override
         public void sessionDidActivate(HttpSessionEvent event) {
             System.out.println("HttpSessionActivationListener.sessionDidActivate(" + event.getSession().getId() + ")");
-            recordActivation(event.getSession().getId());
+            PassivationEventTracker.recordActivation(event.getSession().getId());
         }
     }
 }

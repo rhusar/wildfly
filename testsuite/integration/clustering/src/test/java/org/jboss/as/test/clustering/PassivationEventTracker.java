@@ -4,7 +4,6 @@
  */
 package org.jboss.as.test.clustering;
 
-import java.io.Serializable;
 import java.util.AbstractMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -20,7 +19,7 @@ import java.util.function.Consumer;
  *
  * @author Radoslav Husar
  */
-public class PassivationEventTracker implements Serializable {
+public final class PassivationEventTracker {
 
     /**
      * Event types for passivation/activation tracking.
@@ -42,7 +41,7 @@ public class PassivationEventTracker implements Serializable {
      *
      * @param identifier the identifier for the object being passivated
      */
-    protected static void recordPassivation(Object identifier) {
+    public static void recordPassivation(Object identifier) {
         EVENTS.add(new AbstractMap.SimpleImmutableEntry<>(identifier, EventType.PASSIVATION));
     }
 
@@ -52,7 +51,7 @@ public class PassivationEventTracker implements Serializable {
      *
      * @param identifier the identifier for the object being activated
      */
-    protected static void recordActivation(Object identifier) {
+    public static void recordActivation(Object identifier) {
         EVENTS.add(new AbstractMap.SimpleImmutableEntry<>(identifier, EventType.ACTIVATION));
     }
 
