@@ -13,8 +13,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
 
 /**
- * Reusable base class for objects that need to track passivation/activation events.
- * Provides a static event queue that can be polled without triggering activation.
+ * Reusable static class for tracking passivation/activation events.
+ * Provides a static event queue that can be polled without triggering activation,
+ * typically using an HTTP HEAD request or accessed via Stateless Jakarta bean.
+ * Event queue must be cleared during test initialization.
  * This class cannot be reasonably parametrized as the core functionality relies on a static field accessible outside the scope of the request/invocation.
  *
  * @author Radoslav Husar

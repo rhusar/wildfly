@@ -11,6 +11,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.xml.stream.XMLInputFactory;
@@ -18,6 +19,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import org.jboss.as.server.deployment.DeploymentUnit;
+import org.jboss.as.version.Stability;
 import org.jboss.metadata.property.PropertyReplacers;
 import org.jboss.staxmapper.XMLMapper;
 import org.junit.Assert;
@@ -51,9 +53,20 @@ public class DistributableWebDeploymentSchemaTestCase {
         this.schema = schema;
     }
 
+    protected URL getDeploymentXmlURL(Optional<String> qualifier) {
+        String format = String.format("distributable-web-%s%s%d.%d.xml",
+                qualifier.map(s -> s + "-").orElse(""),
+                this.schema.getStability() == Stability.DEFAULT ? "" : this.schema.getStability() +"-",
+                this.schema.getVersion().major(),
+                this.schema.getVersion().minor()
+        );
+        System.out.println("XXX  " + format);
+        return this.getClass().getResource(format);
+    }
+
     @Test
     public void test() throws IOException, XMLStreamException {
-        URL url = this.getClass().getResource(String.format("distributable-web-%d.%d.xml", this.schema.getVersion().major(), this.schema.getVersion().minor()));
+        URL url = getDeploymentXmlURL(Optional.empty());
         XMLMapper mapper = XMLMapper.Factory.create();
         mapper.registerRootElement(this.schema.getQualifiedName(), this.schema);
         try (InputStream input = url.openStream()) {
@@ -73,7 +86,7 @@ public class DistributableWebDeploymentSchemaTestCase {
 
     @Test
     public void testInfinispan() throws IOException, XMLStreamException {
-        URL url = this.getClass().getResource(String.format("distributable-web-infinispan-%d.%d.xml", this.schema.getVersion().major(), this.schema.getVersion().minor()));
+        URL url = getDeploymentXmlURL(Optional.of("infinispan"));
         XMLMapper mapper = XMLMapper.Factory.create();
         mapper.registerRootElement(this.schema.getQualifiedName(), this.schema);
         try (InputStream input = url.openStream()) {
@@ -111,7 +124,7 @@ public class DistributableWebDeploymentSchemaTestCase {
 
     @Test
     public void testHotRod() throws IOException, XMLStreamException {
-        URL url = this.getClass().getResource(String.format("distributable-web-hotrod-%d.%d.xml", this.schema.getVersion().major(), this.schema.getVersion().minor()));
+        URL url = getDeploymentXmlURL(Optional.of("hotrod"));
         XMLMapper mapper = XMLMapper.Factory.create();
         mapper.registerRootElement(this.schema.getQualifiedName(), this.schema);
         try (InputStream input = url.openStream()) {
