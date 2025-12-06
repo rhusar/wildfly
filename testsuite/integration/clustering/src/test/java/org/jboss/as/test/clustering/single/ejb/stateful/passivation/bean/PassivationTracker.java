@@ -4,6 +4,10 @@
  */
 package org.jboss.as.test.clustering.single.ejb.stateful.passivation.bean;
 
+import java.util.Map;
+
+import org.jboss.as.test.clustering.PassivationEventTracker;
+
 import jakarta.ejb.Remove;
 
 /**
@@ -37,6 +41,21 @@ public interface PassivationTracker {
      * Resets the passivation/activation flags.
      */
     void resetFlags();
+
+    /**
+     * Gets the unique identifier for this bean instance.
+     */
+    String getIdentifier();
+
+    /**
+     * Clears all passivation events.
+     */
+    void clearPassivationEvents();
+
+    /**
+     * Polls for the next passivation event.
+     */
+    Map.Entry<Object, PassivationEventTracker.EventType> pollPassivationEvent();
 
     /**
      * Removes the bean.

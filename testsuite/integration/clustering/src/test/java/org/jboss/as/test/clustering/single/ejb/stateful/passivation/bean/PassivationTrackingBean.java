@@ -4,6 +4,10 @@
  */
 package org.jboss.as.test.clustering.single.ejb.stateful.passivation.bean;
 
+import java.util.UUID;
+
+import org.jboss.as.test.clustering.PassivationEventTracker;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.ejb.PostActivate;
 import jakarta.ejb.PrePassivate;
@@ -21,6 +25,7 @@ import jakarta.ejb.Stateful;
 @Remote(PassivationTracker.class)
 public class PassivationTrackingBean implements PassivationTracker {
 
+    private String identifier;
     private int value;
     private volatile boolean beenPassivated = false;
     private volatile boolean beenActivated = false;
@@ -49,7 +54,13 @@ public class PassivationTrackingBean implements PassivationTracker {
 
     @PostConstruct
     public void postConstruct() {
-        System.out.println("Called postConstruct()");
+        this.identifier = UUID.randomUUID().toString();
+        System.out.println("Called postConstruct() - identifier: " + this.identifier);
+    }
+
+    @Override
+    public String getIdentifier() {
+        return this.identifier;
     }
 
     @Override
@@ -59,16 +70,28 @@ public class PassivationTrackingBean implements PassivationTracker {
         System.out.println("Called resetFlags()");
     }
 
+    @Override
+    public void clearPassivationEvents() {
+        PassivationEventTracker.clearEvents();
+    }
+
+    @Override
+    public java.util.Map.Entry<Object, PassivationEventTracker.EventType> pollPassivationEvent() {
+        return PassivationEventTracker.pollEvent();
+    }
+
     @PrePassivate
     public void prePassivate() {
-        System.out.println("Called @PrePassivate");
+        System.out.println("Called @PrePassivate - identifier: " + this.identifier);
         this.beenPassivated = true;
+        PassivationEventTracker.recordPassivation(this.identifier);
     }
 
     @PostActivate
     public void postActivate() {
-        System.out.println("Called @PostActivate");
+        System.out.println("Called @PostActivate - identifier: " + this.identifier);
         this.beenActivated = true;
+        PassivationEventTracker.recordActivation(this.identifier);
     }
 
     @Remove
