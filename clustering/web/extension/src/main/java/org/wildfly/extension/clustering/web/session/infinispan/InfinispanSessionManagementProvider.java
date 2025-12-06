@@ -73,7 +73,7 @@ public class InfinispanSessionManagementProvider extends AbstractSessionManageme
                 System.out.println("XXX idleThreshold is = " + idleThreshold);
 
                 long maxCount = (size.isEmpty() && idleThreshold.isPresent()) ? Long.MAX_VALUE : size.orElse(0);
-                EvictionStrategy strategy = size.isPresent() ? EvictionStrategy.REMOVE : EvictionStrategy.NONE;
+                EvictionStrategy strategy = (size.isPresent() || idleThreshold.isPresent()) ? EvictionStrategy.REMOVE : EvictionStrategy.NONE;
                 builder.memory().storage(StorageType.HEAP).whenFull(strategy).maxCount(maxCount);
 
                 if (strategy.isEnabled()) {

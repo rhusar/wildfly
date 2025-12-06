@@ -21,6 +21,10 @@ import java.util.function.Consumer;
  */
 public final class PassivationEventTracker {
 
+    private PassivationEventTracker() {
+        // Access only through static methods; qualification is mandatory
+    }
+
     /**
      * Event types for passivation/activation tracking.
      */

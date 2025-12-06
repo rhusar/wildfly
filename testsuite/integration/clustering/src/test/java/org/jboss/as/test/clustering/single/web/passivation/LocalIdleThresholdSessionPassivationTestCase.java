@@ -33,6 +33,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.jboss.arquillian.container.test.api.OperateOnDeployment;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.as.arquillian.api.ServerSetup;
+import org.jboss.as.arquillian.setup.SnapshotServerSetupTask;
 import org.jboss.as.test.clustering.PassivationEventTracker;
 import org.jboss.as.test.clustering.single.web.SimpleServlet;
 import org.jboss.as.test.shared.ManagementServerSetupTask;
@@ -43,15 +44,15 @@ import org.junit.Test;
 
 /**
  * Validates the correctness of session activation/passivation events for a distributed session manager using a local,
- * passivating cache with idle-threshold (time-based) eviction.
+ * passivating cache with idle-threshold, i.e. time-based eviction.
  *
  * @author Radoslav Husar
  */
-@ServerSetup(LocalIdleThresholdSessionPassivationTestCase.IdleThresholdServerSetupTask.class)
+@ServerSetup({SnapshotServerSetupTask.class, LocalIdleThresholdSessionPassivationTestCase.ServerSetupTask.class})
 public abstract class LocalIdleThresholdSessionPassivationTestCase {
 
-    static class IdleThresholdServerSetupTask extends ManagementServerSetupTask {
-        IdleThresholdServerSetupTask() {
+    static class ServerSetupTask extends ManagementServerSetupTask {
+        ServerSetupTask() {
             super(createContainerConfigurationBuilder()
                     .setupScript(createScriptBuilder()
                             .startBatch()
@@ -70,14 +71,14 @@ public abstract class LocalIdleThresholdSessionPassivationTestCase {
     // Max idle time configured in jboss-web-idle.xml is PT3S (3 seconds)
     private static final Duration MAX_IDLE_DURATION = Duration.ofSeconds(TimeoutUtil.adjust(3));
     // Wait a bit longer than max-idle to ensure passivation has occurred
-    private static final Duration IDLE_WAIT_BUFFER = MAX_IDLE_DURATION.plusSeconds(TimeoutUtil.adjust(65));
+    private static final Duration IDLE_WAIT_BUFFER = MAX_IDLE_DURATION.plusSeconds(TimeoutUtil.adjust(10));
     private static final Duration MAX_PASSIVATION_DURATION = Duration.ofSeconds(TimeoutUtil.adjust(10));
     private static final Duration PASSIVATION_CHECK_INTERVAL = Duration.ofMillis(TimeoutUtil.adjust(100));
     private static final Duration COMMIT_DURATION = Duration.ofSeconds(TimeoutUtil.adjust(5));
 
     static WebArchive getBaseDeployment(String moduleName) {
         WebArchive war = ShrinkWrap.create(WebArchive.class, moduleName + ".war");
-        war.addClasses(SessionOperationServlet.class);
+        war.addClasses(SessionOperationServlet.class, PassivationEventTracker.class);
         war.setWebXML(SimpleServlet.class.getPackage(), "web.xml");
         return war;
     }

@@ -29,6 +29,10 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpSessionActivationListener;
 import jakarta.servlet.http.HttpSessionEvent;
 
+/**
+ * @author Paul Ferraro
+ * @author Radoslav Husar
+ */
 @WebServlet(urlPatterns = SessionOperationServlet.SERVLET_PATH)
 public class SessionOperationServlet extends HttpServlet {
     @Serial
