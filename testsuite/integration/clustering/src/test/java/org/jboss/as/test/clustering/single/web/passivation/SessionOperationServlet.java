@@ -16,9 +16,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.jboss.as.test.clustering.PassivationEventTracker;
-import org.wildfly.clustering.web.annotation.Immutable;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.Cookie;
@@ -28,6 +25,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpSessionActivationListener;
 import jakarta.servlet.http.HttpSessionEvent;
+
+import org.jboss.as.test.clustering.PassivationEventTracker;
+import org.wildfly.clustering.web.annotation.Immutable;
 
 /**
  * @author Paul Ferraro

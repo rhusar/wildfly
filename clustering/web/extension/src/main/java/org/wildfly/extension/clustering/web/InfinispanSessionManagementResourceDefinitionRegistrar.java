@@ -23,7 +23,7 @@ public class InfinispanSessionManagementResourceDefinitionRegistrar extends Sess
 
     static final CacheConfigurationAttributeGroup CACHE_ATTRIBUTE_GROUP = new InfinispanCacheConfigurationAttributeGroup(CAPABILITY);
 
-    static final ISOStandardDurationAttributeDefinition MAX_IDLE = new ISOStandardDurationAttributeDefinition.Builder("max-idle")
+    static final ISOStandardDurationAttributeDefinition IDLE_THRESHOLD = new ISOStandardDurationAttributeDefinition.Builder("max-idle")
             .setRequired(false)
             .setStability(Stability.COMMUNITY)
             .build();
@@ -35,7 +35,7 @@ public class InfinispanSessionManagementResourceDefinitionRegistrar extends Sess
     @Override
     public ResourceDescriptor.Builder apply(ResourceDescriptor.Builder builder) {
         return super.apply(builder)
-                .addAttributes(List.of(MAX_IDLE))
+                .addAttributes(List.of(IDLE_THRESHOLD))
                 .requireSingletonChildResource(AffinityResourceRegistration.PRIMARY_OWNER)
                 ;
     }

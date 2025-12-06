@@ -200,8 +200,6 @@ public class InfinispanBeanManagementProvider<K, V extends BeanInstance<K>> impl
         OptionalInt size = InfinispanBeanManagementProvider.this.configuration.getMaxSize();
         Optional<Duration> idleThreshold = InfinispanBeanManagementProvider.this.configuration.getIdleTimeout();
 
-        System.out.println("XXX EJB idleThreshold = " + idleThreshold);
-
         EvictionStrategy strategy = (size.isPresent() || idleThreshold.isPresent()) ? EvictionStrategy.REMOVE : EvictionStrategy.MANUAL;
         long maxCount = (size.isEmpty() && idleThreshold.isPresent()) ? Long.MAX_VALUE : size.orElse(0);
         builder.memory().storage(StorageType.HEAP).whenFull(strategy).maxCount(maxCount);

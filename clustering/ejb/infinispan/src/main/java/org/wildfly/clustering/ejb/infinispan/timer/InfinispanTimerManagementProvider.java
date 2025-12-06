@@ -118,8 +118,6 @@ public class InfinispanTimerManagementProvider implements TimerManagementProvide
         OptionalInt size = this.configuration.getMaxSize();
         Optional<Duration> idleThreshold = this.configuration.getIdleTimeout();
 
-        System.out.println("XXX EJB idleThreshold = " + idleThreshold);
-
         EvictionStrategy strategy = (size.isPresent() || idleThreshold.isPresent()) ? EvictionStrategy.REMOVE : EvictionStrategy.NONE;
         long maxCount = (size.isEmpty() && idleThreshold.isPresent()) ? Long.MAX_VALUE : size.orElse(0);
         builder.memory().storage(StorageType.HEAP).whenFull(strategy).maxCount(maxCount);

@@ -70,7 +70,6 @@ public class InfinispanSessionManagementProvider extends AbstractSessionManageme
 
                 OptionalInt size = configuration.getMaxSize();
                 Optional<Duration> idleThreshold = getSessionManagementConfiguration().getIdleThreshold();
-                System.out.println("XXX idleThreshold is = " + idleThreshold);
 
                 long maxCount = (size.isEmpty() && idleThreshold.isPresent()) ? Long.MAX_VALUE : size.orElse(0);
                 EvictionStrategy strategy = (size.isPresent() || idleThreshold.isPresent()) ? EvictionStrategy.REMOVE : EvictionStrategy.NONE;

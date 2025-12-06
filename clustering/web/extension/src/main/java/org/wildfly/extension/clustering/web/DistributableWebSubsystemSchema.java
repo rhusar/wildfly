@@ -132,7 +132,7 @@ public enum DistributableWebSubsystemSchema implements SubsystemResourceXMLSchem
             builder.addAttribute(SessionManagementResourceDefinitionRegistrar.MARSHALLER);
         }
         if (this.since(VERSION_5_0_COMMUNITY)) {
-            builder.addAttribute(InfinispanSessionManagementResourceDefinitionRegistrar.MAX_IDLE);
+            builder.addAttribute(InfinispanSessionManagementResourceDefinitionRegistrar.IDLE_THRESHOLD);
         }
         return builder;
     }

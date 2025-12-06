@@ -4,7 +4,7 @@
  */
 package org.wildfly.extension.clustering.web;
 
-import static org.wildfly.extension.clustering.web.InfinispanSessionManagementResourceDefinitionRegistrar.MAX_IDLE;
+import static org.wildfly.extension.clustering.web.InfinispanSessionManagementResourceDefinitionRegistrar.IDLE_THRESHOLD;
 
 import java.time.Duration;
 import java.util.List;
@@ -91,9 +91,7 @@ public abstract class SessionManagementResourceDefinitionRegistrar implements Ch
     public ResourceServiceInstaller configure(OperationContext context, ModelNode model) throws OperationFailedException {
         SessionGranularity granularity = GRANULARITY.resolve(context, model);
         SessionMarshallerFactory marshallerFactory = MARSHALLER.resolve(context, model);
-        Optional<Duration> idleThreshold = Optional.ofNullable(MAX_IDLE.resolve(context, model));
-        System.out.println("XXX model="+model);
-        System.out.println("XXX extracted idleThreshold="+idleThreshold);
+        Optional<Duration> idleThreshold = Optional.ofNullable(IDLE_THRESHOLD.resolve(context, model));
         DistributableSessionManagementConfiguration<DeploymentUnit> configuration = new DistributableSessionManagementConfiguration<>() {
             @Override
             public SessionAttributePersistenceStrategy getAttributePersistenceStrategy() {

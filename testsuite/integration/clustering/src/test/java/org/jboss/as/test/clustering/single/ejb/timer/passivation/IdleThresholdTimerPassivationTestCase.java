@@ -38,16 +38,12 @@ import org.junit.runner.RunWith;
 @ServerSetup({SnapshotRestoreSetupTask.class, IdleThresholdTimerPassivationTestCase.ServerSetupTask.class})
 public class IdleThresholdTimerPassivationTestCase {
 
-    // Max idle time configured via ManagementServerSetupTask is PT1S (1 second)
-    private static final Duration IDLE_THRESHOLD_DURATION = Duration.ofSeconds(TimeoutUtil.adjust(1));
-    // Wait a bit longer than max-idle to ensure passivation has occurred
-    private static final Duration IDLE_GRACE_TIME = IDLE_THRESHOLD_DURATION.plusSeconds(TimeoutUtil.adjust(10));
-
     static class ServerSetupTask extends ManagementServerSetupTask {
         ServerSetupTask() {
             super(createContainerConfigurationBuilder()
                     .setupScript(createScriptBuilder()
                             .startBatch()
+                            // These must be unset before using default timer management
                             .add("/subsystem=ejb3/service=timer-service:undefine-attribute(name=thread-pool-name)")
                             .add("/subsystem=ejb3/service=timer-service:undefine-attribute(name=default-data-store)")
                             .add("/subsystem=ejb3/service=timer-service:write-attribute(name=default-transient-timer-management, value=transient)")
@@ -56,7 +52,6 @@ public class IdleThresholdTimerPassivationTestCase {
                             .add("/subsystem=distributable-ejb/infinispan-timer-management=transient:undefine-attribute(name=max-active-timers)")
                             .add("/subsystem=distributable-ejb/infinispan-timer-management=persistent:write-attribute(name=max-idle, value=PT1S)")
                             .add("/subsystem=distributable-ejb/infinispan-timer-management=persistent:undefine-attribute(name=max-active-timers)")
-                            //.add("/subsystem=infinispan/cache-container=ejb/local-cache=transient/component=expiration:write-attribute(name=interval,value=500)")
                             .endBatch()
                             .build())
                     .build());
@@ -75,6 +70,11 @@ public class IdleThresholdTimerPassivationTestCase {
     }
 
     private EJBDirectory directory;
+
+    // Max idle time configured via ManagementServerSetupTask is PT1S (1 second)
+    private static final Duration IDLE_THRESHOLD_DURATION = Duration.ofSeconds(TimeoutUtil.adjust(1));
+    // Wait a bit longer than max-idle to ensure passivation has occurred
+    private static final Duration IDLE_GRACE_TIME = IDLE_THRESHOLD_DURATION.plusSeconds(TimeoutUtil.adjust(10));
 
     @Before
     public void before() throws Exception {

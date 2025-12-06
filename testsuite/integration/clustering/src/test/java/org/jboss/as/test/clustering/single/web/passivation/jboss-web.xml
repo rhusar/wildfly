@@ -5,7 +5,7 @@
   -->
 <jboss-web xmlns="urn:jboss:jakartaee:1.0"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xsi:schemaLocation="urn:jboss:jakartaee:1.0 https://raw.githubusercontent.com/wildfly/metadata/refs/tags/16.1.0.Final/web/src/main/resources/schema/jboss-web_15_0.xsd"
-           version="15.0" >
+           xsi:schemaLocation="urn:jboss:jakartaee:1.0 https://raw.githubusercontent.com/wildfly/metadata/refs/tags/17.0.0.Beta1/web/src/main/resources/schema/jboss-web_15_0.xsd"
+           version="15.0">
     <max-active-sessions>1</max-active-sessions>
 </jboss-web>
