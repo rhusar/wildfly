@@ -32,11 +32,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.jboss.arquillian.container.test.api.OperateOnDeployment;
 import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.as.arquillian.api.ServerSetup;
-import org.jboss.as.arquillian.setup.SnapshotServerSetupTask;
 import org.jboss.as.test.clustering.PassivationEventTracker;
 import org.jboss.as.test.clustering.single.web.SimpleServlet;
-import org.jboss.as.test.shared.ManagementServerSetupTask;
 import org.jboss.as.test.shared.TimeoutUtil;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -44,29 +41,11 @@ import org.junit.Test;
 
 /**
  * Validates the correctness of session activation/passivation events for a distributed session manager using a local,
- * passivating cache with idle-threshold, i.e. time-based eviction.
+ * passivating cache with time-based (idle-threshold) eviction.
  *
  * @author Radoslav Husar
  */
-@ServerSetup({SnapshotServerSetupTask.class, LocalIdleThresholdSessionPassivationTestCase.ServerSetupTask.class})
 public abstract class LocalIdleThresholdSessionPassivationTestCase {
-
-    static class ServerSetupTask extends ManagementServerSetupTask {
-        ServerSetupTask() {
-            super(createContainerConfigurationBuilder()
-                    .setupScript(createScriptBuilder()
-                            .startBatch()
-                            .add("/subsystem=distributable-web/infinispan-session-management=default:write-attribute(name=max-idle, value=PT1S)")
-                            .endBatch()
-                            .build())
-                    .tearDownScript(createScriptBuilder()
-                            .startBatch()
-//                            .add("/subsystem=distributable-web/infinispan-session-management=default:undefine-attribute(name=max-idle)")
-                            .endBatch()
-                            .build())
-                    .build());
-        }
-    }
 
     // Max idle time configured in jboss-web-idle.xml is PT3S (3 seconds)
     private static final Duration MAX_IDLE_DURATION = Duration.ofSeconds(TimeoutUtil.adjust(3));

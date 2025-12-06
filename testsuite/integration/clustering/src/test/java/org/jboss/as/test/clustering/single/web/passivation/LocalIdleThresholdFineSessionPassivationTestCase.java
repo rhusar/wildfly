@@ -15,6 +15,7 @@ import org.junit.runner.RunWith;
 /**
  * Validates the correctness of session passivation events for a distributed session manager using a local,
  * passivating cache with time-based (idle-threshold) eviction and ATTRIBUTE granularity.
+ * Also, verifies functionality of community namespace, i.e. xmlns="urn:jboss:distributable-web:community:5.0"
  *
  * @author Radoslav Husar
  */
@@ -26,7 +27,7 @@ public class LocalIdleThresholdFineSessionPassivationTestCase extends LocalIdleT
     @Deployment(name = DEPLOYMENT_1, testable = false)
     public static Archive<?> deployment() {
         return getBaseDeployment(MODULE_NAME)
-//                .addAsWebInfResource(LocalIdleThresholdSessionPassivationTestCase.class.getPackage(), "distributable-web-fine.xml", "distributable-web.xml")
+                .addAsWebInfResource(LocalMaxActiveSessionsSessionPassivationTestCase.class.getPackage(), "distributable-web-fine-idle-threshold.xml", "distributable-web.xml")
                 ;
     }
 }
