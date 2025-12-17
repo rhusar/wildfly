@@ -7,7 +7,7 @@ package org.wildfly.mod_cluster.undertow;
 
 import java.time.Duration;
 
-import org.jboss.as.server.suspend.SuspendController;
+import org.jboss.as.server.suspend.SuspendableActivityRegistry;
 import org.jboss.modcluster.container.ContainerEventHandler;
 import org.wildfly.extension.undertow.Server;
 import org.wildfly.extension.undertow.UndertowListener;
@@ -23,7 +23,7 @@ public interface UndertowEventHandlerAdapterConfiguration {
     Duration getStatusInterval();
     UndertowService getUndertowService();
     ContainerEventHandler getContainerEventHandler();
-    SuspendController getSuspendController();
+    SuspendableActivityRegistry getSuspendableActivityRegistry();
     UndertowListener getListener();
     Server getServer();
 }
