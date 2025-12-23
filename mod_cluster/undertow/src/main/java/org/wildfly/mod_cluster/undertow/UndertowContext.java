@@ -114,6 +114,7 @@ public class UndertowContext implements Context {
 
     @Override
     public boolean isDistributable() {
+        // TODO This logic should be improved; e.g. needs to be updated with fix for https://issues.redhat.com/browse/WFLY-21293 which decorates a session manager factory
         return !(this.deployment.getDeploymentInfo().getSessionManagerFactory() instanceof InMemorySessionManagerFactory);
     }
 

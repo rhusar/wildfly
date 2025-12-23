@@ -6,11 +6,12 @@
 package org.wildfly.mod_cluster.undertow;
 
 import java.time.Duration;
+import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
 import org.jboss.as.clustering.controller.CapabilityServiceConfigurator;
 import org.jboss.as.controller.capability.CapabilityServiceSupport;
-import org.jboss.as.server.suspend.SuspendController;
+import org.jboss.as.server.suspend.SuspendableActivityRegistry;
 import org.jboss.modcluster.container.ContainerEventHandler;
 import org.jboss.msc.Service;
 import org.jboss.msc.service.ServiceBuilder;
@@ -37,10 +38,10 @@ public class UndertowEventHandlerAdapterServiceConfigurator extends UndertowEven
     private final Duration statusInterval;
 
     private volatile Supplier<ContainerEventHandler> eventHandler;
-    private volatile SupplierDependency<SuspendController> suspendController;
-
     private volatile SupplierDependency<UndertowService> service;
     private volatile SupplierDependency<UndertowListener> listener;
+    private volatile SupplierDependency<SuspendableActivityRegistry> suspendableActivityRegistry;
+    private volatile SupplierDependency<Executor> managementExecutor;
 
     public UndertowEventHandlerAdapterServiceConfigurator(String proxyName, String listenerName, Duration statusInterval) {
         super(proxyName);
@@ -53,14 +54,15 @@ public class UndertowEventHandlerAdapterServiceConfigurator extends UndertowEven
     public ServiceConfigurator configure(CapabilityServiceSupport support) {
         this.service = new ServiceSupplierDependency<>(support.getCapabilityServiceName(Capabilities.CAPABILITY_UNDERTOW));
         this.listener = new ServiceSupplierDependency<>(support.getCapabilityServiceName(Capabilities.CAPABILITY_LISTENER, this.listenerName));
-        this.suspendController = new ServiceSupplierDependency<>(support.getCapabilityServiceName(Capabilities.REF_SUSPEND_CONTROLLER));
+        this.suspendableActivityRegistry = new ServiceSupplierDependency<>(support.getCapabilityServiceName(Capabilities.REF_SUSPEND_CONTROLLER));
+        this.managementExecutor = new ServiceSupplierDependency<>(support.getCapabilityServiceName(org.jboss.as.controller.management.Capabilities.MANAGEMENT_EXECUTOR));
         return this;
     }
 
     @Override
     public ServiceBuilder<?> build(ServiceTarget target) {
         ServiceBuilder<?> builder = new AsyncServiceConfigurator(this.getServiceName()).build(target);
-        new CompositeDependency(this.service, this.listener, this.suspendController).register(builder);
+        new CompositeDependency(this.service, this.listener, this.suspendableActivityRegistry, this.managementExecutor).register(builder);
         this.eventHandler = builder.requires(ProxyConfigurationResourceDefinition.Capability.SERVICE.getDefinition().getCapabilityServiceName(proxyName));
         Service service = new UndertowEventHandlerAdapterService(this);
         return builder.setInstance(service);
@@ -82,8 +84,13 @@ public class UndertowEventHandlerAdapterServiceConfigurator extends UndertowEven
     }
 
     @Override
-    public SuspendController getSuspendController() {
-        return this.suspendController.get();
+    public SuspendableActivityRegistry getSuspendableActivityRegistry() {
+        return this.suspendableActivityRegistry.get();
+    }
+
+    @Override
+    public Executor getManagementExecutor() {
+        return this.managementExecutor.get();
     }
 
     @Override

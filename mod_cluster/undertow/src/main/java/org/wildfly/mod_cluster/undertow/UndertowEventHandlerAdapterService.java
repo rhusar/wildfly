@@ -5,16 +5,22 @@
 
 package org.wildfly.mod_cluster.undertow;
 
-import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 
-import org.jboss.as.server.suspend.ServerActivity;
-import org.jboss.as.server.suspend.ServerActivityCallback;
-import org.jboss.as.server.suspend.SuspendController;
+import io.undertow.servlet.api.Deployment;
+import org.jboss.as.server.suspend.ServerResumeContext;
+import org.jboss.as.server.suspend.ServerSuspendContext;
+import org.jboss.as.server.suspend.SuspendableActivity;
+import org.jboss.as.server.suspend.SuspendableActivityRegistry;
+import org.jboss.as.server.suspend.SuspensionStateProvider;
 import org.jboss.logging.Logger;
 import org.jboss.modcluster.container.Connector;
 import org.jboss.modcluster.container.ContainerEventHandler;
@@ -30,21 +36,19 @@ import org.wildfly.extension.undertow.UndertowEventListener;
 import org.wildfly.extension.undertow.UndertowService;
 import org.wildfly.security.manager.WildFlySecurityManager;
 
-import io.undertow.servlet.api.Deployment;
-
 /**
  * Builds a service exposing an Undertow subsystem adapter to mod_cluster's {@link ContainerEventHandler}.
  *
  * @author Paul Ferraro
  * @author Radoslav Husar
  */
-public class UndertowEventHandlerAdapterService implements UndertowEventListener, Service, Runnable, ServerActivity {
+public class UndertowEventHandlerAdapterService implements UndertowEventListener, Service, Runnable, SuspendableActivity {
     // No logger interface for this module and no reason to create one for this class only
     private static final Logger log = Logger.getLogger("org.jboss.mod_cluster.undertow");
     private static final ThreadFactory THREAD_FACTORY = new DefaultThreadFactory(UndertowEventHandlerAdapterService.class, WildFlySecurityManager.getClassLoaderPrivileged(UndertowEventHandlerAdapterService.class));
 
     private final UndertowEventHandlerAdapterConfiguration configuration;
-    private final Set<Context> contexts = new HashSet<>();
+    private final Set<Context> contexts = ConcurrentHashMap.newKeySet();
     private volatile ScheduledExecutorService executor;
     private volatile Server server;
     private volatile Connector connector;
@@ -77,12 +81,12 @@ public class UndertowEventHandlerAdapterService implements UndertowEventListener
         // Start the periodic STATUS thread
         this.executor = Executors.newScheduledThreadPool(1, THREAD_FACTORY);
         this.executor.scheduleWithFixedDelay(this, 0, this.configuration.getStatusInterval().toMillis(), TimeUnit.MILLISECONDS);
-        this.configuration.getSuspendController().registerActivity(this);
+        this.configuration.getSuspendableActivityRegistry().registerActivity(this, SuspendableActivityRegistry.SuspendPriority.FIRST);
     }
 
     @Override
     public void stop(StopContext context) {
-        this.configuration.getSuspendController().unRegisterActivity(this);
+        this.configuration.getSuspendableActivityRegistry().unregisterActivity(this);
         this.configuration.getUndertowService().unregisterListener(this);
 
         this.executor.shutdownNow();
@@ -103,12 +107,12 @@ public class UndertowEventHandlerAdapterService implements UndertowEventListener
         return new LocationContext(contextPath, new UndertowHost(host, new UndertowEngine(serverName, host.getServer().getValue(), this.configuration.getUndertowService(), this.connector)));
     }
 
-    private synchronized void onStart(Context context) {
+    private void onStart(Context context) {
         ContainerEventHandler handler = this.configuration.getContainerEventHandler();
 
-        SuspendController.State state = this.configuration.getSuspendController().getState();
+        SuspensionStateProvider.State state = this.configuration.getSuspendableActivityRegistry().getState();
 
-        if (state == SuspendController.State.RUNNING) {
+        if (state == SuspensionStateProvider.State.RUNNING) {
             // Normal operation - trigger ENABLE-APP
             handler.start(context);
         } else {
@@ -120,7 +124,7 @@ public class UndertowEventHandlerAdapterService implements UndertowEventListener
         this.contexts.add(context);
     }
 
-    private synchronized void onStop(Context context) {
+    private void onStop(Context context) {
         ContainerEventHandler handler = this.configuration.getContainerEventHandler();
 
         // Trigger STOP-APP with possible session draining
@@ -175,26 +179,17 @@ public class UndertowEventHandlerAdapterService implements UndertowEventListener
         }
     }
 
-    @Override
-    public synchronized void preSuspend(ServerActivityCallback listener) {
-        try {
-            for (Context context : this.contexts) {
-                this.configuration.getContainerEventHandler().stop(context);
-            }
-        } finally {
-            listener.done();
-        }
+    private CompletionStage<Void> forEachContextAsync(BiConsumer<ContainerEventHandler, Context> action) {
+        return CompletableFuture.runAsync(() -> this.contexts.forEach(context -> action.accept(this.configuration.getContainerEventHandler(), context)), this.configuration.getManagementExecutor());
     }
 
     @Override
-    public void suspended(ServerActivityCallback listener) {
-        listener.done();
+    public CompletionStage<Void> suspend(ServerSuspendContext serverSuspendContext) {
+        return forEachContextAsync(ContainerEventHandler::stop);
     }
 
     @Override
-    public void resume() {
-        for (Context context : this.contexts) {
-            this.configuration.getContainerEventHandler().start(context);
-        }
+    public CompletionStage<Void> resume(ServerResumeContext serverResumeContext) {
+        return forEachContextAsync(ContainerEventHandler::start);
     }
 }
