@@ -10,7 +10,7 @@
     </channels>
     <stacks>
         <stack name="maximal">
-            <transport type="TCP"
+            <secured-transport type="TCP"
                        module="org.jgroups"
                        socket-binding="jgroups-tcp"
                        diagnostics-socket-binding="jgroups-diagnostics"
@@ -23,7 +23,7 @@
                              keepalive-time="14"/>
                 <ssl-context client="my-client-ssl-context"
                              server="my-server-ssl-context"/>
-            </transport>
+            </secured-transport>
             <socket-protocol type="MPING" module="org.jgroups" socket-binding="jgroups-mping"/>
             <protocol type="MERGE3"/>
             <socket-protocol type="FD_SOCK" socket-binding="jgroups-tcp-fd" client-socket-binding="jgroups-client-fd"/>

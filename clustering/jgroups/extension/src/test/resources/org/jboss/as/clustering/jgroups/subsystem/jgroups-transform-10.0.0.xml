@@ -19,7 +19,7 @@
             <transport type="UDP" socket-binding="some-binding" statistics-enabled="false"/>
         </stack>
         <stack name="maximal" statistics-enabled="${jgroups.maximal.statistics-enabled:true}">
-            <transport type="TCP"
+            <secured-transport type="TCP"
                        module="${jgroups.maximal.module:org.jgroups}"
                        socket-binding="some-binding"
                        client-socket-binding="some-other-binding"
@@ -31,7 +31,7 @@
                 <default-thread-pool min-threads="${jgroups.maximal.min-threads:11}"
                                      max-threads="${jgroups.maximal.max-threads:12}"
                                      keepalive-time="${jgroups.maximal.keepalive-time:13}"/>
-            </transport>
+            </secured-transport>
             <socket-protocol type="MPING" module="${jgroups.maximal.mping.module:org.jgroups}" socket-binding="jgroups-mping">
                 <property name="name">${jgroups.maximal.property:value}</property>
             </socket-protocol>

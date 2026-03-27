@@ -11,8 +11,12 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.UnaryOperator;
 
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLStreamException;
+
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.PathAddress;
+import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.ResourceRegistration;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.SubsystemSchema;
@@ -31,10 +35,13 @@ import org.jboss.as.controller.persistence.xml.SubsystemResourceRegistrationXMLE
 import org.jboss.as.controller.persistence.xml.SubsystemResourceXMLSchema;
 import org.jboss.as.controller.xml.VersionedNamespace;
 import org.jboss.as.controller.xml.XMLCardinality;
+import org.jboss.as.controller.xml.XMLContentWriter;
+import org.jboss.as.controller.xml.XMLElementReader;
 import org.jboss.as.version.Stability;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.jboss.staxmapper.IntVersion;
+import org.jboss.staxmapper.XMLExtendedStreamWriter;
 
 /**
  * Enumeration of the supported subsystem xml schemas.
@@ -185,10 +192,85 @@ public enum JGroupsSubsystemSchema implements SubsystemResourceXMLSchema<JGroups
     }
 
     private ResourceXMLChoice transportChoice() {
-        NamedResourceRegistrationXMLElement transportElement = this.transportBuilder(StackResourceDefinitionRegistrar.Component.TRANSPORT).build();
+        NamedResourceRegistrationXMLElement.Builder defaultBuilder = this.transportBuilder(StackResourceDefinitionRegistrar.Component.TRANSPORT);
+        if (this.since(VERSION_10_0)) {
+            // Default handler needs client-socket-binding so <transport type="TCP"> (without SSL) round-trips correctly
+            defaultBuilder.addAttribute(SocketTransportResourceDefinitionRegistrar.CLIENT_SOCKET_BINDING);
+        }
+        NamedResourceRegistrationXMLElement transportElement = defaultBuilder.build();
         NamedResourceRegistrationXMLChoice.Builder builder = this.factory.namedElementChoice(transportElement);
 
         if (JGroupsSubsystemSchema.this.since(VERSION_7_0)) {
+            if (JGroupsSubsystemSchema.this.since(VERSION_10_0)) {
+                for (SecurableSocketTransportResourceDefinitionRegistrar.Transport transport : EnumSet.allOf(SecurableSocketTransportResourceDefinitionRegistrar.Transport.class)) {
+                    // Element for <secured-transport> (reading + writing with SSL)
+                    NamedResourceRegistrationXMLElement securedElement = this.transportBuilder(transport)
+                            .withElementLocalName("secured-transport")
+                            .addAttribute(SocketTransportResourceDefinitionRegistrar.CLIENT_SOCKET_BINDING)
+                            .build();
+                    // Element for <transport> (writing without SSL)
+                    NamedResourceRegistrationXMLElement unsecuredElement = this.transportBuilder(transport)
+                            .addAttribute(SocketTransportResourceDefinitionRegistrar.CLIENT_SOCKET_BINDING)
+                            .build();
+                    // Conditional wrapper: reads as <secured-transport>, writes conditionally based on SSL presence
+                    builder.addElement(new NamedResourceRegistrationXMLElement() {
+                        @Override
+                        public QName getResourceAttributeName() {
+                            return securedElement.getResourceAttributeName();
+                        }
+
+                        @Override
+                        public PathElement getPathElement() {
+                            return securedElement.getPathElement();
+                        }
+
+                        @Override
+                        public QName getName() {
+                            return securedElement.getName();
+                        }
+
+                        @Override
+                        public XMLCardinality getCardinality() {
+                            return securedElement.getCardinality();
+                        }
+
+                        @Override
+                        public Stability getStability() {
+                            return securedElement.getStability();
+                        }
+
+                        @Override
+                        public XMLElementReader<Map.Entry<PathAddress, Map<PathAddress, ModelNode>>> getReader() {
+                            return securedElement.getReader();
+                        }
+
+                        @Override
+                        public XMLContentWriter<ModelNode> getWriter() {
+                            return new XMLContentWriter<>() {
+                                @Override
+                                public void writeContent(XMLExtendedStreamWriter writer, ModelNode parentModel) throws XMLStreamException {
+                                    PathElement path = securedElement.getPathElement();
+                                    ModelNode model = parentModel.get(path.getKeyValuePair());
+                                    if (model.hasDefined(SecurableSocketTransportResourceDefinitionRegistrar.CLIENT_SSL_CONTEXT.getName()) || model.hasDefined(SecurableSocketTransportResourceDefinitionRegistrar.SERVER_SSL_CONTEXT.getName())) {
+                                        securedElement.getWriter().writeContent(writer, parentModel);
+                                    } else {
+                                        unsecuredElement.getWriter().writeContent(writer, parentModel);
+                                    }
+                                }
+
+                                @Override
+                                public boolean isEmpty(ModelNode parentModel) {
+                                    return securedElement.getWriter().isEmpty(parentModel);
+                                }
+                            };
+                        }
+                    });
+                }
+            } else {
+                for (SecurableSocketTransportResourceDefinitionRegistrar.Transport transport : EnumSet.allOf(SecurableSocketTransportResourceDefinitionRegistrar.Transport.class)) {
+                    builder.addElement(this.transportBuilder(transport).withElementLocalName(ResourceXMLElementLocalName.KEY).addAttribute(SocketTransportResourceDefinitionRegistrar.CLIENT_SOCKET_BINDING).build());
+                }
+            }
             for (SocketTransportResourceDefinitionRegistrar.Transport transport : EnumSet.allOf(SocketTransportResourceDefinitionRegistrar.Transport.class)) {
                 builder.addElement(this.transportBuilder(transport).withElementLocalName(ResourceXMLElementLocalName.KEY).addAttribute(SocketTransportResourceDefinitionRegistrar.CLIENT_SOCKET_BINDING).build());
             }
@@ -242,10 +324,10 @@ public enum JGroupsSubsystemSchema implements SubsystemResourceXMLSchema<JGroups
             });
         }
 
-        if (this.since(JGroupsSubsystemSchema.VERSION_10_0) || this.since(JGroupsSubsystemSchema.VERSION_9_0_COMMUNITY)) {
+        if ((this.since(JGroupsSubsystemSchema.VERSION_10_0) || this.since(JGroupsSubsystemSchema.VERSION_9_0_COMMUNITY)) && registration instanceof SecurableSocketTransportResourceDefinitionRegistrar.Transport) {
             ResourceXMLElement ssl = this.factory.element(this.factory.resolve("ssl-context"))
                     .withCardinality(XMLCardinality.Single.OPTIONAL)
-                    .addAttributes(List.of(SocketTransportResourceDefinitionRegistrar.CLIENT_SSL_CONTEXT, SocketTransportResourceDefinitionRegistrar.SERVER_SSL_CONTEXT))
+                    .addAttributes(List.of(SecurableSocketTransportResourceDefinitionRegistrar.CLIENT_SSL_CONTEXT, SecurableSocketTransportResourceDefinitionRegistrar.SERVER_SSL_CONTEXT))
                     .build();
             contentBuilder.addElement(ssl);
         }

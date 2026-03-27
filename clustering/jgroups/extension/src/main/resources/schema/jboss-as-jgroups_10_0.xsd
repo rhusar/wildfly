@@ -118,11 +118,18 @@
 
     <xs:complexType name="stack">
         <xs:sequence>
-            <xs:element name="transport" type="tns:transport">
-                <xs:annotation>
-                    <xs:documentation>Defines the transport protocol for a stack.</xs:documentation>
-                </xs:annotation>
-            </xs:element>
+            <xs:choice>
+                <xs:element name="transport" type="tns:transport">
+                    <xs:annotation>
+                        <xs:documentation>Defines the transport protocol for a stack.</xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="secured-transport" type="tns:secured-transport">
+                    <xs:annotation>
+                        <xs:documentation>Defines a TLS-secured transport protocol for a stack.</xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+            </xs:choice>
             <xs:choice minOccurs="0" maxOccurs="unbounded">
                 <xs:element name="protocol" type="tns:protocol">
                     <xs:annotation>
@@ -347,11 +354,6 @@
                             <xs:documentation>Defines the thread pool used for default messages received by this transport.</xs:documentation>
                         </xs:annotation>
                     </xs:element>
-                    <xs:element name="ssl-context" type="tns:ssl-context" minOccurs="0">
-                        <xs:annotation>
-                            <xs:documentation>References to the managed client and server SSLContexts to be used for communication with other cluster members.</xs:documentation>
-                        </xs:annotation>
-                    </xs:element>
                 </xs:sequence>
                 <xs:attribute name="socket-binding" type="xs:string">
                     <xs:annotation>
@@ -383,6 +385,20 @@
                         <xs:documentation>Identifies the machine where this node runs.</xs:documentation>
                     </xs:annotation>
                 </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="secured-transport">
+        <xs:complexContent>
+            <xs:extension base="tns:transport">
+                <xs:sequence>
+                    <xs:element name="ssl-context" type="tns:ssl-context" minOccurs="0">
+                        <xs:annotation>
+                            <xs:documentation>References to the managed client and server SSLContexts to be used for communication with other cluster members.</xs:documentation>
+                        </xs:annotation>
+                    </xs:element>
+                </xs:sequence>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>

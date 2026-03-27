@@ -19,7 +19,7 @@
             <transport type="UDP" socket-binding="some-binding" statistics-enabled="false"/>
         </stack>
         <stack name="maximal" statistics-enabled="${jgroups.maximal.statistics-enabled:true}">
-            <transport type="TCP"
+            <secured-transport type="TCP"
                        module="${jgroups.maximal.module:org.jgroups}"
                        socket-binding="some-binding"
                        client-socket-binding="some-other-binding"
@@ -33,7 +33,7 @@
                                      keepalive-time="${jgroups.maximal.keepalive-time:13}"/>
                 <ssl-context client="my-client-context"
                              server="my-server-context"/>
-            </transport>
+            </secured-transport>
             <socket-protocol type="MPING" module="${jgroups.maximal.mping.module:org.jgroups}" socket-binding="jgroups-mping">
                 <property name="name">${jgroups.maximal.property:value}</property>
             </socket-protocol>
@@ -64,6 +64,9 @@
                 <remote-site name="SFO" channel="bridge"/>
                 <remote-site name="NYC" channel="bridge"/>
             </relay>
+        </stack>
+        <stack name="unsecured">
+            <transport type="TCP" socket-binding="some-binding"/>
         </stack>
     </stacks>
 </subsystem>
