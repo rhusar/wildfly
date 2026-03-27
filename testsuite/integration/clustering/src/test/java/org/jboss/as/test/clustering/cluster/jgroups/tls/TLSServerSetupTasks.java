@@ -11,7 +11,6 @@ import java.util.Set;
 import org.jboss.as.test.shared.ManagementServerSetupTask;
 import org.jboss.as.version.Stability;
 import org.jgroups.protocols.TCP;
-import org.jgroups.protocols.TCP_NIO2;
 
 /**
  * Utility interface containing {@link org.jboss.as.arquillian.api.ServerSetupTask}s for setting up TLS/SSL for JGroups channels.
@@ -129,12 +128,5 @@ public interface TLSServerSetupTasks {
             super(NODE_1_2_3, TCP.class.getSimpleName(), true);
         }
     }
-
-    class SharedStoreSecureJGroupsTCP_NIO2TransportServerSetupTask_NODE_1_2 extends SecureJGroupsTransportServerSetupTask {
-        public SharedStoreSecureJGroupsTCP_NIO2TransportServerSetupTask_NODE_1_2() {
-            super(NODE_1_2, TCP_NIO2.class.getSimpleName(), true);
-        }
-    }
-
 
 }
