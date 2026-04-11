@@ -9,7 +9,6 @@ import static org.jboss.as.test.clustering.cluster.AbstractClusteringTestCase.*;
 import java.util.Set;
 
 import org.jboss.as.test.shared.ManagementServerSetupTask;
-import org.jboss.as.version.Stability;
 import org.jgroups.protocols.TCP;
 
 /**
@@ -27,7 +26,6 @@ public interface TLSServerSetupTasks {
         public PhysicalKeyStoresServerSetupTask(Set<String> containers) {
             super(createContainerSetConfigurationBuilder()
                     .addContainers(containers, createContainerConfigurationBuilder()
-                            .requireStability(Stability.COMMUNITY)
                             .setupScript(createScriptBuilder()
                                     // n.b. we cannot use a batch here since we need to run the 'generate-key-pair' operation on already running store
                                     // WFLYELY00007: The required service 'service org.wildfly.security.key-store.jgroupsKS' is not UP, it is currently 'STARTING'."}}
@@ -87,7 +85,6 @@ public interface TLSServerSetupTasks {
         public SecureJGroupsTransportServerSetupTask(Set<String> nodes, String tp, boolean sharedKS) {
             super(createContainerSetConfigurationBuilder()
                     .addContainers(nodes, createContainerConfigurationBuilder()
-                            .requireStability(Stability.COMMUNITY)
                             .setupScript(createScriptBuilder()
                                     .startBatch()
                                     .add("/subsystem=elytron/key-store=jgroupsKS:add(path=%sserver.keystore.pkcs12, relative-to=jboss.server.config.dir, credential-reference={clear-text=secret}, type=PKCS12)", sharedKS ? "../../../" : "")
