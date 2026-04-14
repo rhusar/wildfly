@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.security.AccessController;
 import java.util.Map;
+import java.util.ServiceLoader;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -37,9 +38,22 @@ import org.wildfly.transaction.client.ContextTransactionManager;
  *
  * @author Scott Marlow
  */
-public class TransactionScopedEntityManager extends AbstractEntityManager implements Serializable {
+public abstract class TransactionScopedEntityManager extends AbstractEntityManager implements Serializable {
 
     private static final long serialVersionUID = 455498112L;
+
+    private static final Factory FACTORY = ServiceLoader.load(Factory.class).iterator().next();
+
+    /**
+     * Creates a new {@code TransactionScopedEntityManager}.
+     */
+    public static TransactionScopedEntityManager create(String puScopedName, Map properties, EntityManagerFactory emf,
+                                                        SynchronizationType synchronizationType,
+                                                        TransactionSynchronizationRegistry transactionSynchronizationRegistry,
+                                                        TransactionManager transactionManager) {
+        return FACTORY.createTransactionScopedEntityManager(puScopedName, properties, emf, synchronizationType,
+                                                                transactionSynchronizationRegistry, transactionManager);
+    }
 
     private final String puScopedName;          // Scoped name of the persistent unit
     private final Map properties;
@@ -50,7 +64,10 @@ public class TransactionScopedEntityManager extends AbstractEntityManager implem
     private transient Boolean deferDetach;
     private transient Boolean skipQueryDetach;
 
-    public TransactionScopedEntityManager(String puScopedName, Map properties, EntityManagerFactory emf, SynchronizationType synchronizationType, TransactionSynchronizationRegistry transactionSynchronizationRegistry, TransactionManager transactionManager) {
+    protected TransactionScopedEntityManager(String puScopedName, Map properties, EntityManagerFactory emf,
+                                          SynchronizationType synchronizationType,
+                                          TransactionSynchronizationRegistry transactionSynchronizationRegistry,
+                                          TransactionManager transactionManager) {
         this.puScopedName = puScopedName;
         this.properties = properties;
         this.emf = emf;
@@ -224,5 +241,12 @@ public class TransactionScopedEntityManager extends AbstractEntityManager implem
                 && (!allowJoinedUnsyncPersistenceContext || !entityManagerFromJTA.isJoinedToTransaction())) {
             throw JpaLogger.ROOT_LOGGER.badSynchronizationTypeCombination(scopedPuName);
         }
+    }
+
+    public interface Factory {
+        TransactionScopedEntityManager createTransactionScopedEntityManager(String puScopedName, Map properties, EntityManagerFactory emf,
+                                                                            SynchronizationType synchronizationType,
+                                                                            TransactionSynchronizationRegistry transactionSynchronizationRegistry,
+                                                                            TransactionManager transactionManager);
     }
 }

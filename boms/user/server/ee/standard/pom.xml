@@ -89,8 +89,16 @@
                             <includeDependencies combine.children="append">
                                 <!-- include here any <dependency /> exclusive to this BOM -->
                                 <dependency>
+                                    <groupId>jakarta.data</groupId>
+                                    <artifactId>jakarta.data-api</artifactId>
+                                </dependency>
+                                <dependency>
                                     <groupId>org.jboss.spec.jakarta.el</groupId>
-                                    <artifactId>jboss-el-api_5.0_spec</artifactId>
+                                    <artifactId>jakarta.el-api</artifactId>
+                                </dependency>
+                                <dependency>
+                                    <groupId>jakarta.enterprise</groupId>
+                                    <artifactId>jakarta.enterprise.cdi-el-api</artifactId>
                                 </dependency>
                             </includeDependencies>
                         </configuration>
