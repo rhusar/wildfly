@@ -52,8 +52,12 @@
         <confidential-port>443</confidential-port>
         <proxy-url>http://localhost:9000</proxy-url>
         <verify-token-audience>true</verify-token-audience>
-        <credential name="secret" secret="0aa31d98-e0aa-404c-b6e0-e771dba1e798"/>
-        <redirect-rewrite-rule name="^/wsmain/api/(.*)$" replacement="api/$1"/>
+        <credential name="secret">
+            <secret>0aa31d98-e0aa-404c-b6e0-e771dba1e798</secret>
+        </credential>
+        <redirect-rewrite-rule name="^/wsmain/api/(.*)$">
+            <replacement>api/$1</replacement>
+        </redirect-rewrite-rule>
     </secure-deployment>
     <secure-deployment name="http-endpoint">
         <adapter-state-cookie-path>/</adapter-state-cookie-path>
@@ -63,8 +67,17 @@
         <realm-public-key>MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC4siLKUew0WYxdtq6/rwk4Uj/4amGFFnE/yzIxQVU0PUqz3QBRVkUWpDj0K6ZnS5nzJV/y6DHLEy7hjZTdRDphyF1sq09aDOYnVpzu8o2sIlMM8q5RnUyEfIyUZqwo8pSZDJ90fS0s+IDUJNCSIrAKO3w1lqZDHL6E/YFHXyzkvQIDAQAB</realm-public-key>
         <auth-server-url>http://localhost:8080/auth</auth-server-url>
         <ssl-required>EXTERNAL</ssl-required>
-        <credential client-key-alias="keyAlias" client-key-password="keyPassword" client-keystore-file="/tmp/keystore.jks" client-keystore-password="keystorePassword" client-keystore-type="jks" name="jwt" token-timeout="10"/>
-        <redirect-rewrite-rule name="^/wsmain/api/(.*)$" replacement="/api/$1/"/>
+        <credential name="jwt">
+            <client-keystore-file>/tmp/keystore.jks</client-keystore-file>
+            <client-keystore-type>jks</client-keystore-type>
+            <client-keystore-password>keystorePassword</client-keystore-password>
+            <client-key-password>keyPassword</client-key-password>
+            <token-timeout>10</token-timeout>
+            <client-key-alias>keyAlias</client-key-alias>
+        </credential>
+        <redirect-rewrite-rule name="^/wsmain/api/(.*)$">
+            <replacement>/api/$1/</replacement>
+        </redirect-rewrite-rule>
     </secure-deployment>
     <secure-deployment name="some-endpoint">
         <adapter-state-cookie-path>/</adapter-state-cookie-path>
@@ -74,8 +87,12 @@
         <realm-public-key>MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC4siLKUew0WYxdtq6/rwk4Uj/4amGFFnE/yzIxQVU0PUqz3QBRVkUWpDj0K6ZnS5nzJV/y6DHLEy7hjZTdRDphyF1sq09aDOYnVpzu8o2sIlMM8q5RnUyEfIyUZqwo8pSZDJ90fS0s+IDUJNCSIrAKO3w1lqZDHL6E/YFHXyzkvQIDAQAB</realm-public-key>
         <auth-server-url>http://localhost:8080/auth</auth-server-url>
         <ssl-required>EXTERNAL</ssl-required>
-        <credential name="secret-jwt" secret="fd8f54e1-6994-413a-acf8-90bc67f05412"/>
-        <redirect-rewrite-rule name="^/wsmain/api/(.*)$" replacement="/api/$1/"/>
+        <credential name="secret-jwt">
+            <secret>fd8f54e1-6994-413a-acf8-90bc67f05412</secret>
+        </credential>
+        <redirect-rewrite-rule name="^/wsmain/api/(.*)$">
+            <replacement>/api/$1/</replacement>
+        </redirect-rewrite-rule>
     </secure-deployment>
     <secure-deployment name="wildfly-management">
         <bearer-only>true</bearer-only>
