@@ -5,6 +5,7 @@
 
 package org.jboss.as.jpa.container.persistence32;
 
+import java.io.Serial;
 import java.util.Map;
 
 import jakarta.persistence.CacheRetrieveMode;
@@ -27,6 +28,9 @@ import jakarta.transaction.TransactionSynchronizationRegistry;
 import org.jboss.as.jpa.container.TransactionScopedEntityManager;
 
 public final class TransactionScopedEntityManager32 extends TransactionScopedEntityManager {
+
+    @Serial
+    private static final long serialVersionUID = -713531744224336906L;
 
     private transient volatile EntityManager32Adapter adapter;
 

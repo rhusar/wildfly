@@ -5,6 +5,7 @@
 
 package org.jboss.as.jpa.container.persistence31;
 
+import java.io.Serial;
 import java.util.Map;
 
 import jakarta.persistence.EntityManager;
@@ -33,12 +34,18 @@ public final class WildFlyEntityManagerFactory31 implements ExtendedEntityManage
 
     public static class ExtendedEntityManager31 extends ExtendedEntityManager {
 
+        @Serial
+        private static final long serialVersionUID = -4303887788978456675L;
+
         private ExtendedEntityManager31(String puScopedName, EntityManager underlyingEntityManager, jakarta.persistence.SynchronizationType synchronizationType, jakarta.transaction.TransactionSynchronizationRegistry transactionSynchronizationRegistry, jakarta.transaction.TransactionManager transactionManager) {
             super(puScopedName, underlyingEntityManager, synchronizationType, transactionSynchronizationRegistry, transactionManager);
         }
     }
 
     public static class TransactionScopedEntityManager31 extends TransactionScopedEntityManager {
+
+        @Serial
+        private static final long serialVersionUID = 4060580192670417074L;
 
         private TransactionScopedEntityManager31(String puScopedName, Map properties, jakarta.persistence.EntityManagerFactory emf, jakarta.persistence.SynchronizationType synchronizationType, jakarta.transaction.TransactionSynchronizationRegistry transactionSynchronizationRegistry, jakarta.transaction.TransactionManager transactionManager) {
             super(puScopedName, properties, emf, synchronizationType, transactionSynchronizationRegistry, transactionManager);

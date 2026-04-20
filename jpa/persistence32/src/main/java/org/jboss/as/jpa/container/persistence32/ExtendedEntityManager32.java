@@ -5,6 +5,8 @@
 
 package org.jboss.as.jpa.container.persistence32;
 
+import java.io.Serial;
+
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.ConnectionConsumer;
@@ -27,6 +29,9 @@ import org.jboss.as.jpa.container.ExtendedEntityManager;
  * ExtendedEntityManager subclass that implements the EntityManager methods added in Jakarta Persistence 3.2.
  */
 public final class ExtendedEntityManager32 extends ExtendedEntityManager {
+
+    @Serial
+    private static final long serialVersionUID = 6979033295500516481L;
 
     private transient volatile EntityManager32Adapter adapter;
 
