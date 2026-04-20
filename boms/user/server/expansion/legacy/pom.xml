@@ -79,7 +79,7 @@
         </dependency>
         <dependency>
             <groupId>${channels.maven.groupId}</groupId>
-            <artifactId>wildfly</artifactId>
+            <artifactId>wildfly-compat-ee-10</artifactId>
             <version>${full.maven.version}</version>
             <type>pom</type>
         </dependency>
@@ -112,14 +112,7 @@
                                 <channel>
                                     <manifest>
                                         <groupId>${channels.maven.groupId}</groupId>
-                                        <artifactId>wildfly-ee-10</artifactId>
-                                        <version>${version.boms.channel.ee}</version>
-                                    </manifest>
-                                </channel>
-                                <channel>
-                                    <manifest>
-                                        <groupId>${channels.maven.groupId}</groupId>
-                                        <artifactId>wildfly</artifactId>
+                                        <artifactId>wildfly-compat-ee-10</artifactId>
                                         <version>${version.boms.channel.full}</version>
                                     </manifest>
                                 </channel>
