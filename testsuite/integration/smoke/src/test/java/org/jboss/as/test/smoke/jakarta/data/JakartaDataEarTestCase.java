@@ -83,16 +83,29 @@ public class JakartaDataEarTestCase {
 
         @Override
         public void setup(ManagementClient client, String containerId) throws Exception {
-            if (AssumeTestGroupUtil.isLegacyEEDistribution()) {
+            if (configNeedsSubsystem()) {
                 super.setup(client, containerId);
             }
         }
 
         @Override
         public void tearDown(ManagementClient client, String containerId) throws Exception {
-            if (AssumeTestGroupUtil.isLegacyEEDistribution()) {
+            if (configNeedsSubsystem()) {
                 super.tearDown(client, containerId);
             }
+        }
+
+        private static boolean configNeedsSubsystem() {
+            return AssumeTestGroupUtil.isLegacyEEDistribution() && noneOf("ts.layers", "ts.bootable");
+        }
+
+        private static boolean noneOf(final String... keys) {
+            for (String key : keys) {
+                if (System.getProperty(key) != null) {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 
