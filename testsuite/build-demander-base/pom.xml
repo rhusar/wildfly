@@ -143,8 +143,8 @@
             </activation>
             <properties>
                 <testsuite.default.base.build.groupId>${ee.maven.groupId}</testsuite.default.base.build.groupId>
-                <testsuite.default.base.build.artifactId>wildfly-${latest.ee.artifactid.segment}-build</testsuite.default.base.build.artifactId>
-                <testsuite.default.base.dist.artifactId>wildfly-${latest.ee.artifactid.segment}-dist</testsuite.default.base.dist.artifactId>
+                <testsuite.default.base.build.artifactId>${latest.full.build.artifactId}</testsuite.default.base.build.artifactId>
+                <testsuite.default.base.dist.artifactId>${latest.full.dist.artifactId}</testsuite.default.base.dist.artifactId>
                 <testsuite.default.base.build.version>${ee.maven.version}</testsuite.default.base.build.version>
             </properties>
         </profile>
@@ -158,8 +158,8 @@
             </activation>
             <properties>
                 <testsuite.default.base.build.groupId>${ee.maven.groupId}</testsuite.default.base.build.groupId>
-                <testsuite.default.base.build.artifactId>wildfly-${legacy.ee.artifactid.segment}-build</testsuite.default.base.build.artifactId>
-                <testsuite.default.base.dist.artifactId>wildfly-${legacy.ee.artifactid.segment}-dist</testsuite.default.base.dist.artifactId>
+                <testsuite.default.base.build.artifactId>${legacy.full.build.artifactId}</testsuite.default.base.build.artifactId>
+                <testsuite.default.base.dist.artifactId>${legacy.full.dist.artifactId}</testsuite.default.base.dist.artifactId>
                 <testsuite.default.base.build.version>${ee.maven.version}</testsuite.default.base.build.version>
             </properties>
         </profile>
