@@ -132,8 +132,8 @@
                 <property><name>latest-ee-full-server-tests</name></property>
             </activation>
             <properties>
-                <testsuite.default.full.build.artifactId>wildfly-${latest.ee.artifactid.segment}-build</testsuite.default.full.build.artifactId>
-                <testsuite.default.full.dist.artifactId>wildfly-${latest.ee.artifactid.segment}-dist</testsuite.default.full.dist.artifactId>
+                <testsuite.default.full.build.artifactId>${latest.full.build.artifactId}</testsuite.default.full.build.artifactId>
+                <testsuite.default.full.dist.artifactId>${latest.full.dist.artifactId}</testsuite.default.full.dist.artifactId>
             </properties>
         </profile>
 
@@ -146,8 +146,8 @@
                 <property><name>latest-ee-only-server-tests</name></property>
             </activation>
             <properties>
-                <testsuite.default.full.build.artifactId>${latest.full.build.artifactId}</testsuite.default.full.build.artifactId>
-                <testsuite.default.full.dist.artifactId>${latest.full.dist.artifactId}</testsuite.default.full.dist.artifactId>
+                <testsuite.default.full.build.artifactId>wildfly-${latest.ee.artifactid.segment}-build</testsuite.default.full.build.artifactId>
+                <testsuite.default.full.dist.artifactId>wildfly-${latest.ee.artifactid.segment}-dist</testsuite.default.full.dist.artifactId>
             </properties>
         </profile>
 
