@@ -7,7 +7,7 @@
 <!-- Hibernate Search ORM Mapper - Coordination through outbox-polling:
      Hibernate ORM integration using outbox polling as coordination strategy
      for automatic indexing -->
-<module xmlns="urn:jboss:module:1.9" name="olling">
+<module xmlns="urn:jboss:module:1.9" name="org.hibernate.search.mapper.orm.outboxpolling">
 
     <resources>
         <artifact name="${org.hibernate.search:hibernate-search-mapper-orm-outbox-polling}"/>
