@@ -5,6 +5,8 @@
 
 package org.jboss.as.clustering.jgroups.subsystem;
 
+import java.util.EnumSet;
+import java.util.List;
 import java.util.function.Consumer;
 
 import org.jboss.as.controller.ModelVersion;
@@ -19,19 +21,23 @@ import org.jboss.as.controller.transform.description.ResourceTransformationDescr
  */
 public class SocketTransportResourceTransformer implements Consumer<ModelVersion> {
 
-    private final ResourceTransformationDescriptionBuilder builder;
+    private final List<ResourceTransformationDescriptionBuilder> builders;
 
     SocketTransportResourceTransformer(ResourceTransformationDescriptionBuilder parent) {
-        this.builder = parent.addChildResource(SecurableSocketTransportResourceDefinitionRegistrar.Transport.TCP.getPathElement());
+        this.builders = EnumSet.allOf(SecurableSocketTransportResourceDefinitionRegistrar.Transport.class).stream()
+                .map(transport -> parent.addChildResource(transport.getPathElement()))
+                .toList();
     }
 
     @Override
     public void accept(ModelVersion version) {
         if (JGroupsSubsystemModel.VERSION_11_0_0.requiresTransformation(version)) {
-            this.builder.getAttributeBuilder()
-                    .addRejectCheck(RejectAttributeChecker.DEFINED, SecurableSocketTransportResourceDefinitionRegistrar.CLIENT_SSL_CONTEXT, SecurableSocketTransportResourceDefinitionRegistrar.SERVER_SSL_CONTEXT)
-                    .setDiscard(DiscardAttributeChecker.UNDEFINED, SecurableSocketTransportResourceDefinitionRegistrar.CLIENT_SSL_CONTEXT, SecurableSocketTransportResourceDefinitionRegistrar.SERVER_SSL_CONTEXT)
-                    .end();
+            for (ResourceTransformationDescriptionBuilder builder : this.builders) {
+                builder.getAttributeBuilder()
+                        .addRejectCheck(RejectAttributeChecker.DEFINED, SecurableSocketTransportResourceDefinitionRegistrar.CLIENT_SSL_CONTEXT, SecurableSocketTransportResourceDefinitionRegistrar.SERVER_SSL_CONTEXT)
+                        .setDiscard(DiscardAttributeChecker.UNDEFINED, SecurableSocketTransportResourceDefinitionRegistrar.CLIENT_SSL_CONTEXT, SecurableSocketTransportResourceDefinitionRegistrar.SERVER_SSL_CONTEXT)
+                        .end();
+            }
         }
     }
 }

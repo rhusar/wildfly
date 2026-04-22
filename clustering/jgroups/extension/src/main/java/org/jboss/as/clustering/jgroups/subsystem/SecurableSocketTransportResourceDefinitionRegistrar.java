@@ -35,6 +35,7 @@ public class SecurableSocketTransportResourceDefinitionRegistrar<T extends Basic
 
     enum Transport implements ResourceRegistration {
         TCP,
+        TCP_NIO2,
         ;
         private final PathElement path = StackResourceDefinitionRegistrar.Component.TRANSPORT.pathElement(this.name());
 

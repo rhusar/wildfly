@@ -35,7 +35,6 @@ import org.wildfly.subsystem.service.ServiceDependency;
  */
 public class SocketTransportResourceDefinitionRegistrar<T extends BasicTCP> extends AbstractTransportResourceDefinitionRegistrar<T> {
     enum Transport implements ResourceRegistration {
-        TCP_NIO2,
         ;
         private final PathElement path = StackResourceDefinitionRegistrar.Component.TRANSPORT.pathElement(this.name());
 

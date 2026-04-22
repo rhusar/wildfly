@@ -13,8 +13,8 @@ import org.jboss.as.test.clustering.cluster.web.CoarseWebFailoverTestCase;
  * @author Radoslav Husar
  */
 @ServerSetup({
-        TLSServerSetupTasks.SharedPhysicalKeyStoresServerSetupTask.class,
-        TLSServerSetupTasks.SharedStoreSecureJGroupsTransportServerSetupTask_NODE_1_2_3.class,
+        TLSServerSetupTasks.PerNodePhysicalKeyStoresServerSetupTask_NODE_1_2_3.class,
+        TLSServerSetupTasks.PerNodeSecureJGroupsTransportServerSetupTask_NODE_1_2_3.class,
 })
 public class TLSWebFailoverTestCase extends CoarseWebFailoverTestCase {
 

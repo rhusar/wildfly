@@ -80,6 +80,11 @@ public class ManagedSocketFactory implements SocketFactory {
     }
 
     @Override
+    public SelectorProvider getSelectorProvider() {
+        return this.provider;
+    }
+
+    @Override
     public SocketChannel createSocketChannel(String name) throws IOException {
         return this.createNetworkChannel(name, SelectorProvider::openSocketChannel, SocketBindingManager.NamedManagedBindingRegistry::registerChannel, SocketBindingManager.UnnamedBindingRegistry::registerChannel);
     }
