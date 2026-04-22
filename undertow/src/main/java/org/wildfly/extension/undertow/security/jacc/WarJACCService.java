@@ -8,6 +8,7 @@ package org.wildfly.extension.undertow.security.jacc;
 import static org.wildfly.common.Assert.checkNotNullParam;
 import static org.wildfly.security.jakarta.authz.WebPCFResolver.resolvePolicyConfigurationFactory;
 import static org.wildfly.security.jakarta.authz.WebPCFResolver.setGlobalPolicyConfigurationFactory;
+import static org.wildfly.security.jakarta.authz.WebPolicyContextRegistration.register;
 
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
@@ -73,6 +74,8 @@ public class WarJACCService extends JaccService<WarMetaData> {
     private final WarMetaData metaData;
     /** The original PolicyConfigurationFactory cached so it can be restored */
     private volatile PolicyConfigurationFactory originalPolicyConfigurationFactory;
+    /** Cleanup action to restore the original PolicyFactory when the deployment is undeployed */
+    private volatile Runnable policyFactoryCleanup;
 
     public WarJACCService(String contextId, WarMetaData metaData, Boolean standalone, final ClassLoader deploymentClassLoader) {
         super(contextId, metaData, standalone);
@@ -436,12 +439,21 @@ public class WarJACCService extends JaccService<WarMetaData> {
 
     @Override
     public void beginContextPolicy() throws GeneralSecurityException {
+        // Register custom PolicyFactory from web.xml context-param (returns cleanup or null)
+        policyFactoryCleanup = register(metaData.getMergedJBossWebMetaData(), deploymentClassLoader, contextId);
+
         PolicyRegistration.beginContextPolicy(contextId, deploymentClassLoader);
     }
 
     @Override
     public void endContextPolicy() throws GeneralSecurityException {
         PolicyRegistration.endContextPolicy(contextId);
+
+        // Restore original PolicyFactory if cleanup was registered
+        if (policyFactoryCleanup != null) {
+            policyFactoryCleanup.run();
+            policyFactoryCleanup = null;
+        }
     }
 
     static String getCommaSeparatedString(String[] str) {
