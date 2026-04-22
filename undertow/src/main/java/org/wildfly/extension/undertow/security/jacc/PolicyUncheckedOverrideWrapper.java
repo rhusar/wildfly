@@ -13,6 +13,7 @@ import jakarta.security.jacc.WebResourcePermission;
 import org.jboss.logging.Logger;
 import org.wildfly.common.Assert;
 import org.wildfly.elytron.web.undertow.server.SecurityContextImpl;
+import org.wildfly.extension.undertow.logging.UndertowLogger;
 import org.wildfly.security.authz.jacc.UncheckedPolicyUtil;
 
 /**
@@ -67,8 +68,7 @@ public class PolicyUncheckedOverrideWrapper implements HandlerWrapper {
                         }
                     }
                 } else if (securityContext != null) {
-                    log.warnf("Unable to apply Jakarta Authorization Policy - unexpected SecurityContext type: %s",
-                            securityContext.getClass().getName());
+                    UndertowLogger.ROOT_LOGGER.unexpectedSecurityContextType(securityContext.getClass().getName());
                 }
 
                 next.handleRequest(exchange);
