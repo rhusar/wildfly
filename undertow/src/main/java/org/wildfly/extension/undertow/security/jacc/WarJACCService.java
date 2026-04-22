@@ -84,7 +84,7 @@ public class WarJACCService extends JaccService<WarMetaData> {
     protected PolicyConfigurationFactory getPolicyConfigurationFactory()
             throws ModuleLoadException, ClassNotFoundException, PolicyContextException, GeneralSecurityException {
         PolicyConfigurationFactory pcf = super.getPolicyConfigurationFactory();
-        PolicyConfigurationFactory resolvedPcf = resolvePolicyConfigurationFactory(pcf, metaData.getMergedJBossWebMetaData(), deploymentClassLoader);
+        PolicyConfigurationFactory resolvedPcf = resolvePolicyConfigurationFactory(pcf, metaData.getMergedJBossWebMetaData(), deploymentClassLoader, contextId);
 
         if (pcf != resolvedPcf) {
             this.originalPolicyConfigurationFactory = pcf;
