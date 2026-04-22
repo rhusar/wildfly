@@ -52,12 +52,21 @@ public class PolicyUncheckedOverrideWrapper implements HandlerWrapper {
                     }
 
                     boolean isUnchecked = policyUtil.isUnchecked(permission);
-                    impl.setAuthenticationRequired(!isUnchecked);
 
-                    if (log.isTraceEnabled()) {
-                        log.tracef("Policy decision for %s %s: authenticationRequired=%b (isUnchecked=%b)",
-                                exchange.getRequestMethod(), exchange.getRequestPath(),
-                                !isUnchecked, isUnchecked);
+                    // Only clear authentication requirement if Policy says resource is unchecked
+                    // Don't force authentication if it's not unchecked - let constraint handler decision stand
+                    if (isUnchecked) {
+                        impl.setAuthenticationRequired(false);
+
+                        if (log.isTraceEnabled()) {
+                            log.tracef("Policy indicates resource is unchecked, clearing authentication requirement for: %s %s",
+                                    exchange.getRequestMethod(), exchange.getRequestPath());
+                        }
+                    } else {
+                        if (log.isTraceEnabled()) {
+                            log.tracef("Policy indicates resource is checked, leaving authentication requirement unchanged for: %s %s",
+                                    exchange.getRequestMethod(), exchange.getRequestPath());
+                        }
                     }
                 } else if (securityContext != null) {
                     log.warnf("Unable to apply Jakarta Authorization Policy - unexpected SecurityContext type: %s",
@@ -76,12 +85,14 @@ public class PolicyUncheckedOverrideWrapper implements HandlerWrapper {
      * @return the permission representing this request
      */
     private WebResourcePermission createWebResourcePermission(HttpServerExchange exchange) {
-        String requestPath = exchange.getRequestPath();
+        // Use relative path (without context path) to match how Jakarta Authorization
+        // creates permissions from web.xml security constraints
+        String relativePath = exchange.getRelativePath();
         String httpMethod = exchange.getRequestMethod().toString();
 
         // WebResourcePermission format: WebResourcePermission(String name, String actions)
-        // name = request path (servlet mapping)
+        // name = request path relative to context (servlet mapping)
         // actions = HTTP method (or null for all methods)
-        return new WebResourcePermission(requestPath, httpMethod);
+        return new WebResourcePermission(relativePath, httpMethod);
     }
 }
