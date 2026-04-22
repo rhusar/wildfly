@@ -32,7 +32,7 @@
     <packaging>pom</packaging>
 
     <properties>
-        <full.maven.groupId>${parent.groupId}</full.maven.groupId>
+        <full.maven.groupId>${project.parent.groupId}</full.maven.groupId>
     </properties>
 
     <dependencies>

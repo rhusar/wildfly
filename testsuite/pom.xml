@@ -658,9 +658,6 @@
                 <testsuite.ee.feature.pack.groupId>${ee.maven.groupId}</testsuite.ee.feature.pack.groupId>
                 <testsuite.ee.feature.pack.artifactId>${latest.ee.feature.pack.artifactId}</testsuite.ee.feature.pack.artifactId>
                 <testsuite.ee.feature.pack.version>${ee.maven.version}</testsuite.ee.feature.pack.version>
-                <!-- If we are using channel-driven provisioning, use the latest wildfly-ee channel -->
-                <channels.maven.artifactId>wildfly-${latest.ee.artifactid.segment}</channels.maven.artifactId>
-                <channels.maven.version>${ee.maven.version}</channels.maven.version>
                 <!-- For pre-built servers, use full builds pulled from the root of the source tree -->
                 <testsuite.default.build.project.root></testsuite.default.build.project.root>
                 <testsuite.default.build.project.prefix></testsuite.default.build.project.prefix>
@@ -721,9 +718,6 @@
                 <testsuite.ee.feature.pack.groupId>${ee.maven.groupId}</testsuite.ee.feature.pack.groupId>
                 <testsuite.ee.feature.pack.artifactId>${latest.ee.feature.pack.artifactId}</testsuite.ee.feature.pack.artifactId>
                 <testsuite.ee.feature.pack.version>${ee.maven.version}</testsuite.ee.feature.pack.version>
-                <!-- If we are using channel-driven provisioning, use the latest wildfly-ee channel -->
-                <channels.maven.artifactId>wildfly-${latest.ee.artifactid.segment}</channels.maven.artifactId>
-                <channels.maven.version>${ee.maven.version}</channels.maven.version>
                 <!-- For pre-built servers, use 'ee-'' builds pulled from the root of the source tree -->
                 <testsuite.default.build.project.root></testsuite.default.build.project.root>
                 <testsuite.default.build.project.prefix>ee-</testsuite.default.build.project.prefix>
@@ -747,9 +741,6 @@
                 <testsuite.ee.feature.pack.groupId>${ee.maven.groupId}</testsuite.ee.feature.pack.groupId>
                 <testsuite.ee.feature.pack.artifactId>${legacy.ee.feature.pack.artifactId}</testsuite.ee.feature.pack.artifactId>
                 <testsuite.ee.feature.pack.version>${ee.maven.version}</testsuite.ee.feature.pack.version>
-                <!-- If we are using channel-driven provisioning, use the legacy wildfly-ee channel -->
-                <channels.maven.artifactId>wildfly-${legacy.ee.artifactid.segment}</channels.maven.artifactId>
-                <channels.maven.version>${ee.maven.version}</channels.maven.version>
                 <!-- For pre-built servers, use full builds pulled from the legacy/ee-feature-pack source tree -->
                 <testsuite.default.build.project.root>legacy/ee-feature-pack</testsuite.default.build.project.root>
                 <testsuite.default.build.project.prefix></testsuite.default.build.project.prefix>
@@ -804,9 +795,6 @@
                 <testsuite.ee.feature.pack.groupId>${ee.maven.groupId}</testsuite.ee.feature.pack.groupId>
                 <testsuite.ee.feature.pack.artifactId>${legacy.ee.feature.pack.artifactId}</testsuite.ee.feature.pack.artifactId>
                 <testsuite.ee.feature.pack.version>${ee.maven.version}</testsuite.ee.feature.pack.version>
-                <!-- If we are using channel-driven provisioning, use the legacy wildfly-ee channel -->
-                <channels.maven.artifactId>wildfly-${legacy.ee.artifactid.segment}</channels.maven.artifactId>
-                <channels.maven.version>${ee.maven.version}</channels.maven.version>
                 <!-- For pre-built servers, use 'ee-' builds pulled from the legacy/ee-feature-pack source tree -->
                 <testsuite.default.build.project.root>legacy/ee-feature-pack</testsuite.default.build.project.root>
                 <testsuite.default.build.project.prefix>ee-</testsuite.default.build.project.prefix>

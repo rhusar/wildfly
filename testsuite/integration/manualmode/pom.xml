@@ -341,8 +341,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.wildfly.channels</groupId>
-            <artifactId>wildfly-ee</artifactId>
+            <groupId>${channels.maven.groupId}</groupId>
+            <artifactId>${testsuite.ee.only.channel.artifactId}</artifactId>
             <version>${ee.maven.version}</version>
             <type>yaml</type>
             <classifier>manifest</classifier>
@@ -692,20 +692,6 @@
             <activation>
                 <property>
                     <name>external.wildfly.channels</name>
-                </property>
-            </activation>
-            <properties>
-                <!-- Disable channel-provisioning executions to avoid interference between external settings and the test -->
-                <channel.provisioning.phase>none</channel.provisioning.phase>
-                <!-- Stop arquillian blowing up on a non-existent dir for an arquillian.xml config -->
-                <multichannel.jboss.home>${project.build.directory}/wildfly</multichannel.jboss.home>
-            </properties>
-        </profile>
-        <profile>
-            <id>internal.wildfly.channels</id>
-            <activation>
-                <property>
-                    <name>internal.wildfly.channels</name>
                 </property>
             </activation>
             <properties>

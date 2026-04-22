@@ -693,7 +693,7 @@
 
     <profiles>
         <profile>
-            <id>skip.preview</id>
+            <id>preview-build</id>
             <activation>
                 <property>
                     <name>!no.preview.build</name>
@@ -705,7 +705,7 @@
         </profile>
 
         <profile>
-            <id>skip.legacy</id>
+            <id>legacy-ee-build</id>
             <activation>
                 <property>
                     <name>!no.legacy.ee.build</name>

@@ -16,7 +16,7 @@ The `wildfly-ee-feature-pack-galleon-shared-legacy` module is used to control th
 are relevant to *both* the `wildfly-ee` and `wildfly-legacy-ee` feature
 packs.
 
-Note that `wildfly-legacy-ee` is a conceptual name used in this document for a feature pack will have different actual names over time, depending on what EE version it provides. For example, it initially was called `wildfly-ee-10`.
+Note that `wildfly-legacy-ee` is a conceptual name used in this document for a feature pack that will have different actual names over time, depending on what EE version it provides. For example, it initially was called `wildfly-ee-10`.
 
 [WARNING]
 ====

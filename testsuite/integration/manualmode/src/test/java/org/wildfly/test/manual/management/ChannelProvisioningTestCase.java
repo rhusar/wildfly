@@ -61,8 +61,7 @@ public class ChannelProvisioningTestCase {
         AssumeTestGroupUtil.assumeNotWildFlyPreview();
         if (AssumeTestGroupUtil.isBootableJar()
                 || isNonStandardEEFeaturePack()
-                || System.getProperty("external.wildfly.channels") != null
-                || System.getProperty("internal.wildfly.channels") != null) {
+                || System.getProperty("external.wildfly.channels") != null) {
             throw new AssumptionViolatedException("Unsuitable environment");
         }
     }

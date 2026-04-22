@@ -340,18 +340,6 @@
             </properties>
         </profile>
         <profile>
-            <id>internal.wildfly.channels</id>
-            <activation>
-                <property>
-                    <name>internal.wildfly.channels</name>
-                </property>
-            </activation>
-            <properties>
-                <!-- Disable channel-provisioning executions to avoid interference between external settings and the test -->
-                <channel.provisioning.phase>none</channel.provisioning.phase>
-            </properties>
-        </profile>
-        <profile>
             <id>latest-ee-only-server-tests</id>
             <activation>
                 <property><name>latest-ee-only-server-tests</name></property>

@@ -256,7 +256,7 @@
                             <generate-channel-manifest>true</generate-channel-manifest>
                             <deploy-channel-manifest>false</deploy-channel-manifest>
                             <generate-complete-model>true</generate-complete-model>
-                            <copyright>${copyright}</copyright>
+                            <copyright>${wildfly.copyright.simple}</copyright>
                         </configuration>
                     </execution>
                 </executions>
@@ -487,7 +487,7 @@
         <profile>
             <id>javadocDist</id>
             <properties>
-                <javadoc.branding>WildFly public API - ${project.version}</javadoc.branding>
+                <javadoc.branding>${legacy.dist.product.release.name} public API - ${project.version}</javadoc.branding>
             </properties>
             <build>
                 <plugins>

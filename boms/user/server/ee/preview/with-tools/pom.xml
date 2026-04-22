@@ -38,7 +38,7 @@
     </dependencyManagement>
 
     <dependencies>
-        <!-- depende on tools BOM builder to ensure such BOM is built before this builder runs -->
+        <!-- depends on tools BOM builder to ensure such BOM is built before this builder runs -->
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>wildfly-tools-builder</artifactId>

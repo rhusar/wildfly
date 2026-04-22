@@ -61,7 +61,7 @@
                         <oracle-javadoc>https://docs.oracle.com/en/java/javase/17/docs/api</oracle-javadoc>
                         <resteasyversion>${version.org.jboss.resteasy}</resteasyversion>
                         <wildflyversion>${product.docs.server.version}</wildflyversion>
-                        <copyright-blurb>${wildfly.copyright}</copyright-blurb>
+                        <copyright-blurb>${wildfly.copyright.html}</copyright-blurb>
                         <!-- Default asciidoc setting attributes -->
                         <linkcss>false</linkcss>
                         <sectanchors/>
