@@ -59,7 +59,15 @@ public abstract class ExtendedEntityManager extends AbstractEntityManager implem
      */
     private static final long serialVersionUID = 432438L;
 
-    private static final Factory FACTORY = ServiceLoader.load(Factory.class).iterator().next();
+    private static final Factory FACTORY; static {
+        Factory f;
+        if (WildFlySecurityManager.isChecking()) {
+            f = AccessController.doPrivileged((PrivilegedAction<Factory>) () -> ServiceLoader.load(Factory.class).iterator().next());
+        } else {
+            f = ServiceLoader.load(Factory.class).iterator().next();
+        }
+        FACTORY = f;
+    }
 
     /**
      * Creates a new {@code ExtendedEntityManager}.

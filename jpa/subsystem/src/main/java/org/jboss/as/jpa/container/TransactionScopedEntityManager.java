@@ -10,6 +10,7 @@ import static org.jboss.as.jpa.messages.JpaLogger.ROOT_LOGGER;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Map;
 import java.util.ServiceLoader;
 
@@ -27,6 +28,7 @@ import org.jboss.as.jpa.util.JPAServiceNames;
 import org.jboss.as.server.CurrentServiceContainer;
 import org.jboss.msc.service.ServiceContainer;
 import org.jboss.msc.service.ServiceController;
+import org.wildfly.security.manager.WildFlySecurityManager;
 import org.wildfly.transaction.client.ContextTransactionManager;
 
 /**
@@ -42,7 +44,17 @@ public abstract class TransactionScopedEntityManager extends AbstractEntityManag
 
     private static final long serialVersionUID = 455498112L;
 
-    private static final Factory FACTORY = ServiceLoader.load(Factory.class).iterator().next();
+    private static final Factory FACTORY;
+
+    static {
+        Factory f;
+        if (WildFlySecurityManager.isChecking()) {
+            f = AccessController.doPrivileged((PrivilegedAction<Factory>) () -> ServiceLoader.load(Factory.class).iterator().next());
+        } else {
+            f = ServiceLoader.load(Factory.class).iterator().next();
+        }
+        FACTORY = f;
+    }
 
     /**
      * Creates a new {@code TransactionScopedEntityManager}.
