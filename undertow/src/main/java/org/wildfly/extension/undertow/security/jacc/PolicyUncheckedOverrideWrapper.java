@@ -11,6 +11,7 @@ import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import jakarta.security.jacc.WebResourcePermission;
 import org.jboss.logging.Logger;
+import org.wildfly.common.Assert;
 import org.wildfly.elytron.web.undertow.server.SecurityContextImpl;
 import org.wildfly.security.authz.jacc.UncheckedPolicyUtil;
 
@@ -30,10 +31,7 @@ public class PolicyUncheckedOverrideWrapper implements HandlerWrapper {
     private final UncheckedPolicyUtil policyUtil;
 
     public PolicyUncheckedOverrideWrapper(UncheckedPolicyUtil policyUtil) {
-        if (policyUtil == null) {
-            throw new IllegalArgumentException("policyUtil must not be null");
-        }
-        this.policyUtil = policyUtil;
+        this.policyUtil = Assert.checkNotNullParam("policyUtil", policyUtil);
     }
 
     @Override
