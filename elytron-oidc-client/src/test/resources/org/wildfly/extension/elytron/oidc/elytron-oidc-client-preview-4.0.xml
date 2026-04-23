@@ -59,12 +59,8 @@
         <confidential-port>443</confidential-port>
         <proxy-url>http://localhost:9000</proxy-url>
         <verify-token-audience>true</verify-token-audience>
-        <credential name="secret">
-            <secret>0aa31d98-e0aa-404c-b6e0-e771dba1e798</secret>
-        </credential>
-        <redirect-rewrite-rule name="^/wsmain/api/(.*)$">
-            <replacement>/api/$1/</replacement>
-        </redirect-rewrite-rule>
+        <credential name="secret" secret="0aa31d98-e0aa-404c-b6e0-e771dba1e798" />
+        <redirect-rewrite-rule name="^/wsmain/api/(.*)$" replacement="/api/$1/" />
     </secure-deployment>
     <secure-deployment name="myAppWithJwt.war">
         <adapter-state-cookie-path>/</adapter-state-cookie-path>
@@ -74,17 +70,10 @@
         <realm-public-key>MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC4siLKUew0WYxdtq6/rwk4Uj/4amGFFnE/yzIxQVU0PUqz3QBRVkUWpDj0K6ZnS5nzJV/y6DHLEy7hjZTdRDphyF1sq09aDOYnVpzu8o2sIlMM8q5RnUyEfIyUZqwo8pSZDJ90fS0s+IDUJNCSIrAKO3w1lqZDHL6E/YFHXyzkvQIDAQAB</realm-public-key>
         <auth-server-url>http://localhost:8080/auth</auth-server-url>
         <ssl-required>EXTERNAL</ssl-required>
-        <credential name="jwt">
-            <client-keystore-file>/tmp/keystore.jks</client-keystore-file>
-            <client-keystore-type>jks</client-keystore-type>
-            <client-keystore-password>keystorePassword</client-keystore-password>
-            <client-key-password>keyPassword</client-key-password>
-            <token-timeout>10</token-timeout>
-            <client-key-alias>keyAlias</client-key-alias>
-        </credential>
-        <redirect-rewrite-rule name="^/wsmain/api/(.*)$">
-            <replacement>/api/$1/</replacement>
-        </redirect-rewrite-rule>
+        <credential name="jwt" client-key-password="keyPassword" client-keystore-file="/tmp/keystore.jks"
+                    client-keystore-password="keystorePassword" client-key-alias="keyAlias" token-timeout="10"
+                    client-keystore-type="jks" />
+        <redirect-rewrite-rule name="^/wsmain/api/(.*)$" replacement="/api/$1/" />
     </secure-deployment>
     <secure-deployment name="myAppWithSecretJwt.war">
         <adapter-state-cookie-path>/</adapter-state-cookie-path>
@@ -94,31 +83,22 @@
         <realm-public-key>MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC4siLKUew0WYxdtq6/rwk4Uj/4amGFFnE/yzIxQVU0PUqz3QBRVkUWpDj0K6ZnS5nzJV/y6DHLEy7hjZTdRDphyF1sq09aDOYnVpzu8o2sIlMM8q5RnUyEfIyUZqwo8pSZDJ90fS0s+IDUJNCSIrAKO3w1lqZDHL6E/YFHXyzkvQIDAQAB</realm-public-key>
         <auth-server-url>http://localhost:8080/auth</auth-server-url>
         <ssl-required>EXTERNAL</ssl-required>
-        <credential name="secret-jwt">
-            <secret>fd8f54e1-6994-413a-acf8-90bc67f05412</secret>
-            <algorithm>HS512</algorithm>
-        </credential>
-        <redirect-rewrite-rule name="^/wsmain/api/(.*)$">
-            <replacement>/api/$1/</replacement>
-        </redirect-rewrite-rule>
+        <credential name="secret-jwt" secret="fd8f54e1-6994-413a-acf8-90bc67f05412" algorithm="HS512"/>
+        <redirect-rewrite-rule name="^/wsmain/api/(.*)$" replacement="/api/$1/" />
     </secure-deployment>
     <secure-deployment name="myAppWithRealmInline.war">
         <realm>demo</realm>
         <resource>customer-portal</resource>
         <auth-server-url>http://localhost:8081/auth</auth-server-url>
         <ssl-required>EXTERNAL</ssl-required>
-        <credential name="secret">
-            <secret>password</secret>
-        </credential>
+        <credential name="secret" secret="password" />
     </secure-deployment>
     <secure-deployment name="myAppWithProvider.war">
         <client-id>customer-portal</client-id>
         <provider>google</provider>
         <ssl-required>EXTERNAL</ssl-required>
         <principal-attribute>firstName</principal-attribute>
-        <credential name="secret">
-            <secret>password</secret>
-        </credential>
+        <credential name="secret" secret="password" />
     </secure-deployment>
     <secure-deployment name="myBearerOnlyApp.war">
         <bearer-only>true</bearer-only>

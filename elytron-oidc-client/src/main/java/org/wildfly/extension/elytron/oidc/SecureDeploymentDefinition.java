@@ -9,7 +9,6 @@ import static org.jboss.as.server.security.SecurityMetaData.OPERATION_CONTEXT_AT
 import static org.jboss.as.server.security.VirtualDomainMarkerUtility.virtualDomainName;
 import static org.jboss.as.server.security.VirtualDomainUtil.VIRTUAL;
 import static org.jboss.as.web.common.VirtualHttpServerMechanismFactoryMarkerUtility.virtualMechanismFactoryName;
-import static org.wildfly.extension.elytron.oidc.ElytronOidcSubsystemSchema.VERSION_4_0_PREVIEW;
 import static org.wildfly.extension.elytron.oidc.ProviderAttributeDefinitions.AUTHENTICATION_REQUEST_FORMAT;
 import static org.wildfly.extension.elytron.oidc.ProviderAttributeDefinitions.DISABLE_TRUST_MANAGER;
 import static org.wildfly.extension.elytron.oidc.ProviderAttributeDefinitions.PROVIDER_JWT_CLAIMS_TYP;
@@ -71,7 +70,13 @@ import org.wildfly.security.http.oidc.OidcSecurityRealm;
 class SecureDeploymentDefinition extends SimpleResourceDefinition {
 
     static final ResourceRegistration PATH = ResourceRegistration.of(PathElement.pathElement(ElytronOidcDescriptionConstants.SECURE_DEPLOYMENT), Stability.DEFAULT);
+
+    /*
+     * These are attributes at a stability level other than Default, the OidcActivationProcessor also cross references them
+     * in the deployment's own configuration to ensure they are not activated there.
+     */
     protected static List<SimpleAttributeDefinition> NON_DEFAULT_ATTRIBUTES = new ArrayList<>();
+
     protected static final SimpleAttributeDefinition REALM =
             new SimpleAttributeDefinitionBuilder(ElytronOidcDescriptionConstants.REALM, ModelType.STRING, true)
                     .setAllowExpression(true)
@@ -217,8 +222,7 @@ class SecureDeploymentDefinition extends SimpleResourceDefinition {
         ALL_ATTRIBUTES.add(LOGOUT_SESSION_REQUIRED);
         ALL_ATTRIBUTES.add(BACK_CHANNEL_LOGOUT_SESSION_INVALIDATION_LIMIT);
 
-        SimpleAttributeDefinition[] providerAttributes = (VERSION_4_0_PREVIEW.getVersion().major() < ElytronOidcClientSubsystemModel.CURRENT.getVersion().getMajor()
-                ? ProviderAttributeDefinitions.ATTRIBUTES_VERSION_4_0 : ProviderAttributeDefinitions.ATTRIBUTES);
+        SimpleAttributeDefinition[] providerAttributes = ProviderAttributeDefinitions.ATTRIBUTES;
         for (SimpleAttributeDefinition attribute : providerAttributes) {
             ALL_ATTRIBUTES.add(attribute);
         }

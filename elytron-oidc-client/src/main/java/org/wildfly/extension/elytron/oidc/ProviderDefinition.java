@@ -5,9 +5,7 @@
 
 package org.wildfly.extension.elytron.oidc;
 
-import static org.wildfly.extension.elytron.oidc.ElytronOidcSubsystemSchema.VERSION_4_0_PREVIEW;
 import static org.wildfly.extension.elytron.oidc.ProviderAttributeDefinitions.DISABLE_TRUST_MANAGER;
-import static org.wildfly.extension.elytron.oidc.ProviderAttributeDefinitions.PROVIDER_JWT_CLAIMS_TYP;
 import static org.wildfly.extension.elytron.oidc._private.ElytronOidcLogger.ROOT_LOGGER;
 
 import org.jboss.as.controller.AbstractAddStepHandler;
@@ -48,15 +46,13 @@ class ProviderDefinition extends SimpleResourceDefinition {
         for (AttributeDefinition attribute : ProviderAttributeDefinitions.ATTRIBUTES) {
             resourceRegistration.registerReadWriteAttribute(attribute, null, ProviderWriteAttributeHandler.INSTANCE);
         }
-        resourceRegistration.registerReadWriteAttribute(PROVIDER_JWT_CLAIMS_TYP, null, ProviderWriteAttributeHandler.INSTANCE);
     }
 
     static class ProviderAddHandler extends AbstractAddStepHandler {
         public static ProviderAddHandler INSTANCE = new ProviderAddHandler();
 
         private ProviderAddHandler() {
-            super((VERSION_4_0_PREVIEW.getVersion().major() < (ElytronOidcClientSubsystemModel.CURRENT.getVersion().getMajor()))
-                ? ProviderAttributeDefinitions.ATTRIBUTES_VERSION_4_0 : ProviderAttributeDefinitions.ATTRIBUTES);
+            super(ProviderAttributeDefinitions.ATTRIBUTES);
         }
 
         protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) throws OperationFailedException {
@@ -76,8 +72,7 @@ class ProviderDefinition extends SimpleResourceDefinition {
         public static final ProviderWriteAttributeHandler INSTANCE = new ProviderWriteAttributeHandler();
 
         private ProviderWriteAttributeHandler() {
-            super((VERSION_4_0_PREVIEW.getVersion().major() < (ElytronOidcClientSubsystemModel.CURRENT.getVersion().getMajor()))
-                    ? ProviderAttributeDefinitions.ATTRIBUTES_VERSION_4_0 : ProviderAttributeDefinitions.ATTRIBUTES);
+            super(ProviderAttributeDefinitions.ATTRIBUTES);
         }
 
         @Override

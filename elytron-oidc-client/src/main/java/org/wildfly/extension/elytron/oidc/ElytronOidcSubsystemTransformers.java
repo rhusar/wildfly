@@ -218,5 +218,11 @@ public class ElytronOidcSubsystemTransformers implements ExtensionTransformerReg
                 .addRejectCheck(RejectAttributeChecker.DEFINED, PROVIDER_JWT_CLAIMS_TYP)
                 .setDiscard(DiscardAttributeChecker.ALWAYS, PROVIDER_JWT_CLAIMS_TYP)
                 .end();
+
+        builder.addChildResource(PathElement.pathElement(REALM))
+                .getAttributeBuilder()
+                .addRejectCheck(RejectAttributeChecker.DEFINED, PROVIDER_JWT_CLAIMS_TYP)
+                .setDiscard(DiscardAttributeChecker.ALWAYS, PROVIDER_JWT_CLAIMS_TYP)
+                .end();
     }
 }

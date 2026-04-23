@@ -1207,82 +1207,80 @@
     </xs:complexType>
 
     <xs:complexType name="credential-type">
-        <xs:all>
-            <xs:element name="algorithm" type="xs:string" minOccurs="0" maxOccurs="1">
-                <xs:annotation>
-                    <xs:documentation>
-                        <![CDATA[
-                        The credential signature algorithm used by the OpenID provider.
-                        ]]>
-                    </xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="client-key-alias" type="xs:string" minOccurs="0" maxOccurs="1">
-                <xs:annotation>
-                    <xs:documentation>
-                        <![CDATA[
-                        The client key alias when the credential provider is used.
-                        ]]>
-                    </xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="client-key-password" type="xs:string" minOccurs="0" maxOccurs="1">
-                <xs:annotation>
-                    <xs:documentation>
-                        <![CDATA[
-                        The password for the client key when the credential provider is used.
-                        This is required if 'client-keystore-file' has been specified.
-                        ]]>
-                    </xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="client-keystore-file" type="xs:string" minOccurs="0" maxOccurs="1">
-                <xs:annotation>
-                    <xs:documentation>
-                        <![CDATA[
-                        The path to the client keystore when the credential provider is used. This is optional.
-                        ]]>
-                    </xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="client-keystore-password" type="xs:string" minOccurs="0" maxOccurs="1">
-                <xs:annotation>
-                    <xs:documentation>
-                        <![CDATA[
-                        The password for the client keystore when the credential provider is used.
-                        This is required if 'client-keystore-file' has been specified.
-                        ]]>
-                    </xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="client-keystore-type" type="xs:string" minOccurs="0" maxOccurs="1">
-                <xs:annotation>
-                    <xs:documentation>
-                        <![CDATA[
-                        The client keystore type when the credential provider is used.
-                        ]]>
-                    </xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="secret" type="xs:string" minOccurs="0" maxOccurs="1">
-                <xs:annotation>
-                    <xs:documentation>
-                        <![CDATA[
-                        The client secret that was registered with the OpenID provider.
-                        ]]>
-                    </xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="token-timeout" type="xs:int" minOccurs="0" maxOccurs="1">
-                <xs:annotation>
-                    <xs:documentation>
-                        <![CDATA[
-                        The amount of time after which the token expires and can no longer be used to authenticate requests.
-                        ]]>
-                    </xs:documentation>
-                </xs:annotation>
-            </xs:element>
-        </xs:all>
+        <xs:attribute name="client-keystore-file" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    <![CDATA[
+                    The path to the client keystore when the credential provider is used. This is optional.
+                    ]]>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="client-keystore-type" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    <![CDATA[
+                    The client keystore type when the credential provider is used.
+                    ]]>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="client-keystore-password" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    <![CDATA[
+                    The password for the client keystore when the credential provider is used.
+                    This is required if 'client-keystore-file' has been specified.
+                    ]]>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="client-key-password" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    <![CDATA[
+                    The password for the client key when the credential provider is used.
+                    This is required if 'client-keystore-file' has been specified.
+                    ]]>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="client-key-alias" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    <![CDATA[
+                    The client key alias when the credential provider is used.
+                    ]]>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="token-timeout" type="xs:int">
+            <xs:annotation>
+                <xs:documentation>
+                    <![CDATA[
+                    The amount of time after which the token expires and can no longer be used to authenticate requests.
+                    ]]>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="secret" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    <![CDATA[
+                    The client secret that was registered with the OpenID provider.
+                    ]]>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="algorithm" type="xs:string">
+            <xs:annotation>
+                <xs:documentation>
+                    <![CDATA[
+                    The credential signature algorithm used by the OpenID provider.
+                    ]]>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
         <xs:attribute name="name" type="xs:string" use="required">
             <xs:annotation>
                 <xs:documentation>
@@ -1295,23 +1293,20 @@
     </xs:complexType>
 
     <xs:complexType name="redirect-rewrite-rule-type">
-        <xs:all>
-            <xs:element name="replacement" type="xs:string" minOccurs="1" maxOccurs="1">
-                <xs:annotation>
-                    <xs:documentation>
-                        <![CDATA[
-                    The replacement String in the rewrite rule for the redirect URI.
-                    The replacement String in the rewrite rule for the redirect URI.
-                    ]]>
-                </xs:documentation>
-            </xs:annotation>
-        </xs:element>
-        </xs:all>
         <xs:attribute name="name" type="xs:string" use="required">
             <xs:annotation>
                 <xs:documentation>
                     <![CDATA[
                     The name of the Redirect URI rewrite rule.
+                    ]]>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="replacement" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    <![CDATA[
+                    The replacement String in the rewrite rule for the redirect URI.
                     ]]>
                 </xs:documentation>
             </xs:annotation>
