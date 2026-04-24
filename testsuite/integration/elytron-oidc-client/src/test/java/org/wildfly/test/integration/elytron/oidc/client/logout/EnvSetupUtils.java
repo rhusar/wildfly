@@ -153,6 +153,20 @@ public class EnvSetupUtils {
 
             operation = createOpNode("system-property=" + OIDC_REQUEST_OBJECT_SIGNING_KEYSTORE_FILE, ModelDescriptionConstants.REMOVE);
             Utils.applyUpdate(operation, client);
+
+            if (!isOidcServerConfig) {
+                operation = createOpNode("system-property=" + Constants.LOGOUT_PATH_VALUE_PROP, ModelDescriptionConstants.REMOVE);
+                Utils.applyUpdate(operation, client);
+
+                operation = createOpNode("system-property=" + Constants.LOGOUT_CALLBACK_PATH_VALUE_PROP, ModelDescriptionConstants.REMOVE);
+                Utils.applyUpdate(operation, client);
+
+                operation = createOpNode("system-property=" + Constants.POST_LOGOUT_PATH_VALUE_PROP, ModelDescriptionConstants.REMOVE);
+                Utils.applyUpdate(operation, client);
+
+                operation = createOpNode("system-property=" + Constants.CLIENT_SECRET_PROP, ModelDescriptionConstants.REMOVE);
+                Utils.applyUpdate(operation, client);
+            }
         }
 
         /* register rpInitiated, backchannel, frontchannel, postLogoutRedirectUris with Keycloak

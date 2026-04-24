@@ -171,7 +171,7 @@ It is possible to configure the scope values that would be used in the OIDC auth
 ==== Deployment Configuration
 It is also possible to configure the scope values that would be used via the scope attribute in a deployment's `oidc.json` file.
 
-NOTE: If both the deployment and subsystem configuration is present, then the subsystem configuration will override the deployment values.
+NOTE: If both the deployment and subsystem configuration are present, then the subsystem configuration will override the deployment values.
 
 == Sending a Request Object as a JWT
 
@@ -459,13 +459,13 @@ The following example shows how to add configuration to the _elytron-oidc-client
 ----
 
 
-NOTE: This is a preview level feature, the WildFly server's stability level must be set to `preview`
+NOTE: This is a preview level feature; the WildFly server's stability level must be set to `preview`
 or lower to enable it. The stability level must not be changed to `community` or `default` after configuring the
 `logout` attributes. For more information about the stability levels of the WildFly server, please refer to the
 link:Admin_Guide{outfilesuffix}[Admin Guide], particularly the
 link:Admin_Guide{outfilesuffix}#Feature_stability_levels[Feature stability levels] section.
 
-NOTE: If both the deployment and subsystem configuration is present, then the subsystem configuration will override the deployment values.
+NOTE: If both the deployment and subsystem configuration are present, then the subsystem configuration will override the deployment values.
 ----
 ----
 
