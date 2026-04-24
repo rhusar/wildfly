@@ -372,7 +372,7 @@
         <version.org.keycloak>25.0.6</version.org.keycloak>
         <version.org.mockito>5.21.0</version.org.mockito>
         <version.org.syslog4j>0.9.30</version.org.syslog4j>
-        <version.org.testcontainers>2.0.4</version.org.testcontainers>
+        <version.org.testcontainers>2.0.5</version.org.testcontainers>
         <version.org.testng>7.8.0</version.org.testng>
         <!-- The MicroProfile REST Client TCK requires a newer version of TestNG. The version is explicitly overridden
              on the dependency on the MicroProfile REST Client TCK POM.
@@ -507,7 +507,7 @@
         <version.org.eclipse.angus.angus-mail>2.0.4</version.org.eclipse.angus.angus-mail>
         <version.org.eclipse.jdt>3.33.0</version.org.eclipse.jdt>
         <version.org.eclipse.microprofile>7.1</version.org.eclipse.microprofile>
-        <version.org.eclipse.microprofile.config.api>3.1</version.org.eclipse.microprofile.config.api>
+        <version.org.eclipse.microprofile.config.api>3.1.1</version.org.eclipse.microprofile.config.api>
         <version.org.eclipse.microprofile.fault-tolerance.api>4.1.2</version.org.eclipse.microprofile.fault-tolerance.api>
         <version.org.eclipse.microprofile.health.api>4.0.1</version.org.eclipse.microprofile.health.api>
         <version.org.eclipse.microprofile.jwt.api>2.1</version.org.eclipse.microprofile.jwt.api>
@@ -546,7 +546,7 @@
         <version.org.jboss.genericjms>3.0.0.Final</version.org.jboss.genericjms>
         <version.org.jboss.hal.console>3.7.19.Final</version.org.jboss.hal.console>
         <version.org.jboss.iiop-client>2.0.1.Final</version.org.jboss.iiop-client>
-        <version.org.jboss.ironjacamar>3.0.18.Final</version.org.jboss.ironjacamar>
+        <version.org.jboss.ironjacamar>3.0.19.Final</version.org.jboss.ironjacamar>
         <version.org.jboss.jboss-transaction-spi>8.0.0.Final</version.org.jboss.jboss-transaction-spi>
         <version.org.jboss.metadata>17.1.0</version.org.jboss.metadata>
         <version.org.jboss.mod_cluster>2.1.0.Final</version.org.jboss.mod_cluster>
@@ -583,7 +583,7 @@
         <version.org.opensaml.opensaml>4.3.2</version.org.opensaml.opensaml>
         <version.org.ow2.asm>9.9.1</version.org.ow2.asm>
         <version.org.reactivestreams>1.0.4</version.org.reactivestreams>
-        <version.org.wildfly.clustering>10.0.0.Final</version.org.wildfly.clustering>
+        <version.org.wildfly.clustering>10.0.1.Final</version.org.wildfly.clustering>
         <!--
             Maintain separation between these two frequently updated artifacts to avoid merge conflicts.
         -->
