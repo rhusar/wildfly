@@ -6,7 +6,7 @@
 package org.wildfly.extension.clustering.web.session.hotrod;
 
 import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 import jakarta.servlet.ServletContext;
 
@@ -90,18 +90,17 @@ public class HotRodSessionManagementProvider extends AbstractSessionManagementPr
         DeploymentServiceInstaller configurationInstaller = new RemoteCacheConfigurationServiceInstallerFactory(configurator).apply(deploymentCacheConfiguration);
         DeploymentServiceInstaller cacheInstaller = RemoteCacheServiceInstallerFactory.INSTANCE.apply(deploymentCacheConfiguration);
 
-        ServiceDependency<RemoteCache<?, ?>> remoteCache = deploymentCacheConfiguration.getServiceDependency(HotRodServiceDescriptor.REMOTE_CACHE);
-        RemoteCacheConfiguration cacheConfiguration = new RemoteCacheConfiguration() {
+        DataFormat format = DataFormat.builder().keyType(MediaType.APPLICATION_OCTET_STREAM).keyMarshaller(marshaller).valueType(MediaType.APPLICATION_OCTET_STREAM).valueMarshaller(marshaller).build();
+        ServiceDependency<SessionManagerFactory<ServletContext, C>> factory = deploymentCacheConfiguration.getServiceDependency(HotRodServiceDescriptor.REMOTE_CACHE).map(new Function<>() {
             @Override
-            public <CK, CV> RemoteCache<CK, CV> getCache() {
-                RemoteCache<?, ?> cache = remoteCache.get();
-                return cache.withDataFormat(DataFormat.builder().keyType(MediaType.APPLICATION_OCTET_STREAM).keyMarshaller(marshaller).valueType(MediaType.APPLICATION_OCTET_STREAM).valueMarshaller(marshaller).build());
-            }
-        };
-        Supplier<SessionManagerFactory<ServletContext, C>> factory = new Supplier<>() {
-            @Override
-            public SessionManagerFactory<ServletContext, C> get() {
-                return new HotRodSessionManagerFactory<>(new HotRodSessionManagerFactory.Configuration<C>() {
+            public SessionManagerFactory<ServletContext, C> apply(RemoteCache<?, ?> cache) {
+                RemoteCacheConfiguration config = new RemoteCacheConfiguration() {
+                    @Override
+                    public <CK, CV> RemoteCache<CK, CV> getCache() {
+                        return cache.withDataFormat(format);
+                    }
+                };
+                return new HotRodSessionManagerFactory<>(new HotRodSessionManagerFactory.Configuration<>() {
                     @Override
                     public SessionManagerFactoryConfiguration<C> getSessionManagerFactoryConfiguration() {
                         return configuration;
@@ -109,14 +108,13 @@ public class HotRodSessionManagementProvider extends AbstractSessionManagementPr
 
                     @Override
                     public RemoteCacheConfiguration getCacheConfiguration() {
-                        return cacheConfiguration;
+                        return config;
                     }
                 });
             }
-        };
+        });
         DeploymentServiceInstaller installer = ServiceInstaller.BlockingBuilder.of(factory)
                 .provides(WebDeploymentServiceDescriptor.SESSION_MANAGER_FACTORY.resolve(configuration.getDeploymentUnit()))
-                .requires(remoteCache)
                 .withLifecycle(BlockingLifecycle.autoClose())
                 .build();
 

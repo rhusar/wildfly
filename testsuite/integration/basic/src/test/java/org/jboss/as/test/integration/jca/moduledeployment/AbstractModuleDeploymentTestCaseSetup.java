@@ -272,8 +272,7 @@ public abstract class AbstractModuleDeploymentTestCaseSetup extends AbstractMgmt
         ResourceAdapterArchive rar = ShrinkWrap
                 .create(ResourceAdapterArchive.class);
         JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "ra16out.jar");
-        jar.addPackage(MultipleConnectionFactory1.class.getPackage()).addClass(
-                jakarta.jms.MessageListener.class);
+        jar.addPackage(MultipleConnectionFactory1.class.getPackage());
         rar.addAsManifestResource(this.getClass().getPackage(), raFile,
                 "ra.xml");
         rar.as(ExplodedExporter.class).exportExploded(testModuleRoot, getSlot());

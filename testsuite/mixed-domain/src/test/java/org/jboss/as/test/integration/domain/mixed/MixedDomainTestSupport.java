@@ -196,6 +196,7 @@ public class MixedDomainTestSupport extends DomainTestSupport {
             primaryUtil.executeAwaitConnectionClosed(Util.createEmptyOperation("reload", PathAddress.pathAddress(HOST, "primary")));
             primaryUtil.connect();
             primaryUtil.awaitHostController(System.currentTimeMillis());
+            primaryUtil.awaitServers(System.currentTimeMillis());
             assertNoBootErrors(primaryUtil.getDomainClient(), PathAddress.pathAddress(HOST, "primary"));
 
             //Start the secondary hosts
