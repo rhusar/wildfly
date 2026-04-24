@@ -162,10 +162,10 @@
                 </executions>
                 <configuration>
                     <manifestPath>${project.build.directory}/assembly-manifest-rename/assembly/${project.artifactId}-${project.version}-manifest.yaml</manifestPath>
-                    <manifestName>WildFly Legacy EE manifest version ${project.version}</manifestName>
+                    <manifestName>${legacy.dist.product.release.name} manifest version ${project.version}</manifestName>
                     <manifestId>${project.groupId}:${project.artifactId}</manifestId>
-                    <manifestLogicalVersion>WildFly Legacy EE ${project.version}</manifestLogicalVersion>
-                    <manifestDescription>Manifest for WildFly Legacy EE feature pack.</manifestDescription>
+                    <manifestLogicalVersion>${legacy.dist.product.release.name} ${project.version}</manifestLogicalVersion>
+                    <manifestDescription>Manifest for the ${legacy.dist.product.release.name} feature pack.</manifestDescription>
                 </configuration>
             </plugin>
         </plugins>

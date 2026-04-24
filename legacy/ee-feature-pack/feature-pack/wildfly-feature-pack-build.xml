@@ -3,7 +3,7 @@
   ~ SPDX-License-Identifier: Apache-2.0
   -->
 
-<build xmlns="urn:wildfly:feature-pack-build:3.5" producer="org.wildfly:wildfly-ee-10-feature-pack">
+<build xmlns="urn:wildfly:feature-pack-build:3.5" producer="wildfly-ee-10@maven(org.jboss.universe:community-universe):current">
 
     <family name="wildfly">
       <criteria name="jakarta-ee-10+"/>
