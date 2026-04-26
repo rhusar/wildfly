@@ -78,6 +78,22 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- Depend on the ee-only dist to ensure that testsuite setups that depend on this
+             to ensure its contents are available for testing can also rely on the ee-only
+             installation being available. -->
+        <dependency>
+            <groupId>${ee.maven.groupId}</groupId>
+            <artifactId>${latest.ee.dist.artifactId}</artifactId>
+            <version>${ee.maven.version}</version>
+            <type>pom</type>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -130,14 +146,6 @@
                                 <jboss-fork-embedded>${galleon.fork.embedded}</jboss-fork-embedded>
                             </galleon-options>
                             <channels>
-                                <channel>
-                                    <name>wildfly-${latest.ee.artifactid.segment}</name>
-                                    <manifest>
-                                        <groupId>${channels.maven.groupId}</groupId>
-                                        <artifactId>wildfly-${latest.ee.artifactid.segment}</artifactId>
-                                        <version>${ee.maven.version}</version>
-                                    </manifest>
-                                </channel>
                                 <channel>
                                     <name>wildfly</name>
                                     <manifest>

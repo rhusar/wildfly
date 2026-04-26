@@ -104,12 +104,16 @@
         <legacy.ee.artifactid.segment>ee-${legacy.jakarta.version}</legacy.ee.artifactid.segment>
         <legacy.ee.feature.pack.artifactId>wildfly-${legacy.ee.artifactid.segment}-feature-pack</legacy.ee.feature.pack.artifactId>
         <legacy.ee.channel.artifactId>wildfly-${legacy.ee.artifactid.segment}</legacy.ee.channel.artifactId>
+        <legacy.ee.build.artifactId>wildfly-${legacy.ee.artifactid.segment}-build</legacy.ee.build.artifactId>
+        <legacy.ee.dist.artifactId>wildfly-${legacy.ee.artifactid.segment}-dist</legacy.ee.dist.artifactId>
         <legacy.full.build.artifactId>wildfly-${legacy.ee.artifactid.segment}-expansion-build</legacy.full.build.artifactId>
         <legacy.full.dist.artifactId>wildfly-${legacy.ee.artifactid.segment}-expansion-dist</legacy.full.dist.artifactId>
         <latest.jakarta.version>11</latest.jakarta.version> <!-- for downstream use -->
         <latest.ee.artifactid.segment>ee</latest.ee.artifactid.segment>
         <latest.ee.feature.pack.artifactId>wildfly-${latest.ee.artifactid.segment}-galleon-pack</latest.ee.feature.pack.artifactId>
         <latest.ee.channel.artifactId>wildfly-${latest.ee.artifactid.segment}</latest.ee.channel.artifactId>
+        <latest.ee.build.artifactId>wildfly-${latest.ee.artifactid.segment}-build</latest.ee.build.artifactId>
+        <latest.ee.dist.artifactId>wildfly-${latest.ee.artifactid.segment}-dist</latest.ee.dist.artifactId>
         <latest.full.build.artifactId>wildfly-build</latest.full.build.artifactId>
         <latest.full.dist.artifactId>wildfly-dist</latest.full.dist.artifactId>
         <preview.dist.product.release.name>WildFly Preview</preview.dist.product.release.name>
@@ -641,7 +645,7 @@
 
             <dependency>
                 <groupId>${ee.maven.groupId}</groupId>
-                <artifactId>wildfly-ee-build</artifactId>
+                <artifactId>${latest.ee.build.artifactId}</artifactId>
                 <version>${ee.maven.version}</version>
                 <type>pom</type>
             </dependency>
@@ -664,7 +668,7 @@
 
             <dependency>
                 <groupId>${ee.maven.groupId}</groupId>
-                <artifactId>wildfly-ee-dist</artifactId>
+                <artifactId>${latest.ee.dist.artifactId}</artifactId>
                 <version>${ee.maven.version}</version>
                 <type>pom</type>
             </dependency>
@@ -875,14 +879,14 @@
 
             <dependency>
                 <groupId>${full.maven.groupId}</groupId>
-                <artifactId>wildfly-build</artifactId>
+                <artifactId>${latest.full.build.artifactId}</artifactId>
                 <version>${full.maven.version}</version>
                 <type>pom</type>
             </dependency>
 
             <dependency>
                 <groupId>${full.maven.groupId}</groupId>
-                <artifactId>wildfly-dist</artifactId>
+                <artifactId>${latest.full.dist.artifactId}</artifactId>
                 <version>${full.maven.version}</version>
                 <type>pom</type>
             </dependency>
@@ -913,6 +917,34 @@
                 <artifactId>wildfly-galleon-pack</artifactId>
                 <version>${full.maven.version}</version>
                 <type>zip</type>
+            </dependency>
+
+            <dependency>
+                <groupId>${full.maven.groupId}</groupId>
+                <artifactId>${legacy.full.build.artifactId}</artifactId>
+                <version>${full.maven.version}</version>
+                <type>pom</type>
+            </dependency>
+
+            <dependency>
+                <groupId>${full.maven.groupId}</groupId>
+                <artifactId>${legacy.full.dist.artifactId}</artifactId>
+                <version>${full.maven.version}</version>
+                <type>pom</type>
+            </dependency>
+
+            <dependency>
+                <groupId>${ee.maven.groupId}</groupId>
+                <artifactId>${legacy.ee.build.artifactId}</artifactId>
+                <version>${ee.maven.version}</version>
+                <type>pom</type>
+            </dependency>
+
+            <dependency>
+                <groupId>${ee.maven.groupId}</groupId>
+                <artifactId>${legacy.ee.dist.artifactId}</artifactId>
+                <version>${ee.maven.version}</version>
+                <type>pom</type>
             </dependency>
 
             <dependency>
