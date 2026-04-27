@@ -323,7 +323,7 @@
             <id>external.channel.profile</id>
             <activation><property><name>external.wildfly.channels</name></property></activation>
             <properties>
-                <wildfly.channels>${channels.maven.groupId}:wildfly-${latest.ee.artifactid.segment}:${full.maven.version}</wildfly.channels>
+                <wildfly.channels>${channels.maven.groupId}:wildfly-${latest.ee.artifactid.segment}:${ee.maven.version}</wildfly.channels>
             </properties>
         </profile>
     </profiles>
