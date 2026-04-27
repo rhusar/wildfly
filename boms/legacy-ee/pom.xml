@@ -36,6 +36,7 @@
         <!-- Thus, in preview, ORM 7.1 uses 2.4 so keep this at current 2.4.x until standard moves to EE 11 -->
         <version.com.h2database>2.2.224</version.com.h2database>
         <version.io.undertow.ee>1.0.0.CR1</version.io.undertow.ee>
+        <version.io.undertow.jastow>2.2.9.Final</version.io.undertow.jastow>
         <version.jakarta.annotation.jakarta-annotation-api>2.1.1</version.jakarta.annotation.jakarta-annotation-api>
         <version.jakarta.authentication.jakarta-authentication-api>3.0.0</version.jakarta.authentication.jakarta-authentication-api>
         <version.jakarta.authorization.jakarta-authorization-api>2.1.0</version.jakarta.authorization.jakarta-authorization-api>
@@ -95,6 +96,18 @@
                 <groupId>io.undertow.ee</groupId>
                 <artifactId>undertow-websockets</artifactId>
                 <version>${version.io.undertow.ee}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>io.undertow.jastow</groupId>
+                <artifactId>jastow</artifactId>
+                <version>${version.io.undertow.jastow}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>*</groupId>
