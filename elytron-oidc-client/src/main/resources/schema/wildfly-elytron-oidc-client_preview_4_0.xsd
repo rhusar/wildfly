@@ -1553,7 +1553,7 @@
                         The value of this property can also be an absolute URL.  When the callback
                         URL is outside the client application's context an absolute URL is required.
 
-                        For both scenarios the absolute URL must be registed with the OpenId Provider.
+                        For both scenarios the absolute URL must be registered with the OpenId Provider.
                     ]]>
                     </xs:documentation>
                 </xs:annotation>
