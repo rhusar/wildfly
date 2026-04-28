@@ -589,13 +589,13 @@ class EJB3SubsystemAdd extends AbstractBoottimeAddStepHandler {
                 public ServiceController<?> install(RequirementServiceTarget target) {
                     // Install on-demand singleton service
                     // We don't want this to start until a deployment requires it
-                    ServiceController<?> controller = org.wildfly.service.ServiceInstaller.BlockingBuilder.of(Functions.constantSupplier(null))
+                    ServiceController<?> controller = org.wildfly.service.ServiceInstaller.BlockingBuilder.of(Functions.constantSupplier(Boolean.TRUE))
                             .provides(CLUSTERED_SINGLETON_CAPABILITY.getCapabilityServiceName())
                             .build()
                             .install(targetFactory.get().createSingletonServiceTarget(target));
 
                     // Install well-known on-demand service that, once started, will force singleton service instrumentation to start.
-                    ServiceInstaller.BlockingBuilder.of(Functions.constantSupplier(null))
+                    ServiceInstaller.BlockingBuilder.of(Functions.constantSupplier(Boolean.TRUE))
                             .provides(ServiceNameFactory.resolveServiceName(CLUSTERED_SINGLETON_BARRIER))
                             // N.B. Depend on ServiceName(s) provided by singleton service instrumentation
                             .requires(controller.provides().stream().map(ServiceDependency::on).toList())
