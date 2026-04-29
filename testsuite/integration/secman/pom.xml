@@ -164,7 +164,7 @@
                 <jdk>[24,)</jdk>
             </activation>
             <properties>
-                <surefire.se.supports.sm.test.phase>test</surefire.se.supports.sm.test.phase>
+                <surefire.se.supports.sm.test.phase>none</surefire.se.supports.sm.test.phase>
             </properties>
         </profile>
     </profiles>
