@@ -33,7 +33,6 @@
     <properties>
         <version.com.fasterxml.classmate>1.5.1</version.com.fasterxml.classmate>
         <!-- n.b. H2 version here is driven by what Hibernate ORM version tests with as the H2 dialect! -->
-        <!-- Thus, in preview, ORM 7.1 uses 2.4 so keep this at current 2.4.x until standard moves to EE 11 -->
         <version.com.h2database>2.2.224</version.com.h2database>
         <version.io.undertow.ee>1.0.0.CR1</version.io.undertow.ee>
         <version.io.undertow.jastow>2.2.9.Final</version.io.undertow.jastow>
