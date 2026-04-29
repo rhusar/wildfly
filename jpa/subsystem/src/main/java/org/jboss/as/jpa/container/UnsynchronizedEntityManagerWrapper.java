@@ -95,7 +95,7 @@ public class UnsynchronizedEntityManagerWrapper implements EntityManager, Synchr
     }
 
     public <T> TypedQuery<T> createQuery(TypedQueryReference<T> reference) {
-        return null;
+        return entityManager.createQuery(reference);
     }
 
     @Override
@@ -124,7 +124,7 @@ public class UnsynchronizedEntityManagerWrapper implements EntityManager, Synchr
     }
 
     public <T> TypedQuery<T> createQuery(CriteriaSelect<T> selectQuery) {
-        return null;
+        return entityManager.createQuery(selectQuery);
     }
 
     @Override

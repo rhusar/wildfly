@@ -60,7 +60,11 @@ public class StoredProcedureQueryNonTxInvocationDetacher implements StoredProced
 
     @Override
     public Object getSingleResultOrNull() {
-        return underlyingStoredProcedureQuery.getSingleResultOrNull();
+        try {
+            return underlyingStoredProcedureQuery.getSingleResultOrNull();
+        } finally {
+            underlyingEntityManager.clear();
+        }
     }
 
     @Override

@@ -48,7 +48,7 @@ final class EntityManager32Adapter {
         } finally {
             if (isTraceEnabled) {
                 long elapsed = System.currentTimeMillis() - start;
-                ROOT_LOGGER.tracef("createQuery selectQuery '%s' took %dms", elapsed);
+                ROOT_LOGGER.tracef("createQuery(CriteriaSelect) took %dms", elapsed);
             }
         }
     }
@@ -65,7 +65,7 @@ final class EntityManager32Adapter {
         } finally {
             if (isTraceEnabled) {
                 long elapsed = System.currentTimeMillis() - start;
-                ROOT_LOGGER.tracef("createQuery reference '%s' took %dms", elapsed);
+                ROOT_LOGGER.tracef("createQuery(TypedQueryReference) took %dms", elapsed);
             }
         }
     }
