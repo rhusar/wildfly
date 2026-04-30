@@ -180,7 +180,6 @@ final class TLSByteChannel {
                         }
 
                     case BUFFER_UNDERFLOW:
-                        continue;
                 }
             } finally {
                 networkInboundStore.compact();

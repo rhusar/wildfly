@@ -15,9 +15,9 @@ import org.junit.jupiter.api.Test;
  * @author Radoslav Husar
  */
 @ServerSetup({
-//        TLSServerSetupTasks.SharedPhysicalKeyStoresServerSetupTask.class,
+        TLSServerSetupTask.PerNodeKeyStore_NODE_1_2.class,
         TCP_NIO2ServerSetupTask.class,
-        TLSServerSetupTasks.SharedStoreSecureJGroupsTCP_NIO2TransportServerSetupTask_NODE_1_2.class,
+        TLSServerSetupTask.PerNodeSecureJGroupsTransport_TCP_NIO2_NODE_1_2.class,
 })
 class TLSTCP_NIO2CommandDispatcherTestCase extends CommandDispatcherTestCase {
 

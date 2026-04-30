@@ -126,6 +126,50 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>keytool-maven-plugin</artifactId>
+                <version>1.5</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>keytool-api-1.7</artifactId>
+                        <version>1.5</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <phase>generate-test-resources</phase>
+                        <id>clean-test-keystore</id>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <phase>generate-test-resources</phase>
+                        <id>genkey-test-keystore</id>
+                        <goals>
+                            <goal>generateKeyPair</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <keystore>${project.build.testOutputDirectory}/test-keystore.p12</keystore>
+                    <dname>cn=localhost</dname>
+                    <storetype>PKCS12</storetype>
+                    <storepass>changeit</storepass>
+                    <keypass>changeit</keypass>
+                    <alias>test</alias>
+                    <keyalg>RSA</keyalg>
+                    <keysize>2048</keysize>
+                    <validity>365</validity>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <profiles>
         <!-- profile is the same name as the test IPv6 profile for consistency and in case the profile is enabled via
         the profile name rather than the system property. -->
