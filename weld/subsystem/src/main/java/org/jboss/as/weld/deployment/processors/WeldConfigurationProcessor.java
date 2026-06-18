@@ -56,6 +56,11 @@ public class WeldConfigurationProcessor implements DeploymentUnitProcessor {
         deploymentUnit.putAttachment(WeldConfiguration.ATTACHMENT_KEY, mergedConfiguration);
     }
 
+    @Override
+    public void undeploy(DeploymentUnit deploymentUnit) {
+        deploymentUnit.removeAttachment(WeldConfiguration.ATTACHMENT_KEY);
+    }
+
     private static boolean getValue(Boolean value, boolean globalValue) {
         if (value != null) {
             return value;

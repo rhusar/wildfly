@@ -137,6 +137,13 @@ public class WarStructureDeploymentProcessor implements DeploymentUnitProcessor 
         processExternalMounts(deploymentUnit, deploymentRoot);
     }
 
+    @Override
+    public void undeploy(DeploymentUnit deploymentUnit) {
+        deploymentUnit.removeAttachment(WarMetaData.ATTACHMENT_KEY);
+        deploymentUnit.removeAttachment(TldsMetaData.ATTACHMENT_KEY);
+        deploymentUnit.removeAttachment(UndertowAttachments.EXTERNAL_RESOURCES);
+    }
+
     private void processExternalMounts(DeploymentUnit deploymentUnit, VirtualFile deploymentRoot) throws DeploymentUnitProcessingException {
         VirtualFile mounts = deploymentRoot.getChild(WEB_INF_EXTERNAL_MOUNTS);
         if(!mounts.exists()) {

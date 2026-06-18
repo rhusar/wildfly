@@ -516,6 +516,7 @@ public class UndertowDeploymentProcessor implements DeploymentUnitProcessor {
     @Override
     public void undeploy(final DeploymentUnit deploymentUnit) {
         deploymentUnit.removeAttachment(ServletContextAttribute.ATTACHMENT_KEY);
+        deploymentUnit.removeAttachment(UndertowAttachments.UNDERTOW_INITIAL_HANDLER_CHAIN_WRAPPERS);
     }
 
     private static HashMap<String, TagLibraryInfo> createTldsInfo(final TldsMetaData tldsMetaData, List<TldMetaData> sharedTlds) {

@@ -5,6 +5,7 @@
 package org.jboss.as.webservices.deployers;
 
 import org.jboss.as.server.deployment.DeploymentPhaseContext;
+import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.as.webservices.util.WSAttachmentKeys;
@@ -19,5 +20,10 @@ public final class WSServiceDependenciesProcessor implements DeploymentUnitProce
 
     public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
         phaseContext.addDependency(WSServices.CONFIG_SERVICE, WSAttachmentKeys.SERVER_CONFIG_KEY);
+    }
+
+    @Override
+    public void undeploy(DeploymentUnit context) {
+        context.removeAttachment(WSAttachmentKeys.SERVER_CONFIG_KEY);
     }
 }

@@ -76,6 +76,11 @@ public final class WSHandlerChainAnnotationProcessor implements DeploymentUnitPr
         }
     }
 
+    @Override
+    public void undeploy(DeploymentUnit context) {
+        context.removeAttachment(WS_ENDPOINT_HANDLERS_MAPPING_KEY);
+    }
+
     private static void processHandlerChainAnnotations(final ResourceRoot currentResourceRoot,
             final List<ResourceRoot> resourceRoots, final Index index, final WSEndpointHandlersMapping mapping)
             throws DeploymentUnitProcessingException {

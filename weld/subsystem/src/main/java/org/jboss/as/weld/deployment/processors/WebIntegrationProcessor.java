@@ -172,6 +172,11 @@ public class WebIntegrationProcessor implements DeploymentUnitProcessor {
         warMetaData.addAdditionalDependency(weldStartService);
     }
 
+    @Override
+    public void undeploy(DeploymentUnit deploymentUnit) {
+        deploymentUnit.removeAttachment(ExpressionFactoryWrapper.ATTACHMENT_KEY);
+    }
+
     private void setupWeldContextIgnores(List<ParamValueMetaData> contextParams, String parameterName) {
         for (ParamValueMetaData param : contextParams) {
             if (parameterName.equals(param.getParamName())) {

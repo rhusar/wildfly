@@ -119,6 +119,11 @@ public class WebComponentProcessor implements DeploymentUnitProcessor {
         }
     }
 
+    @Override
+    public void undeploy(DeploymentUnit deploymentUnit) {
+        deploymentUnit.removeAttachment(WebComponentDescription.WEB_COMPONENTS);
+    }
+
     /**
      * Gets all classes that are eligible for injection etc
      *

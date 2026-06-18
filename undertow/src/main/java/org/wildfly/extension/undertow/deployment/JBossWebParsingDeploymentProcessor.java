@@ -87,4 +87,9 @@ public class JBossWebParsingDeploymentProcessor implements DeploymentUnitProcess
             }
         }
     }
+
+    @Override
+    public void undeploy(DeploymentUnit deploymentUnit) {
+        deploymentUnit.removeAttachment(org.jboss.as.ee.structure.Attachments.DISTINCT_NAME);
+    }
 }

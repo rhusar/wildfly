@@ -246,6 +246,11 @@ public class UndertowJSRWebSocketDeploymentProcessor implements DeploymentUnitPr
         }
     }
 
+    @Override
+    public void undeploy(DeploymentUnit deploymentUnit) {
+        deploymentUnit.removeAttachment(UndertowAttachments.WEB_SOCKET_DEPLOYMENT_INFO);
+    }
+
     private static boolean isClientScanningEnabled() {
         final String value = WildFlySecurityManager.getPropertyPrivileged(ENABLE_CLIENT_ENDPOINT_SCANNING, "false");
         return value.isEmpty() || Boolean.parseBoolean(value);

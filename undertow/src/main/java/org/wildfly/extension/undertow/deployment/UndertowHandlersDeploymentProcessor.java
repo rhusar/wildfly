@@ -53,6 +53,12 @@ public class UndertowHandlersDeploymentProcessor implements DeploymentUnitProces
         handleJbossWebXml(deploymentUnit, module);
     }
 
+    @Override
+    public void undeploy(DeploymentUnit deploymentUnit) {
+        deploymentUnit.removeAttachment(PREDICATED_HANDLERS);
+        deploymentUnit.removeAttachment(UndertowAttachments.UNDERTOW_OUTER_HANDLER_CHAIN_WRAPPERS);
+    }
+
     private void handleJbossWebXml(DeploymentUnit deploymentUnit, Module module) throws DeploymentUnitProcessingException {
         WarMetaData warMetadata = deploymentUnit.getAttachment(WarMetaData.ATTACHMENT_KEY);
         if (warMetadata == null) {

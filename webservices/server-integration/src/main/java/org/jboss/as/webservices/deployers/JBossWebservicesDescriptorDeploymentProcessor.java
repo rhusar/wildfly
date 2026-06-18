@@ -40,6 +40,11 @@ public final class JBossWebservicesDescriptorDeploymentProcessor implements Depl
         }
     }
 
+    @Override
+    public void undeploy(DeploymentUnit context) {
+        context.removeAttachment(WSAttachmentKeys.JBOSS_WEBSERVICES_METADATA_KEY);
+    }
+
     private URL getJBossWebServicesDescriptorURL(final ResourceRoot deploymentRoot) throws DeploymentUnitProcessingException {
         VirtualFile jwsdd = deploymentRoot.getRoot().getChild("WEB-INF/jboss-webservices.xml");
 

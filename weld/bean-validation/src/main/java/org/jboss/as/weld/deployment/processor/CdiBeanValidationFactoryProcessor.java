@@ -66,4 +66,9 @@ public class CdiBeanValidationFactoryProcessor implements DeploymentUnitProcesso
         // Make sure CdiValidatorFactoryService is started before WeldStartCompletionService sends out lifecycle events
         deploymentUnit.addToAttachmentList(START_COMPLETION_DEPENDENCIES, serviceName);
     }
+
+    @Override
+    public void undeploy(DeploymentUnit deploymentUnit) {
+        deploymentUnit.removeAttachment(START_COMPLETION_DEPENDENCIES);
+    }
 }

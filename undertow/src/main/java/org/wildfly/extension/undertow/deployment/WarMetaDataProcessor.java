@@ -351,6 +351,11 @@ public class WarMetaDataProcessor implements DeploymentUnitProcessor {
         }
     }
 
+    @Override
+    public void undeploy(DeploymentUnit deploymentUnit) {
+        deploymentUnit.removeAttachment(org.jboss.as.ee.component.Attachments.MODULE_DEPLOYMENT_DESCRIPTOR_ENVIRONMENT);
+    }
+
     /**
      * Utility class to associate the logical name with the JAR name, needed
      * during the order resolving.
