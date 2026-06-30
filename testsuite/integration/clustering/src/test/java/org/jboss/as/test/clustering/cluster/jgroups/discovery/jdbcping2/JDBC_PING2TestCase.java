@@ -31,8 +31,6 @@ import org.jboss.as.test.clustering.testcontainers.PostgreSQLContainer;
 import org.jboss.as.test.integration.security.common.Utils;
 import org.jboss.as.test.shared.ServerReload;
 import org.jboss.dmr.ModelNode;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 
 /**
  * Test case verifying JGroups discovery protocol JDBC_PING2 integration into WildFly.
@@ -40,42 +38,14 @@ import org.junit.BeforeClass;
  *
  * @author Radoslav Husar
  */
+@TestcontainersRequired
 @ServerSetup(JDBC_PING2TestCase.JDBCPING2ServerSetupTask.class)
 public class JDBC_PING2TestCase extends CommandDispatcherTestCase {
 
-
-
-    @BeforeClass
-    public static void beforeClass() {
-//        PostgreSQLContainer.startContainer();
-    }
-
-    @AfterClass
-    public static void afterClass() {
-//        PostgreSQLContainer.stopContainer();
-    }
-
     @Override
     public void legacy() throws Exception {
-        //
     }
 
-    /**
-     * Server setup task that configures JDBC_PING2 discovery protocol with a PostgreSQL datasource.
-     * <p>
-     * This task performs the following configuration:
-     * <ol>
-     *   <li>Deploys the PostgreSQL JDBC driver JAR</li>
-     *   <li>Creates a datasource for JDBC_PING2</li>
-     *   <li>Removes the existing TCPPING discovery protocol</li>
-     *   <li>Adds JDBC_PING2 protocol with the configured datasource</li>
-     * </ol>
-     * <p>
-     * Note: The PostgreSQL container must be started before this setup task runs.
-     * Use {@link PostgreSQLContainer#startContainer()} in {@code @BeforeClass}.
-     *
-     * @author Radoslav Husar
-     */
     @TestcontainersRequired
     public static class JDBCPING2ServerSetupTask implements ServerSetupTask {
 
@@ -184,12 +154,6 @@ public class JDBC_PING2TestCase extends CommandDispatcherTestCase {
             ServerReload.reloadIfRequired(managementClient);
         }
 
-        /**
-         * Finds the PostgreSQL JDBC driver JAR in the classpath.
-         *
-         * @return the path to the PostgreSQL driver JAR
-         * @throws IllegalStateException if the driver JAR cannot be found
-         */
         private String getPostgreSQLDriverPath() {
             String classpath = System.getProperty("java.class.path");
             for (String path : classpath.split(File.pathSeparator)) {
