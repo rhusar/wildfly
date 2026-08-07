@@ -25,4 +25,15 @@ public interface ProtocolConfiguration<P extends Protocol> {
     default Map<String, SocketBinding> getSocketBindings() {
         return Map.of();
     }
+
+    /**
+     * Returns the user-configured properties for this protocol, keyed by their full name including any component prefix
+     * (e.g. {@code diag.passcode}).  These are provided separately from {@link #createProtocol(ChannelFactoryConfiguration)}
+     * because some protocol components (e.g. {@code DiagnosticsHandler}) are null during protocol instantiation and are
+     * only initialized by {@code TP.init()} during {@link org.jgroups.JChannel} construction.  Callers must apply these
+     * properties to the now-non-null components after channel construction.
+     */
+    default Map<String, String> getComponentProperties() {
+        return Map.of();
+    }
 }

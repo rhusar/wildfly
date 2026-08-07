@@ -74,6 +74,11 @@ public abstract class ProtocolConfigurationResourceDefinitionRegistrar<P extends
                         }
 
                         @Override
+                        public Map<String, String> getComponentProperties() {
+                            return properties;
+                        }
+
+                        @Override
                         public P createProtocol(ChannelFactoryConfiguration configuration) {
                             try {
                                 Class<? extends Protocol> protocolClass = findProtocolClass(context, name, model);
@@ -96,6 +101,9 @@ public abstract class ProtocolConfigurationResourceDefinitionRegistrar<P extends
                                                     org.jgroups.stack.Configurator.resolveAndInvokePropertyMethods(object, copy, type);
                                                 }
                                             }
+                                            // Component-prefixed properties (e.g. diag.*) whose component was null are
+                                            // applied post-init in JChannelFactory; suppress false unrecognized warnings.
+                                            Util.forAllComponentTypes(protocol.getClass(), (cl, prefix) -> copy.keySet().removeIf(k -> k.startsWith(prefix + ".")));
                                             if (!copy.isEmpty()) {
                                                 for (String property : copy.keySet()) {
                                                     JGroupsLogger.ROOT_LOGGER.unrecognizedProtocolProperty(name, property);
@@ -164,6 +172,11 @@ public abstract class ProtocolConfigurationResourceDefinitionRegistrar<P extends
         @Override
         public Map<String, SocketBinding> getSocketBindings() {
             return this.configuration.getSocketBindings();
+        }
+
+        @Override
+        public Map<String, String> getComponentProperties() {
+            return this.configuration.getComponentProperties();
         }
 
         P setValue(P protocol, String propertyName, Object propertyValue) {
