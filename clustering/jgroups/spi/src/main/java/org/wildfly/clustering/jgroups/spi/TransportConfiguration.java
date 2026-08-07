@@ -45,6 +45,16 @@ public interface TransportConfiguration<T extends TP> extends ProtocolConfigurat
         Optional<String> getSite();
     }
 
+    /**
+     * Returns the socket binding for the JGroups diagnostics handler, if configured.
+     * The presence of the socket binding enables diagnostics — when present, the diagnostics handler
+     * is re-enabled (the programmatic {@link org.jgroups.JChannel} API disables it by default) and
+     * configured with the address and port from this binding.
+     */
+    default Optional<SocketBinding> getDiagnosticsSocketBinding() {
+        return Optional.empty();
+    }
+
     default Optional<TLSConfiguration> getTLSConfiguration() {
         return Optional.empty();
     }

@@ -4,6 +4,7 @@
  */
 package org.jboss.as.clustering.jgroups;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,7 +25,11 @@ import org.jgroups.conf.ClassConfigurator;
 import org.jgroups.fork.UnknownForkHandler;
 import org.jgroups.protocols.FORK;
 import org.jgroups.protocols.TP;
+import org.jgroups.stack.Configurator;
+import org.jgroups.stack.DiagnosticsHandler;
 import org.jgroups.stack.Protocol;
+import org.jgroups.util.StackType;
+import org.jgroups.util.Util;
 import org.wildfly.clustering.jgroups.spi.ChannelFactory;
 import org.wildfly.clustering.jgroups.spi.PhysicalAddressCache;
 import org.wildfly.clustering.jgroups.spi.ProtocolConfiguration;
@@ -127,6 +132,43 @@ public class JChannelFactory implements ChannelFactory {
         }));
 
         JChannel channel = createChannel(protocols);
+
+        // After JChannel construction, TP.init() has run and all components (e.g. diag_handler) are now non-null.
+        // Apply any component-prefixed transport properties (e.g. diag.passcode) that were deferred.
+        StackType ipVersion = Util.getIpStackType();
+        Map<String, String> componentProperties = this.configuration.getTransport().getComponentProperties();
+        if (!componentProperties.isEmpty()) {
+            Util.forAllComponents(transport, (comp, prefix) -> {
+                try {
+                    Map<String, String> compProps = new HashMap<>();
+                    String key = prefix + ".";
+                    componentProperties.entrySet().stream()
+                        .filter(e -> e.getKey().startsWith(key))
+                        .forEach(e -> compProps.put(e.getKey().substring(prefix.length() + 1), e.getValue()));
+                    if (!compProps.isEmpty()) {
+                        Configurator.resolveAndAssignFields(comp, compProps, ipVersion);
+                        Configurator.resolveAndInvokePropertyMethods(comp, compProps, ipVersion);
+                    }
+                } catch (Exception e) {
+                    throw new IllegalStateException(e);
+                }
+            });
+        }
+
+        // Configure diagnostics socket binding on the handler created by TP.init().
+        // JChannel's constructor disables the handler; re-enable and set address/port from the binding.
+        this.configuration.getTransport().getDiagnosticsSocketBinding().ifPresent(diagnosticsBinding -> {
+            DiagnosticsHandler diagHandler = transport.getDiagnosticsHandler();
+            diagHandler.setEnabled(true);
+            InetSocketAddress address = diagnosticsBinding.getSocketAddress();
+            diagHandler.setBindAddress(address.getAddress());
+            if (diagnosticsBinding.getMulticastAddress() != null) {
+                diagHandler.setMcastAddress(diagnosticsBinding.getMulticastAddress());
+                diagHandler.setPort(diagnosticsBinding.getMulticastPort());
+            } else {
+                diagHandler.setPort(diagnosticsBinding.getPort());
+            }
+        });
 
         channel.setName(this.configuration.getMemberName());
         // Populate cache of physical addresses

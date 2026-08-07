@@ -31,7 +31,6 @@ import org.jboss.as.network.SocketBinding;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.jgroups.protocols.TP;
-import org.jgroups.stack.DiagnosticsHandler;
 import org.jgroups.util.DefaultThreadFactory;
 import org.jgroups.util.ThreadPool;
 import org.wildfly.clustering.jgroups.spi.ProtocolConfiguration;
@@ -199,23 +198,6 @@ public class AbstractTransportResourceDefinitionRegistrar<T extends TP> extends 
                         // JGroups propagates this to the ThreadPool
                         protocol.setThreadFactory(new ClassLoaderThreadFactory(new DefaultThreadFactory("jgroups", false, true).useVirtualThreads(protocol.useVirtualThreads()), JChannelFactory.class.getClassLoader()));
 
-                        SocketBinding diagnosticsBinding = diagnosticsSocketBinding.get();
-                        if (diagnosticsBinding != null) {
-                            DiagnosticsHandler handler = new DiagnosticsHandler(protocol.getLog(), protocol.getSocketFactory(), protocol.getThreadFactory());
-                            InetSocketAddress address = diagnosticsBinding.getSocketAddress();
-                            handler.setBindAddress(address.getAddress());
-                            if (diagnosticsBinding.getMulticastAddress() != null) {
-                                handler.setMcastAddress(diagnosticsBinding.getMulticastAddress());
-                                handler.setPort(diagnosticsBinding.getMulticastPort());
-                            } else {
-                                handler.setPort(diagnosticsBinding.getPort());
-                            }
-                            try {
-                                protocol.setDiagnosticsHandler(handler);
-                            } catch (Exception e) {
-                                throw new IllegalStateException(e);
-                            }
-                        }
                         return protocol;
                     }
 
@@ -227,6 +209,11 @@ public class AbstractTransportResourceDefinitionRegistrar<T extends TP> extends 
                     @Override
                     public SocketBinding getSocketBinding() {
                         return serverSocketBinding.get();
+                    }
+
+                    @Override
+                    public Optional<SocketBinding> getDiagnosticsSocketBinding() {
+                        return Optional.ofNullable(diagnosticsSocketBinding.get());
                     }
                 };
             }
@@ -256,5 +243,10 @@ public class AbstractTransportResourceDefinitionRegistrar<T extends TP> extends 
         @Override
         public SocketBinding getSocketBinding() {
             return this.configuration.getSocketBinding();
+        }
+
+        @Override
+        public Optional<SocketBinding> getDiagnosticsSocketBinding() {
+            return this.configuration.getDiagnosticsSocketBinding();
         }
     }}
