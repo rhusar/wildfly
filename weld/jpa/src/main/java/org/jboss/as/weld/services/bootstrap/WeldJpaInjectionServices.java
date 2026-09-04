@@ -7,9 +7,6 @@ package org.jboss.as.weld.services.bootstrap;
 import static org.jboss.as.weld.util.ResourceInjectionUtilities.getResourceAnnotated;
 
 import java.lang.reflect.Member;
-import java.security.AccessControlContext;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -41,8 +38,6 @@ import org.jboss.weld.injection.spi.ResourceReference;
 import org.jboss.weld.injection.spi.ResourceReferenceFactory;
 import org.jboss.weld.injection.spi.helpers.SimpleResourceReference;
 import org.jipijapa.plugin.spi.PersistenceUnitMetadata;
-import org.wildfly.security.manager.WildFlySecurityManager;
-import org.wildfly.security.manager.action.GetAccessControlContextAction;
 import org.wildfly.transaction.client.ContextTransactionManager;
 
 public class WeldJpaInjectionServices implements JpaInjectionServices {
@@ -74,7 +69,7 @@ public class WeldJpaInjectionServices implements JpaInjectionServices {
         final ServiceRegistry serviceRegistry = deploymentUnit.getServiceRegistry();
         //resolve the attachment now, the deployment unit is released by cleanup() before the resource is created
         final TransactionSynchronizationRegistry transactionSynchronizationRegistry = deploymentUnit.getAttachment(JpaAttachments.TRANSACTION_SYNCHRONIZATION_REGISTRY);
-        return new LazyFactory<EntityManager>(serviceRegistry, persistenceUnitServiceName, scopedPuName,
+        return new LazyFactory<>(serviceRegistry, persistenceUnitServiceName, scopedPuName,
                 persistenceUnitService -> TransactionScopedEntityManager.create(
                         scopedPuName,
                         getProperties(context),
@@ -99,11 +94,11 @@ public class WeldJpaInjectionServices implements JpaInjectionServices {
         if (serviceController != null) {
             final PersistenceUnitServiceImpl persistenceUnitService = (PersistenceUnitServiceImpl) serviceController.getValue();
             if (persistenceUnitService.getEntityManagerFactory() != null) {
-                return new ImmediateResourceReferenceFactory<EntityManagerFactory>(persistenceUnitService.getEntityManagerFactory());
+                return new ImmediateResourceReferenceFactory<>(persistenceUnitService.getEntityManagerFactory());
             }
         }
         final ServiceRegistry serviceRegistry = deploymentUnit.getServiceRegistry();
-        return new LazyFactory<EntityManagerFactory>(serviceRegistry, persistenceUnitServiceName, scopedPuName,
+        return new LazyFactory<>(serviceRegistry, persistenceUnitServiceName, scopedPuName,
                 PersistenceUnitServiceImpl::getEntityManagerFactory);
     }
 
@@ -199,26 +194,14 @@ public class WeldJpaInjectionServices implements JpaInjectionServices {
                         }
                     }
             );
-            final AccessControlContext accessControlContext =
-                    AccessController.doPrivileged(GetAccessControlContextAction.getInstance());
 
             try {
-                // ensure that Injection of persistence unit doesn't cause MSC service thread to block.
-                PrivilegedAction<Void> threadNameCheck =
-                        new PrivilegedAction<Void>() {
-                            // run as security privileged action
-                            @Override
-                            public Void run() {
-                                assert !Thread.currentThread().getName().startsWith(MSC_SERVICE_THREAD) :
-                                                        INJECTION_CANNOT_BE_PERFORMED_WITHIN_MSC_SERVICE_THREAD;
-                                return null;
-                            }
-                        };
-                WildFlySecurityManager.doChecked(threadNameCheck, accessControlContext);
+                // ensure that injection of a persistence unit doesn't cause the MSC service thread to block
+                assert !Thread.currentThread().getName().startsWith(MSC_SERVICE_THREAD) : INJECTION_CANNOT_BE_PERFORMED_WITHIN_MSC_SERVICE_THREAD;
                 latch.await();
                 if (failed.get()) {
                     throw WeldLogger.ROOT_LOGGER.persistenceUnitFailed(scopedPuName);
-                } else if(removed.get()) {
+                } else if (removed.get()) {
                     throw WeldLogger.ROOT_LOGGER.persistenceUnitRemoved(scopedPuName);
                 }
             } catch (InterruptedException e) {
@@ -229,22 +212,10 @@ public class WeldJpaInjectionServices implements JpaInjectionServices {
                 throw new RuntimeException(e);
             }
             final PersistenceUnitServiceImpl persistenceUnitService = (PersistenceUnitServiceImpl) serviceController.getValue();
-            return new ResourceReference<T>() {
-                T persistenceUnitTarget;
-
+            return new ResourceReference<>() {
                 @Override
                 public T getInstance() {
-                    PrivilegedAction<Void> privilegedAction =
-                            new PrivilegedAction<Void>() {
-                                // run as security privileged action
-                                @Override
-                                public Void run() {
-                                    persistenceUnitTarget = resolver.apply(persistenceUnitService);
-                                    return null;
-                                }
-                            };
-                    WildFlySecurityManager.doChecked(privilegedAction, accessControlContext);
-                    return persistenceUnitTarget;
+                    return resolver.apply(persistenceUnitService);
                 }
 
                 @Override
