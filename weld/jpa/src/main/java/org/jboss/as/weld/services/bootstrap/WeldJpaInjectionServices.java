@@ -12,8 +12,9 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 
 import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.persistence.EntityManager;
@@ -34,6 +35,7 @@ import org.jboss.msc.service.LifecycleEvent;
 import org.jboss.msc.service.LifecycleListener;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.ServiceRegistry;
 import org.jboss.weld.injection.spi.JpaInjectionServices;
 import org.jboss.weld.injection.spi.ResourceReference;
 import org.jboss.weld.injection.spi.ResourceReferenceFactory;
@@ -61,26 +63,25 @@ public class WeldJpaInjectionServices implements JpaInjectionServices {
         final String scopedPuName = getScopedPUName(deploymentUnit, context.unitName(), injectionPoint.getMember());
         final ServiceName persistenceUnitServiceName = PersistenceUnitServiceImpl.getPUServiceName(scopedPuName);
 
-        final ServiceController<?> serviceController = deploymentUnit.getServiceRegistry().getRequiredService(persistenceUnitServiceName);
-        //now we have the service controller, as this method is only called at runtime the service should
-        //always be up
-        final PersistenceUnitServiceImpl persistenceUnitService = (PersistenceUnitServiceImpl) serviceController.getValue();
-        if (persistenceUnitService.getEntityManagerFactory() != null) {
-            return new EntityManagerResourceReferenceFactory(scopedPuName, persistenceUnitService.getEntityManagerFactory(), context, deploymentUnit.getAttachment(JpaAttachments.TRANSACTION_SYNCHRONIZATION_REGISTRY), ContextTransactionManager.getInstance());
-        } else {
-            return new LazyFactory<EntityManager>(serviceController, scopedPuName, new Callable<EntityManager>() {
-                @Override
-                public EntityManager call() throws Exception {
-                    return TransactionScopedEntityManager.create(
-                            scopedPuName,
-                            getProperties(context),
-                            persistenceUnitService.getEntityManagerFactory(),
-                            context.synchronization(),
-                            deploymentUnit.getAttachment(JpaAttachments.TRANSACTION_SYNCHRONIZATION_REGISTRY),
-                            ContextTransactionManager.getInstance());
-                }
-            });
+        //the persistence unit service is not necessarily registered yet, see LazyFactory
+        final ServiceController<?> serviceController = deploymentUnit.getServiceRegistry().getService(persistenceUnitServiceName);
+        if (serviceController != null) {
+            final PersistenceUnitServiceImpl persistenceUnitService = (PersistenceUnitServiceImpl) serviceController.getValue();
+            if (persistenceUnitService.getEntityManagerFactory() != null) {
+                return new EntityManagerResourceReferenceFactory(scopedPuName, persistenceUnitService.getEntityManagerFactory(), context, deploymentUnit.getAttachment(JpaAttachments.TRANSACTION_SYNCHRONIZATION_REGISTRY), ContextTransactionManager.getInstance());
+            }
         }
+        final ServiceRegistry serviceRegistry = deploymentUnit.getServiceRegistry();
+        //resolve the attachment now, the deployment unit is released by cleanup() before the resource is created
+        final TransactionSynchronizationRegistry transactionSynchronizationRegistry = deploymentUnit.getAttachment(JpaAttachments.TRANSACTION_SYNCHRONIZATION_REGISTRY);
+        return new LazyFactory<EntityManager>(serviceRegistry, persistenceUnitServiceName, scopedPuName,
+                persistenceUnitService -> TransactionScopedEntityManager.create(
+                        scopedPuName,
+                        getProperties(context),
+                        persistenceUnitService.getEntityManagerFactory(),
+                        context.synchronization(),
+                        transactionSynchronizationRegistry,
+                        ContextTransactionManager.getInstance()));
     }
 
     @Override
@@ -93,21 +94,17 @@ public class WeldJpaInjectionServices implements JpaInjectionServices {
         final String scopedPuName = getScopedPUName(deploymentUnit, context.unitName(), injectionPoint.getMember());
         final ServiceName persistenceUnitServiceName = PersistenceUnitServiceImpl.getPUServiceName(scopedPuName);
 
-        final ServiceController<?> serviceController = deploymentUnit.getServiceRegistry().getRequiredService(persistenceUnitServiceName);
-        //now we have the service controller, as this method is only called at runtime the service should
-        //always be up
-        final PersistenceUnitServiceImpl persistenceUnitService = (PersistenceUnitServiceImpl) serviceController.getValue();
-        if (persistenceUnitService.getEntityManagerFactory() != null) {
-            return new ImmediateResourceReferenceFactory<EntityManagerFactory>(persistenceUnitService.getEntityManagerFactory());
-        } else {
-            return new LazyFactory<EntityManagerFactory>(serviceController, scopedPuName, new Callable<EntityManagerFactory>() {
-                @Override
-                public EntityManagerFactory call() throws Exception {
-                    return persistenceUnitService.getEntityManagerFactory();
-                }
-            });
+        //the persistence unit service is not necessarily registered yet, see LazyFactory
+        final ServiceController<?> serviceController = deploymentUnit.getServiceRegistry().getService(persistenceUnitServiceName);
+        if (serviceController != null) {
+            final PersistenceUnitServiceImpl persistenceUnitService = (PersistenceUnitServiceImpl) serviceController.getValue();
+            if (persistenceUnitService.getEntityManagerFactory() != null) {
+                return new ImmediateResourceReferenceFactory<EntityManagerFactory>(persistenceUnitService.getEntityManagerFactory());
+            }
         }
-
+        final ServiceRegistry serviceRegistry = deploymentUnit.getServiceRegistry();
+        return new LazyFactory<EntityManagerFactory>(serviceRegistry, persistenceUnitServiceName, scopedPuName,
+                PersistenceUnitServiceImpl::getEntityManagerFactory);
     }
 
     @Override
@@ -156,24 +153,34 @@ public class WeldJpaInjectionServices implements JpaInjectionServices {
 
     }
 
+    /**
+     * Defers resolution of the persistence unit service to {@link #createResource()}, which additionally covers the
+     * case where the service is not registered yet: with an {@code initialize-in-order} EAR the top level
+     * {@code WeldStartService} can start before the INSTALL phase of a sub-deployment registers its persistence unit
+     * services (WFLY-22209).
+     */
     private static class LazyFactory<T> implements ResourceReferenceFactory<T> {
         public static final String MSC_SERVICE_THREAD = "MSC service thread";
         public static final String INJECTION_CANNOT_BE_PERFORMED_WITHIN_MSC_SERVICE_THREAD = "injection cannot be performed from JBoss Modular Service Container (MSC) service thread";
-        private final Callable<T> callable;
-        private final ServiceController<?> serviceController;
+        private final ServiceRegistry serviceRegistry;
+        private final ServiceName persistenceUnitServiceName;
         private final String scopedPuName;
+        private final Function<PersistenceUnitServiceImpl, T> resolver;
 
-        public LazyFactory(ServiceController<?> serviceController, String scopedPuName, Callable<T> callable) {
-            this.callable = callable;
-            this.serviceController = serviceController;
+        public LazyFactory(ServiceRegistry serviceRegistry, ServiceName persistenceUnitServiceName, String scopedPuName, Function<PersistenceUnitServiceImpl, T> resolver) {
+            this.serviceRegistry = serviceRegistry;
+            this.persistenceUnitServiceName = persistenceUnitServiceName;
             this.scopedPuName = scopedPuName;
+            this.resolver = resolver;
         }
-
-        final CountDownLatch latch = new CountDownLatch(1);
-        boolean failed = false, removed = false;
 
         @Override
         public ResourceReference<T> createResource() {
+            final ServiceController<?> serviceController = serviceRegistry.getRequiredService(persistenceUnitServiceName);
+            final CountDownLatch latch = new CountDownLatch(1);
+            final AtomicBoolean failed = new AtomicBoolean();
+            final AtomicBoolean removed = new AtomicBoolean();
+
             serviceController.addListener(
                     new LifecycleListener() {
 
@@ -183,10 +190,10 @@ public class WeldJpaInjectionServices implements JpaInjectionServices {
                                 latch.countDown();
                                 controller.removeListener(this);
                             } else if (event == LifecycleEvent.FAILED) {
-                                failed = true;
+                                failed.set(true);
                                 latch.countDown();
                             } else if (event == LifecycleEvent.REMOVED) {
-                                removed = true;
+                                removed.set(true);
                                 latch.countDown();
                             }
                         }
@@ -209,9 +216,9 @@ public class WeldJpaInjectionServices implements JpaInjectionServices {
                         };
                 WildFlySecurityManager.doChecked(threadNameCheck, accessControlContext);
                 latch.await();
-                if (failed) {
+                if (failed.get()) {
                     throw WeldLogger.ROOT_LOGGER.persistenceUnitFailed(scopedPuName);
-                } else if(removed) {
+                } else if(removed.get()) {
                     throw WeldLogger.ROOT_LOGGER.persistenceUnitRemoved(scopedPuName);
                 }
             } catch (InterruptedException e) {
@@ -221,6 +228,7 @@ public class WeldJpaInjectionServices implements JpaInjectionServices {
                 // fail with a runtime exception.
                 throw new RuntimeException(e);
             }
+            final PersistenceUnitServiceImpl persistenceUnitService = (PersistenceUnitServiceImpl) serviceController.getValue();
             return new ResourceReference<T>() {
                 T persistenceUnitTarget;
 
@@ -231,13 +239,7 @@ public class WeldJpaInjectionServices implements JpaInjectionServices {
                                 // run as security privileged action
                                 @Override
                                 public Void run() {
-                                    try {
-                                        persistenceUnitTarget = callable.call();
-                                    } catch (RuntimeException e) { // rethrow PersistenceException
-                                        throw e;
-                                    } catch (Exception e) {  // We shouldn't get any other Exceptions but if we do, throw then as unchecked exception
-                                        throw new RuntimeException(e);
-                                    }
+                                    persistenceUnitTarget = resolver.apply(persistenceUnitService);
                                     return null;
                                 }
                             };
