@@ -114,6 +114,7 @@ import org.wildfly.extension.undertow.logging.UndertowLogger;
 import org.wildfly.extension.undertow.security.jacc.WarJACCDeployer;
 import org.wildfly.extension.undertow.session.NonDistributableWebDeploymentServiceInstallerProvider;
 import org.wildfly.extension.undertow.session.SessionAffinityProvider;
+import org.wildfly.extension.undertow.session.SessionLocalityProvider;
 import org.wildfly.security.auth.server.SecurityDomain;
 import org.wildfly.security.http.HttpServerAuthenticationMechanismFactory;
 
@@ -320,6 +321,7 @@ public class UndertowDeploymentProcessor implements DeploymentUnitProcessor {
         ServletContainerService servletContainer = deploymentUnit.getAttachment(UndertowAttachments.SERVLET_CONTAINER_SERVICE);
         Supplier<SessionManagerFactory> sessionManagerFactory = (servletContainer != null) ? builder.requires(WebDeploymentServiceDescriptor.SESSION_MANAGER_FACTORY.resolve(sessionDeploymentUnit)) : null;
         Supplier<SessionAffinityProvider> sessionAffinityProvider = (servletContainer != null) ? builder.requires(WebDeploymentServiceDescriptor.SESSION_AFFINITY_PROVIDER.resolve(sessionDeploymentUnit)) : null;
+        Supplier<SessionLocalityProvider> sessionLocalityProvider = (servletContainer != null) ? builder.requires(WebDeploymentServiceDescriptor.SESSION_LOCALITY_PROVIDER.resolve(sessionDeploymentUnit)) : null;
 
         if ((servletContainer != null) && (sharedSessionManagerConfig == null)) {
             Integer maxActiveSessions = (metaData.getMaxActiveSessions() != null) ? metaData.getMaxActiveSessions() : servletContainer.getMaxSessions();
@@ -356,6 +358,7 @@ public class UndertowDeploymentProcessor implements DeploymentUnitProcessor {
             };
             provider.getSessionManagerFactoryServiceInstaller(configuration).install(phaseContext);
             provider.getSessionAffinityProviderServiceInstaller(configuration).install(phaseContext);
+            provider.getSessionLocalityProviderServiceInstaller(configuration).install(phaseContext);
         }
 
         UndertowDeploymentInfoService undertowDeploymentInfoService = UndertowDeploymentInfoService.builder()
@@ -384,7 +387,7 @@ public class UndertowDeploymentProcessor implements DeploymentUnitProcessor {
                 .setTempDir(warMetaData.getTempDir())
                 .setExternalResources(deploymentUnit.getAttachmentList(UndertowAttachments.EXTERNAL_RESOURCES))
                 .setAllowSuspendedRequests(deploymentUnit.getAttachmentList(UndertowAttachments.ALLOW_REQUEST_WHEN_SUSPENDED))
-                .createUndertowDeploymentInfoService(deploymentInfo, undertowService, sessionManagerFactory, sessionAffinityProvider,
+                .createUndertowDeploymentInfoService(deploymentInfo, undertowService, sessionManagerFactory, sessionAffinityProvider, sessionLocalityProvider,
                         servletContainerService, componentRegistryDependency, host, controlPoint, suspendController, serverEnvironment, securityDomain, mechanismFactorySupplier, applySecurityFunction);
         builder.setInstance(undertowDeploymentInfoService);
 

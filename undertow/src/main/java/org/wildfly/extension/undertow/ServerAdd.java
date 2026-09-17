@@ -7,6 +7,7 @@ package org.wildfly.extension.undertow;
 
 import static org.wildfly.extension.undertow.ServerDefinition.SERVER_CAPABILITY;
 
+import java.net.URI;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.function.Consumer;
@@ -64,6 +65,16 @@ final class ServerAdd extends AbstractAddStepHandler {
             csb.install();
         }
 
+        if (ServerDefinition.PROXY_FOREIGN_SESSIONS.resolveModelAttribute(context, resource.getModel()).asBoolean()) {
+            final CapabilityServiceBuilder<?> peb = context.getCapabilityServiceTarget().addCapability(ServerDefinition.PROXY_ENDPOINT_CAPABILITY);
+            final Consumer<URI> endpointConsumer = peb.provides(ServerDefinition.PROXY_ENDPOINT_CAPABILITY);
+            final Supplier<Server> peServer = peb.requires(Server.SERVICE_DESCRIPTOR, name);
+            // The endpoint is derived from an HTTP listener of this server, which must therefore already be started
+            addCommonHostListenerDeps(context, peb, HttpListenerResourceDefinition.PATH_ELEMENT);
+            peb.setInstance(new ProxyEndpointService(endpointConsumer, peServer));
+            peb.install();
+        }
+
         for (ServerServiceInstallerProvider factory : ServiceLoader.load(ServerServiceInstallerProvider.class, ServerServiceInstallerProvider.class.getClassLoader())) {
             factory.getServiceInstaller(name).install(context);
         }
@@ -108,6 +119,10 @@ final class ServerAdd extends AbstractAddStepHandler {
         boolean isDefaultServer = context.getCurrentAddressValue().equals(defaultServerName);
         if (isDefaultServer) {
             context.registerCapability(CommonWebServer.CAPABILITY);
+        }
+
+        if (ServerDefinition.PROXY_FOREIGN_SESSIONS.resolveModelAttribute(context, model).asBoolean()) {
+            context.registerCapability(ServerDefinition.PROXY_ENDPOINT_CAPABILITY.fromBaseCapability(context.getCurrentAddress()));
         }
     }
 

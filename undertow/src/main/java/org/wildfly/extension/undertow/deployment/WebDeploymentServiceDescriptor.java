@@ -12,6 +12,7 @@ import io.undertow.servlet.api.SessionManagerFactory;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.msc.service.ServiceName;
 import org.wildfly.extension.undertow.session.SessionAffinityProvider;
+import org.wildfly.extension.undertow.session.SessionLocalityProvider;
 import org.wildfly.service.descriptor.ServiceDescriptor;
 
 /**
@@ -24,6 +25,7 @@ public interface WebDeploymentServiceDescriptor<T> extends ServiceDescriptor<T> 
     WebDeploymentServiceDescriptor<DeploymentInfo> DEPLOYMENT_INFO = of("deployment-info", DeploymentInfo.class);
     WebDeploymentServiceDescriptor<SessionManagerFactory> SESSION_MANAGER_FACTORY = of("session-manager-factory", SessionManagerFactory.class);
     WebDeploymentServiceDescriptor<SessionAffinityProvider> SESSION_AFFINITY_PROVIDER = WebDeploymentServiceDescriptor.of("session-affinity-provider", SessionAffinityProvider.class);
+    WebDeploymentServiceDescriptor<SessionLocalityProvider> SESSION_LOCALITY_PROVIDER = WebDeploymentServiceDescriptor.of("session-locality-provider", SessionLocalityProvider.class);
 
     default ServiceName resolve(DeploymentUnit unit) {
         return unit.getServiceName().append("undertow", this.getName());

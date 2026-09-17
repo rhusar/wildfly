@@ -29,7 +29,7 @@ import java.util.List;
  * @author Stuart Douglas
  */
 public class ReverseProxyHandlerDefinition extends HandlerDefinition {
-    public static final PathElement PATH_ELEMENT =PathElement.pathElement(Constants.REVERSE_PROXY);
+    public static final PathElement PATH_ELEMENT = PathElement.pathElement(Constants.REVERSE_PROXY);
 
     public static final AttributeDefinition PROBLEM_SERVER_RETRY = new SimpleAttributeDefinitionBuilder(Constants.PROBLEM_SERVER_RETRY, ModelType.INT)
             .setRequired(false)

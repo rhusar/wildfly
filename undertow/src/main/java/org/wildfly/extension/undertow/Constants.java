@@ -257,6 +257,7 @@ public interface Constants {
     String DEFAULT_COOKIE_VERSION = "default-cookie-version";
     String PRESERVE_PATH_ON_FORWARD = "preserve-path-on-forward";
 
+    String PROXY_FOREIGN_SESSIONS = "proxy-foreign-sessions";
     String PROXY_PROTOCOL = "proxy-protocol";
     String MAX_POOL_SIZE = "max-pool-size";
     String THREAD_LOCAL_CACHE_SIZE = "thread-local-cache-size";

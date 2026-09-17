@@ -11,6 +11,7 @@ import java.util.function.UnaryOperator;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.msc.service.ServiceName;
 import org.wildfly.clustering.session.SessionManagerFactory;
+import org.wildfly.clustering.web.service.routing.SessionLocality;
 import org.wildfly.service.descriptor.ServiceDescriptor;
 
 import jakarta.servlet.ServletContext;
@@ -24,6 +25,7 @@ public interface WebDeploymentServiceDescriptor<T> extends ServiceDescriptor<T> 
     WebDeploymentServiceDescriptor<UnaryOperator<String>> ROUTE_LOCATOR = WebDeploymentServiceDescriptor.of("route-locator", (Class<UnaryOperator<String>>) (Class<?>) UnaryOperator.class);
     @SuppressWarnings("unchecked")
     WebDeploymentServiceDescriptor<SessionManagerFactory<ServletContext, Map<String, Object>>> SESSION_MANAGER_FACTORY = WebDeploymentServiceDescriptor.of("session-manager-factory", (Class<SessionManagerFactory<ServletContext, Map<String, Object>>>) (Class<?>) SessionManagerFactory.class);
+    WebDeploymentServiceDescriptor<SessionLocality> SESSION_LOCALITY = WebDeploymentServiceDescriptor.of("session-locality", SessionLocality.class);
 
     default ServiceName resolve(DeploymentUnit unit) {
         return unit.getServiceName().append("distributable", this.getName());

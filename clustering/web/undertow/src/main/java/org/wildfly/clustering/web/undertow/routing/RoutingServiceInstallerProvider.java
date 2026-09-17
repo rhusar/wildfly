@@ -5,6 +5,7 @@
 
 package org.wildfly.clustering.web.undertow.routing;
 
+import java.net.URI;
 import java.util.Iterator;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
@@ -47,11 +48,12 @@ public class RoutingServiceInstallerProvider implements ServerServiceInstallerPr
             @Override
             public Consumer<OperationContext> install(OperationContext context) {
                 ServiceDependency<RoutingProvider> provider = RoutingServiceInstallerProvider.this.getRoutingProvider(context, serverName);
+                ServiceDependency<URI> endpoint = RoutingServiceInstallerProvider.this.getProxyEndpoint(context, serverName);
                 ServiceInstaller installer = new ServiceInstaller() {
                     @Override
                     public ServiceController<?> install(RequirementServiceTarget target) {
                         ServiceDependency<String> serverId = ServiceDependency.on(Server.SERVICE_DESCRIPTOR, serverName).map(Server::getRoute);
-                        for (ServiceInstaller installer : provider.get().getServiceInstallers(serverName, serverId)) {
+                        for (ServiceInstaller installer : provider.get().getServiceInstallers(serverName, serverId, endpoint)) {
                             installer.install(target);
                         }
                         return null;
@@ -60,6 +62,16 @@ public class RoutingServiceInstallerProvider implements ServerServiceInstallerPr
                 return ServiceInstaller.Builder.of(installer, context.getCapabilityServiceSupport()).requires(provider).build().install(context);
             }
         };
+    }
+
+    /**
+     * Returns a dependency on the endpoint via which the specified server can be reached by its peers, or an empty
+     * dependency if that server is not configured to proxy requests for foreign sessions.
+     */
+    private ServiceDependency<URI> getProxyEndpoint(OperationContext context, String serverName) {
+        String serverCapabilityName = RuntimeCapability.resolveCapabilityName(Server.SERVICE_DESCRIPTOR, serverName);
+        String endpointCapabilityName = RuntimeCapability.resolveCapabilityName(Server.PROXY_ENDPOINT, serverName);
+        return context.hasOptionalCapability(endpointCapabilityName, serverCapabilityName, null) ? ServiceDependency.on(Server.PROXY_ENDPOINT, serverName) : ServiceDependency.empty();
     }
 
     private ServiceDependency<RoutingProvider> getRoutingProvider(OperationContext context, String serverName) {

@@ -46,6 +46,14 @@ public class NonDistributableWebDeploymentServiceInstallerProvider implements We
     }
 
     @Override
+    public DeploymentServiceInstaller getSessionLocalityProviderServiceInstaller(WebDeploymentConfiguration configuration) {
+        // Sessions of a non-distributable deployment are always read locally
+        return ServiceInstaller.BlockingBuilder.of(() -> SessionLocalityProvider.LOCAL)
+                .provides(WebDeploymentServiceDescriptor.SESSION_LOCALITY_PROVIDER.resolve(configuration.getDeploymentUnit()))
+                .build();
+    }
+
+    @Override
     public WebDeploymentServiceInstallerProvider get() {
         // Supplies distributable implementation, when no distributable implementation is available.
         UndertowLogger.ROOT_LOGGER.clusteringNotSupported();

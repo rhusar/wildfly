@@ -13,13 +13,19 @@ import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
 import org.infinispan.Cache;
+import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.configuration.cache.Configurations;
 import org.infinispan.configuration.cache.ExpirationConfiguration;
 import org.infinispan.configuration.cache.PersistenceConfiguration;
 import org.infinispan.configuration.cache.StorageType;
 import org.infinispan.configuration.cache.StoreConfiguration;
 import org.infinispan.eviction.EvictionStrategy;
+import org.jboss.as.controller.RequirementServiceTarget;
+import org.jboss.as.server.deployment.Attachments;
 import org.jboss.as.server.deployment.DeploymentUnit;
+import org.jboss.msc.service.ServiceController;
+import org.wildfly.clustering.cache.Key;
 import org.wildfly.clustering.cache.infinispan.embedded.EmbeddedCacheConfiguration;
 import org.wildfly.clustering.cache.infinispan.embedded.container.DataContainerConfigurationBuilder;
 import org.wildfly.clustering.infinispan.service.CacheConfigurationServiceInstaller;
@@ -28,14 +34,19 @@ import org.wildfly.clustering.infinispan.service.InfinispanServiceDescriptor;
 import org.wildfly.clustering.server.infinispan.dispatcher.CacheContainerCommandDispatcherFactory;
 import org.wildfly.clustering.server.service.BinaryServiceConfiguration;
 import org.wildfly.clustering.server.service.ClusteringServiceDescriptor;
+import org.wildfly.clustering.server.infinispan.registry.CacheContainerRegistry;
 import org.wildfly.clustering.session.SessionManagerFactory;
+import org.wildfly.clustering.session.cache.affinity.SessionAffinityEndpoint;
 import org.wildfly.clustering.session.infinispan.embedded.InfinispanSessionManagerFactory;
 import org.wildfly.clustering.session.infinispan.embedded.metadata.SessionMetaDataKey;
+import org.wildfly.clustering.web.service.deployment.WebDeploymentConfiguration;
 import org.wildfly.clustering.web.service.deployment.WebDeploymentServiceDescriptor;
 import org.wildfly.clustering.web.service.routing.RouteLocatorProvider;
+import org.wildfly.clustering.web.service.routing.SessionLocality;
 import org.wildfly.clustering.web.service.session.DistributableSessionManagementConfiguration;
 import org.wildfly.clustering.web.service.session.DistributableSessionManagementProvider;
 import org.wildfly.clustering.web.service.session.SessionManagerFactoryConfiguration;
+import org.wildfly.extension.clustering.web.routing.infinispan.InfinispanSessionLocality;
 import org.wildfly.extension.clustering.web.session.AbstractSessionManagementProvider;
 import org.wildfly.service.BlockingLifecycle;
 import org.wildfly.subsystem.service.DeploymentServiceInstaller;
@@ -138,5 +149,32 @@ public class InfinispanSessionManagementProvider extends AbstractSessionManageme
                 .build();
 
         return DeploymentServiceInstaller.combine(configurationInstaller, cacheInstaller, installer);
+    }
+
+    @Override
+    public DeploymentServiceInstaller getSessionLocalityServiceInstaller(WebDeploymentConfiguration configuration) {
+        DeploymentUnit unit = configuration.getDeploymentUnit();
+        BinaryServiceConfiguration templateCacheConfiguration = this.getCacheConfiguration();
+        ServiceDependency<Configuration> cacheConfiguration = templateCacheConfiguration.getServiceDependency(InfinispanServiceDescriptor.CACHE_CONFIGURATION);
+        ServiceDependency<Cache<Key<String>, ?>> cache = templateCacheConfiguration.withChildName(configuration.getDeploymentName()).getServiceDependency(InfinispanServiceDescriptor.CACHE).map(Cache.class::cast);
+        ServiceDependency<CacheContainerRegistry<String, SessionAffinityEndpoint>> registry = templateCacheConfiguration.withChildName(configuration.getServerName()).getServiceDependency(ClusteringServiceDescriptor.REGISTRY).map(CacheContainerRegistry.class::cast);
+
+        ServiceInstaller localInstaller = ServiceInstaller.BlockingBuilder.of(org.wildfly.clustering.function.Supplier.of(SessionLocality.LOCAL))
+                .provides(WebDeploymentServiceDescriptor.SESSION_LOCALITY.resolve(unit))
+                .build();
+
+        return ServiceInstaller.Builder.of(new ServiceInstaller() {
+            @Override
+            public ServiceController<?> install(RequirementServiceTarget target) {
+                // A session of a local cache is, by definition, always read locally
+                if (!Configurations.needSegments(cacheConfiguration.get())) {
+                    return localInstaller.install(target);
+                }
+                return ServiceInstaller.BlockingBuilder.of(cache.combine(registry, InfinispanSessionLocality::new))
+                        .provides(WebDeploymentServiceDescriptor.SESSION_LOCALITY.resolve(unit))
+                        .build()
+                        .install(target);
+            }
+        }, unit.getAttachment(Attachments.CAPABILITY_SERVICE_SUPPORT)).requires(cacheConfiguration).build();
     }
 }

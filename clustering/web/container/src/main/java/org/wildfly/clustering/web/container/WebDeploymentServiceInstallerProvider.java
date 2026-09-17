@@ -26,4 +26,12 @@ public interface WebDeploymentServiceInstallerProvider {
      * @return a number of service configurators
      */
     DeploymentServiceInstaller getSessionAffinityProviderServiceInstaller(WebDeploymentConfiguration configuration);
+
+    /**
+     * Returns an installer of a service providing container-specific session locality logic, i.e. resolution of the
+     * cluster member from which the session associated with a given request can currently be read locally.
+     * @param configuration the configuration of the deployment
+     * @return a number of service configurators
+     */
+    DeploymentServiceInstaller getSessionLocalityProviderServiceInstaller(WebDeploymentConfiguration configuration);
 }
