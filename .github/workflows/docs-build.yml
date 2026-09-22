@@ -1,0 +1,30 @@
+name: Docs Build
+
+on:
+  pull_request:
+    branches:
+      - '**'
+    paths:
+      - 'docs/src/main/asciidoc/**'
+
+# Only run the latest job
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+  validate-docs:
+    name: Validate AsciiDoc
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          java-version: 17
+          distribution: 'temurin'
+          cache: 'maven'
+      - name: Build docs module
+        run: mvn -B verify -f docs/pom.xml -Dmdep.skip=true

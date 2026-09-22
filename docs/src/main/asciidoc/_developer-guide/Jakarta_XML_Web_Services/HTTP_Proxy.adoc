@@ -17,7 +17,7 @@ explained below; for further information please refer to the
 http://cxf.apache.org/docs/client-http-transport-including-ssl-support.html[Apache
 CXF documentation].
 
-[[configuration]]
+[[http-proxy-configuration]]
 == Configuration
 
 The HTTP proxy configuration for a given Jakarta XML Web Services client can be set in the

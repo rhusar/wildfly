@@ -41,6 +41,11 @@
                 <groupId>org.asciidoctor</groupId>
                 <artifactId>asciidoctor-maven-plugin</artifactId>
                 <configuration>
+                    <logHandler>
+                        <failIf>
+                            <severity>WARN</severity>
+                        </failIf>
+                    </logHandler>
                     <attributes>
                         <!-- TODO Validate the need for these that were pulled out of wildfly-parent -->
                         <source-highlighter>coderay</source-highlighter>
