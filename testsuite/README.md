@@ -240,6 +240,7 @@ In integration tests, we use the following images:
 * apache/kafka-native
 * quay.io/arkmq-org/activemq-artemis-broker
 * quay.io/keycloak/keycloak
+* quay.io/infinispan/server
 
 It is possible to override the default images and versions by using:
 
@@ -253,4 +254,5 @@ It is possible to override the default images and versions by using:
      testsuite.kafka-native.image=apache/kafka-native:3.8.0
      testsuite.activemq-artemis-broker.image=quay.io/arkmq-org/activemq-artemis-broker:artemis.2.42.0
      testsuite.keycloak.image=quay.io/keycloak/keycloak:24.0.2
+     testsuite.infinispan-server.image=quay.io/infinispan/server:16.2.3
      ```

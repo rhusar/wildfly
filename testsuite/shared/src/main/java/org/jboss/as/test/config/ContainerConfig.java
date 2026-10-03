@@ -18,7 +18,7 @@ import java.util.logging.Logger;
  * Configuration utility enum for managing container images used in the WildFly testsuite.
  * <p>
  * This enum provides centralized access to container image configurations for various services
- * including OpenTelemetry, Elasticsearch, MailServer, Kafka, Artemis, and Keycloak.
+ * including OpenTelemetry, Elasticsearch, MailServer, Kafka, Artemis, Keycloak, and Infinispan Server.
  * <p>
  * Configuration properties can be provided through multiple sources (in order of precedence):
  * <ol>
@@ -46,7 +46,10 @@ public enum ContainerConfig {
     ARTEMIS_BROKER("testsuite.activemq-artemis-broker.image", "quay.io/arkmq-org/activemq-artemis-broker:artemis.2.42.0"),
 
     /** Keycloak container configuration. */
-    KEYCLOAK("testsuite.keycloak.image", "quay.io/keycloak/keycloak:24.0.5");
+    KEYCLOAK("testsuite.keycloak.image", "quay.io/keycloak/keycloak:24.0.5"),
+
+    /** Infinispan Server container configuration; defaults to the Infinispan version used by the project, passed by the build, or latest. */
+    INFINISPAN_SERVER("testsuite.infinispan-server.image", "quay.io/infinispan/server:" + System.getProperty("version.org.infinispan", "latest"));
 
     private static final Logger logger = Logger.getLogger(ContainerConfig.class.getName());
 

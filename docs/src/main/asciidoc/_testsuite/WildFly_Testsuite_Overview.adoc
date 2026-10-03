@@ -322,7 +322,7 @@ There are maven profiles that might come in handy for testing:
 * `ts.clustering.common.profile` prepares server configurations used by test execution profiles
 * `ts.clustering.cluster.ha.profile` runs tests against `standalone-ha.xml` profile
 * `ts.clustering.cluster.fullha.profile` runs tests which require `standalone-full-ha.xml` profile; e.g. tests requiring JMS subsystem
-* `ts.clustering.cluster.ha-infinispan-server.profile` runs tests against `standalone-ha.xml` profile with Infinispan Server provisioned via `@ClassRule`
+* `ts.clustering.cluster.ha-infinispan-server.profile` runs tests against `standalone-ha.xml` profile with Infinispan Server running in a container managed by Arquillian Testcontainers; requires a Docker or Podman environment
 * `ts.clustering.single.profile` runs clustering tests that are using a non-HA server profile
 * `ts.clustering.single.testable.profile` runs clustering tests that use `testable=true` deployments
 * `ts.clustering.byteman.profile` runs clustering tests that require installation of byteman rules
@@ -369,18 +369,18 @@ test profiles:
 ./integration-tests.sh clean install -Dts.noSmoke -Dts.clustering -P="-ts.clustering.cluster.ha.profile,-ts.clustering.cluster.fullha.profile,-ts.clustering.cluster.ha-infinispan-server.profile,-ts.clustering.byteman.profile,-ts.clustering.single.profile" -Dtest=org.jboss.as.test.clustering.single.dispatcher.CommandDispatcherTestCase
 ----
 
-=== Running Infinispan Server tests against custom distribution
+=== Running Infinispan Server tests against a custom image
 
-To run the Infinispan Server-based tests against a custom distribution, a custom location can be specified with `-Dinfinispan.server.home.override=/foo/bar`
-and `-Dinfinispan.server.profile.override=infinispan-13.0.xml` to use a corresponding server profile.
-The distribution is then copied over to the build directories and patched with user credentials.
+The Infinispan Server-based tests run Infinispan Server in a container, which requires a Docker or Podman environment.
+The HotRod endpoint is bound to the fixed host port `127.0.0.1:11322`.
+To run the tests against a custom image, specify it with `-Dtestsuite.infinispan-server.image=registry/image:tag`
+(see `org.jboss.as.test.config.ContainerConfig` for other ways to override container images).
+Should the image require a different server profile, specify it with e.g. `-Dinfinispan.server.profile.override=infinispan-15.1.xml`.
 
 [source,shell]
 ----
-./integration-tests.sh clean install -Dts.noSmoke -Dts.clustering -P="-ts.clustering.cluster.ha.profile,-ts.clustering.cluster.fullha.profile,-ts.clustering.single.profile,-ts.clustering.byteman.profile,-ts.clustering.single.profile" -Dinfinispan.server.home.override=/Users/rhusar/Downloads/redhat-datagrid-8.3.0-server
+./integration-tests.sh clean install -Dts.noSmoke -Dts.clustering -P="-ts.clustering.cluster.ha.profile,-ts.clustering.cluster.fullha.profile,-ts.clustering.single.profile,-ts.clustering.byteman.profile,-ts.clustering.single.profile" -Dtestsuite.infinispan-server.image=quay.io/infinispan/server:16.0
 ----
-
-Should it be required, the Infinispan Server driver version can be also overridden by `-Dversion.org.infinispan.server.driver=13.0.0.Dev03`.
 
 ==== Skipping clustering tests
 

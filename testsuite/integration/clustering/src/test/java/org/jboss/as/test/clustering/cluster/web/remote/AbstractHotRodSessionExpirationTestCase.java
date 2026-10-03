@@ -5,19 +5,15 @@
 
 package org.jboss.as.test.clustering.cluster.web.remote;
 
-import org.infinispan.server.test.jupiter.InfinispanServerExtension;
+import org.arquillian.testcontainers.api.TestcontainersRequired;
 import org.infinispan.transaction.TransactionMode;
-import org.jboss.as.test.clustering.InfinispanServerUtil;
 import org.jboss.as.test.clustering.cluster.web.expiration.SessionExpirationTestCase;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 /**
  * @author Paul Ferraro
  */
+@TestcontainersRequired
 public abstract class AbstractHotRodSessionExpirationTestCase extends SessionExpirationTestCase {
-
-    @RegisterExtension
-    public static final InfinispanServerExtension SERVER = InfinispanServerUtil.infinispanServerExtension();
 
     public AbstractHotRodSessionExpirationTestCase() {
         super(TransactionMode.NON_TRANSACTIONAL);

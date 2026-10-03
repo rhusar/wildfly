@@ -9,6 +9,7 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.TargetsContainer;
 import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.as.arquillian.api.ServerSetup;
+import org.jboss.as.test.clustering.InfinispanServerContainerSetupTask;
 import org.jboss.shrinkwrap.api.Archive;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -16,7 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * @author Paul Ferraro
  */
 @ExtendWith(ArquillianExtension.class)
-@ServerSetup({ InfinispanServerSetupTask.class, AbstractHotRodPersistenceWebFailoverTestCase.ServerSetupTask.class })
+@ServerSetup({ InfinispanServerContainerSetupTask.class, InfinispanServerSetupTask.class, AbstractHotRodPersistenceWebFailoverTestCase.ServerSetupTask.class })
 public class CoarseHotRodPersistenceWebFailoverTestCase extends AbstractHotRodPersistenceWebFailoverTestCase {
 
     private static final String DEPLOYMENT_NAME = CoarseHotRodPersistenceWebFailoverTestCase.class.getSimpleName() + ".war";

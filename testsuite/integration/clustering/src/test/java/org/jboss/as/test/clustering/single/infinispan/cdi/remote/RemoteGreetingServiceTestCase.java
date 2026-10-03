@@ -9,11 +9,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import jakarta.inject.Inject;
 
+import org.arquillian.testcontainers.api.TestcontainersRequired;
 import org.infinispan.client.hotrod.DataFormat;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit5.ArquillianExtension;
+import org.jboss.as.arquillian.api.ServerSetup;
+import org.jboss.as.test.clustering.InfinispanServerContainerSetupTask;
 import org.jboss.as.test.clustering.single.infinispan.cdi.remote.deployment.RemoteGreetingCache;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -31,6 +34,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * @since 27
  */
 @ExtendWith(ArquillianExtension.class)
+@ServerSetup(InfinispanServerContainerSetupTask.class)
+@TestcontainersRequired
 public class RemoteGreetingServiceTestCase {
 
     @Deployment

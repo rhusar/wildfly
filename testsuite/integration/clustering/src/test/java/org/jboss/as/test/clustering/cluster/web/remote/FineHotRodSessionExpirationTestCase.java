@@ -8,13 +8,14 @@ package org.jboss.as.test.clustering.cluster.web.remote;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.TargetsContainer;
 import org.jboss.as.arquillian.api.ServerSetup;
+import org.jboss.as.test.clustering.InfinispanServerContainerSetupTask;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 
 /**
  * @author Paul Ferraro
  */
-@ServerSetup({ InfinispanServerSetupTask.class })
+@ServerSetup({ InfinispanServerContainerSetupTask.class, InfinispanServerSetupTask.class })
 public class FineHotRodSessionExpirationTestCase extends AbstractHotRodSessionExpirationTestCase {
 
     private static final String MODULE_NAME = FineHotRodSessionExpirationTestCase.class.getSimpleName();

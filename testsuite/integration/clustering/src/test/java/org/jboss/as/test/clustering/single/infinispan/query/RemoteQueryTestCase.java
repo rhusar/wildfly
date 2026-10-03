@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.ServiceLoader;
 import java.util.stream.Collectors;
 
+import org.arquillian.testcontainers.api.TestcontainersRequired;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.RemoteSchemasAdmin;
@@ -23,6 +24,8 @@ import org.infinispan.protostream.GeneratedSchema;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit5.ArquillianExtension;
+import org.jboss.as.arquillian.api.ServerSetup;
+import org.jboss.as.test.clustering.InfinispanServerContainerSetupTask;
 import org.jboss.as.test.clustering.single.infinispan.query.data.Book;
 import org.jboss.as.test.clustering.single.infinispan.query.data.Person;
 import org.jboss.as.test.clustering.single.infinispan.query.data.PersonSchema;
@@ -44,6 +47,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * @since 27
  */
 @ExtendWith(ArquillianExtension.class)
+@ServerSetup(InfinispanServerContainerSetupTask.class)
+@TestcontainersRequired
 public class RemoteQueryTestCase {
 
     @Deployment

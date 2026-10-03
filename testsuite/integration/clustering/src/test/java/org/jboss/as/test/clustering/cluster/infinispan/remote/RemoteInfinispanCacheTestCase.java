@@ -5,25 +5,22 @@
 
 package org.jboss.as.test.clustering.cluster.infinispan.remote;
 
-import org.infinispan.server.test.jupiter.InfinispanServerExtension;
+import org.arquillian.testcontainers.api.TestcontainersRequired;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.TargetsContainer;
 import org.jboss.as.arquillian.api.ServerSetup;
-import org.jboss.as.test.clustering.InfinispanServerUtil;
+import org.jboss.as.test.clustering.InfinispanServerContainerSetupTask;
 import org.jboss.as.test.clustering.cluster.infinispan.AbstractCacheTestCase;
 import org.jboss.as.test.clustering.cluster.infinispan.bean.remote.RemoteCacheBean;
 import org.jboss.as.test.shared.ManagementServerSetupTask;
 import org.jboss.shrinkwrap.api.Archive;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 /**
  * @author Paul Ferraro
  */
-@ServerSetup(RemoteInfinispanCacheTestCase.InfinispanServerSetupTask.class)
+@ServerSetup({ InfinispanServerContainerSetupTask.class, RemoteInfinispanCacheTestCase.InfinispanServerSetupTask.class })
+@TestcontainersRequired
 public class RemoteInfinispanCacheTestCase extends AbstractCacheTestCase {
-
-    @RegisterExtension
-    public static final InfinispanServerExtension SERVER = InfinispanServerUtil.infinispanServerExtension();
 
     @Deployment(name = DEPLOYMENT_1, managed = false, testable = false)
     @TargetsContainer(NODE_1)

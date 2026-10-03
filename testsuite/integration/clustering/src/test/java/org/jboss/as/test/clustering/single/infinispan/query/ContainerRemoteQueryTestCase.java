@@ -11,6 +11,7 @@ import java.util.List;
 
 import jakarta.annotation.Resource;
 
+import org.arquillian.testcontainers.api.TestcontainersRequired;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheContainer;
 import org.infinispan.commons.api.query.Query;
@@ -18,6 +19,7 @@ import org.infinispan.protostream.SerializationContextInitializer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.as.arquillian.api.ServerSetup;
+import org.jboss.as.test.clustering.InfinispanServerContainerSetupTask;
 import org.jboss.as.test.clustering.single.infinispan.query.data.Book;
 import org.jboss.as.test.clustering.single.infinispan.query.data.BookSchema;
 import org.jboss.shrinkwrap.api.Archive;
@@ -36,7 +38,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * @since 27
  */
 @ExtendWith(ArquillianExtension.class)
-@ServerSetup(ServerSetupTask.class)
+@ServerSetup({ InfinispanServerContainerSetupTask.class, ServerSetupTask.class })
+@TestcontainersRequired
 public class ContainerRemoteQueryTestCase {
 
     @Deployment

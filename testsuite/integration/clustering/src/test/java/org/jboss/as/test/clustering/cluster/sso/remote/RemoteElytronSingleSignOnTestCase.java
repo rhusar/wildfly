@@ -5,12 +5,12 @@
 
 package org.jboss.as.test.clustering.cluster.sso.remote;
 
-import org.infinispan.server.test.jupiter.InfinispanServerExtension;
+import org.arquillian.testcontainers.api.TestcontainersRequired;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.TargetsContainer;
 import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.as.arquillian.api.ServerSetup;
-import org.jboss.as.test.clustering.InfinispanServerUtil;
+import org.jboss.as.test.clustering.InfinispanServerContainerSetupTask;
 import org.jboss.as.test.clustering.cluster.sso.AbstractSingleSignOnTestCase;
 import org.jboss.as.test.clustering.cluster.sso.ElytronSSOServerSetupTask;
 import org.jboss.as.test.clustering.cluster.sso.IdentityServerSetupTask;
@@ -18,17 +18,14 @@ import org.jboss.as.test.integration.web.sso.SSOTestBase;
 import org.jboss.as.test.shared.ManagementServerSetupTask;
 import org.jboss.shrinkwrap.api.Archive;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 /**
  * @author Paul Ferraro
  */
 @ExtendWith(ArquillianExtension.class)
-@ServerSetup({ InfinispanServerSetupTask.class, RemoteElytronSingleSignOnTestCase.ServerSetupTask.class, ElytronSSOServerSetupTask.class, IdentityServerSetupTask.class })
+@ServerSetup({ InfinispanServerContainerSetupTask.class, InfinispanServerSetupTask.class, RemoteElytronSingleSignOnTestCase.ServerSetupTask.class, ElytronSSOServerSetupTask.class, IdentityServerSetupTask.class })
+@TestcontainersRequired
 public class RemoteElytronSingleSignOnTestCase extends AbstractSingleSignOnTestCase {
-
-    @RegisterExtension
-    public static final InfinispanServerExtension SERVER = InfinispanServerUtil.infinispanServerExtension();
 
     @Deployment(name = DEPLOYMENT_1, managed = false, testable = false)
     @TargetsContainer(NODE_1)

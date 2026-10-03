@@ -9,6 +9,7 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.TargetsContainer;
 import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.as.arquillian.api.ServerSetup;
+import org.jboss.as.test.clustering.InfinispanServerContainerSetupTask;
 import org.jboss.as.test.clustering.cluster.web.DistributableTestCase;
 import org.jboss.as.test.clustering.cluster.web.event.SessionActivationServlet;
 import org.jboss.shrinkwrap.api.Archive;
@@ -20,7 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * @author Paul Ferraro
  */
 @ExtendWith(ArquillianExtension.class)
-@ServerSetup({ InfinispanServerSetupTask.class })
+@ServerSetup({ InfinispanServerContainerSetupTask.class, InfinispanServerSetupTask.class })
 public class FineHotRodSessionActivationTestCase extends AbstractHotRodSessionActivationTestCase {
 
     private static final String MODULE_NAME = FineHotRodSessionActivationTestCase.class.getSimpleName();

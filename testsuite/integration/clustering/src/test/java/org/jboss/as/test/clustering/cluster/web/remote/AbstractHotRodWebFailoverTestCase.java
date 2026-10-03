@@ -11,18 +11,16 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import java.net.URL;
 
+import org.arquillian.testcontainers.api.TestcontainersRequired;
 import org.infinispan.configuration.cache.CacheMode;
-import org.infinispan.server.test.jupiter.InfinispanServerExtension;
 import org.infinispan.transaction.TransactionMode;
 import org.jboss.arquillian.container.test.api.OperateOnDeployment;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.as.arquillian.container.ManagementClient;
-import org.jboss.as.test.clustering.InfinispanServerUtil;
 import org.jboss.as.test.clustering.cluster.web.AbstractWebFailoverTestCase;
 import org.jboss.as.test.clustering.single.web.SimpleServlet;
 import org.jboss.dmr.ModelNode;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 /**
  * Variation of {@link AbstractWebFailoverTestCase} using hotrod-based session manager.
@@ -31,10 +29,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
  * @author Radoslav Husar
  * @author Paul Ferraro
  */
+@TestcontainersRequired
 public abstract class AbstractHotRodWebFailoverTestCase extends AbstractWebFailoverTestCase {
-
-    @RegisterExtension
-    public static final InfinispanServerExtension INFINISPAN_SERVER_RULE = InfinispanServerUtil.infinispanServerExtension();
 
     @ArquillianResource @OperateOnDeployment(DEPLOYMENT_1)
     private ManagementClient client1;

@@ -55,6 +55,12 @@
             </security-realms>
         </security>
 
-        <endpoints socket-binding="default" security-realm="default" />
+        <endpoints>
+            <endpoint socket-binding="default" security-realm="default">
+                <!-- Advertise the host-mapped address to HotRod clients instead of the container-internal address -->
+                <hotrod-connector external-host="127.0.0.1" external-port="11322"/>
+                <rest-connector/>
+            </endpoint>
+        </endpoints>
     </server>
 </infinispan>

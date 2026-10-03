@@ -75,7 +75,6 @@ public abstract class AbstractClusteringTestCase {
     public static final Set<String> DEPLOYMENT_HELPER_1_2_3_4 = Set.of(DEPLOYMENT_HELPER_1, DEPLOYMENT_HELPER_2, DEPLOYMENT_HELPER_3, DEPLOYMENT_HELPER_4);
 
     // Infinispan Server
-    public static final String INFINISPAN_SERVER_HOME = System.getProperty("infinispan.server.home");
     public static final String INFINISPAN_SERVER_PROFILE = Optional.ofNullable(System.getProperty("infinispan.server.profile")).filter(Predicate.not(String::isBlank)).orElse(String.format("infinispan-%s.xml", Version.getMajorMinor()));
     public static final String INFINISPAN_SERVER_ADDRESS = "127.0.0.1";
     public static final int INFINISPAN_SERVER_PORT = 11322;

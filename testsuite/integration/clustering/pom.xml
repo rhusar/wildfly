@@ -36,9 +36,6 @@
         <surefire.jpda.args.node4/>
 
         <!-- Common infinispan server configuration -->
-        <version.org.infinispan.server>16.0.14</version.org.infinispan.server>
-        <version.org.infinispan.server.driver>${version.org.infinispan}</version.org.infinispan.server.driver>
-        <infinispan.server.home.override/>
         <infinispan.server.profile.override>infinispan-16.0.xml</infinispan.server.profile.override>
 
         <surefire.forked.process.timeout>5400</surefire.forked.process.timeout>
@@ -323,30 +320,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-server-testdriver-core</artifactId>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>junit</groupId>
-                    <artifactId>junit</artifactId>
-                </exclusion>
-                <!-- Avoids issue on deploy - "Caused by: org.jboss.as.cli.CommandRegistry$RegisterHandlerException: The following command names could not be registered since they conflict with the already registered ones: cd" -->
-                <exclusion>
-                    <groupId>org.infinispan</groupId>
-                    <artifactId>infinispan-cli-client</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.jboss.marshalling</groupId>
-                    <artifactId>jboss-marshalling-osgi</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.infinispan</groupId>
-                    <artifactId>infinispan-client-hotrod</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>org.jboss</groupId>
             <artifactId>jboss-ejb-client</artifactId>
             <scope>test</scope>
@@ -360,6 +333,22 @@
         <dependency>
             <groupId>org.jboss.arquillian.junit5</groupId>
             <artifactId>arquillian-junit5-container</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.arquillian.testcontainers</groupId>
+            <artifactId>arquillian-testcontainers</artifactId>
+            <version>${version.org.arquillian.testcontainers}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.clustering</groupId>
+            <artifactId>wildfly-clustering-container-spi</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -405,11 +394,6 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.platform</groupId>
-            <artifactId>junit-platform-suite</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -664,9 +648,8 @@
                         <surefire.jpda.args.node2>${surefire.jpda.args.node2}</surefire.jpda.args.node2>
                         <surefire.jpda.args.node3>${surefire.jpda.args.node3}</surefire.jpda.args.node3>
                         <surefire.jpda.args.node4>${surefire.jpda.args.node4}</surefire.jpda.args.node4>
-                        <infinispan.server.home>${infinispan.server.home.template}</infinispan.server.home>
                         <infinispan.server.profile>${infinispan.server.profile.override}</infinispan.server.profile>
-                        <infinispan.test.checkThreadLeaks>false</infinispan.test.checkThreadLeaks>
+                        <version.org.infinispan>${version.org.infinispan}</version.org.infinispan>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -820,120 +803,6 @@
                                             <target name="build-clustering"/>
                                         </ant>
                                     </target>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <!-- Profile which provisions infinispan server by downloading, unpacking and patching it -->
-        <profile>
-            <id>ts.clustering.common.infinispan-server.download.profile</id>
-            <activation>
-                <property>
-                    <name>!infinispan.server.home.override</name>
-                </property>
-            </activation>
-            <properties>
-                <infinispan.server.home.template>${basedir}/target/infinispan-server-${version.org.infinispan.server}</infinispan.server.home.template>
-            </properties>
-            <build>
-                <plugins>
-                    <!-- Download, unpack, and locally cache infinispan server distribution -->
-                    <!-- This works around the fact that infinispan server distribution zip is no longer published in maven -->
-                    <plugin>
-                        <groupId>com.googlecode.maven-download-plugin</groupId>
-                        <artifactId>download-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>ts.config-as.configure-infinispan-server</id>
-                                <phase>generate-test-resources</phase>
-                                <goals>
-                                    <goal>wget</goal>
-                                </goals>
-                                <configuration>
-                                    <url>https://github.com/infinispan/infinispan/releases/download/${version.org.infinispan.server}/infinispan-server-${version.org.infinispan.server}.zip</url>
-                                    <unpack>true</unpack>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <!-- Patch infinispan server distribution, e.g. with authentication / users configuration. -->
-                    <plugin>
-                        <artifactId>maven-resources-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>ts.config-as.configure-users-infinispan-server</id>
-                                <phase>generate-test-resources</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${infinispan.server.home.template}</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>src/test/resources/infinispan-server-overlay</directory>
-                                            <filtering>true</filtering>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <!-- Alternative profile to the above which copies over custom infinispan server distribution from user-specified path and patches it -->
-        <profile>
-            <id>ts.clustering.common.infinispan-server.custom.profile</id>
-            <activation>
-                <property>
-                    <name>infinispan.server.home.override</name>
-                </property>
-            </activation>
-            <properties>
-                <infinispan.server.home.template>${basedir}/target/infinispan-server-custom</infinispan.server.home.template>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-resources-plugin</artifactId>
-                        <executions>
-                            <!-- Copy over infinispan server distribution from custom path -->
-                            <execution>
-                                <id>ts.config-as.configure-infinispan-server-custom</id>
-                                <phase>generate-test-resources</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${infinispan.server.home.template}</outputDirectory>
-                                    <includeEmptyDirs>true</includeEmptyDirs>
-                                    <resources>
-                                        <resource>
-                                            <directory>${infinispan.server.home.override}</directory>
-                                            <filtering>false</filtering>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                            <!-- Patch infinispan server distribution, e.g. with authentication / users configuration. -->
-                            <execution>
-                                <id>ts.config-as.configure-users-infinispan-server-custom</id>
-                                <phase>generate-test-resources</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${infinispan.server.home.template}</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <directory>src/test/resources/infinispan-server-overlay</directory>
-                                            <filtering>true</filtering>
-                                        </resource>
-                                    </resources>
                                 </configuration>
                             </execution>
                         </executions>
@@ -1119,7 +988,6 @@
                                         <include>org/jboss/as/test/clustering/single/**/*TestCase.java</include>
                                     </includes>
                                     <excludes>
-                                        <exclude>org/jboss/as/test/clustering/single/infinispan/InfinispanModulesTestSuite.java</exclude>
                                         <exclude>org/jboss/as/test/clustering/single/infinispan/cdi/**/*TestCase.java</exclude>
                                         <exclude>org/jboss/as/test/clustering/single/infinispan/query/**/*TestCase.java</exclude>
                                         <exclude>org/jboss/as/test/clustering/single/web/NonHaWebSessionPersistenceTestCase.java</exclude>
@@ -1177,7 +1045,8 @@
                                 <configuration>
                                     <runOrder>alphabetical</runOrder>
                                     <includes>
-                                        <include>org/jboss/as/test/clustering/single/infinispan/InfinispanModulesTestSuite.java</include>
+                                        <include>org/jboss/as/test/clustering/single/infinispan/cdi/**/*TestCase.java</include>
+                                        <include>org/jboss/as/test/clustering/single/infinispan/query/**/*TestCase.java</include>
                                     </includes>
                                     <systemPropertyVariables>
                                         <arquillian.xml>arquillian-testable.xml</arquillian.xml>
