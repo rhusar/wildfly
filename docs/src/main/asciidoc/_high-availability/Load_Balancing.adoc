@@ -14,4 +14,4 @@ include::load-balancing/Ranked_Affinity.adoc[leveloffset=+1]
 
 include::load-balancing/Affinity_Cookie.adoc[leveloffset=+1]
 
-include::load-balancing/Server_Side_Proxying.adoc[leveloffset=+1]
+include::load-balancing/Non_Primary_Owner_Session_Proxying.adoc[leveloffset=+1]

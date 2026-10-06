@@ -5,12 +5,14 @@
 
 package org.wildfly.clustering.web.service.routing;
 
-import java.net.URI;
+import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
- * Resolves the group member from which the session with a given identifier can currently be read locally.
+ * Resolves the primary owner of a session, i.e. the group member from which that session can be read locally, to the
+ * addresses via which that member can be reached by its peers.
  * <p>
  * This is distinct from a route locator, which determines the identifier of the server to which the <em>next</em>
  * request for a given session should be directed, and which is encoded into the session identifier or affinity cookie
@@ -20,43 +22,32 @@ import java.util.List;
 public interface SessionLocality {
 
     /**
-     * Locality for a deployment whose sessions are always read locally.
+     * Locality for a deployment whose sessions are always owned by this member.
      */
     SessionLocality LOCAL = new SessionLocality() {
         @Override
-        public boolean isEnabled() {
-            return false;
+        public Map<String, List<InetSocketAddress>> findPrimaryOwner(String sessionId) {
+            return Map.of();
         }
 
         @Override
-        public URI locate(String sessionId) {
-            return null;
-        }
-
-        @Override
-        public Collection<URI> getPeers() {
+        public Collection<Map<String, List<InetSocketAddress>>> getPeers() {
             return List.of();
         }
     };
 
     /**
-     * Indicates whether the server associated with this deployment publishes an endpoint reachable by its peers, and
-     * can therefore resolve the owner of a session to a proxy target.
-     * @return true, if remote session owners can be resolved, false otherwise.
-     */
-    boolean isEnabled();
-
-    /**
-     * Returns the endpoint of the group member from which the session with the specified identifier can currently be
-     * read locally, or null if that member is this member, or if it could not be resolved to an endpoint.
+     * Returns the addresses, per scheme, of the primary owner of the session with the specified identifier.
+     * Returns an empty map if this member is the primary owner of that session, or if its primary owner could not be
+     * resolved to an address reachable by this member.
      * @param sessionId a session identifier
-     * @return an endpoint, or null if the specified session should be handled locally.
+     * @return the addresses of the primary owner of the specified session, per scheme, possibly empty.
      */
-    URI locate(String sessionId);
+    Map<String, List<InetSocketAddress>> findPrimaryOwner(String sessionId);
 
     /**
-     * Returns the endpoints of the peer members of this member's group, i.e. excluding this member.
-     * @return a collection of endpoints, possibly empty.
+     * Returns the addresses, per scheme, of each peer member of this member's group, i.e. excluding this member.
+     * @return a collection of addresses per scheme, possibly empty.
      */
-    Collection<URI> getPeers();
+    Collection<Map<String, List<InetSocketAddress>>> getPeers();
 }

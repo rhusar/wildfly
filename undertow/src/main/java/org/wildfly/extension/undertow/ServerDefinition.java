@@ -17,7 +17,6 @@ import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.SimpleResourceDefinition;
 import org.jboss.as.controller.capability.RuntimeCapability;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
-import org.jboss.as.version.Stability;
 import org.jboss.as.web.host.CommonWebServer;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
@@ -42,25 +41,14 @@ class ServerDefinition extends SimpleResourceDefinition {
             .setDefaultValue(new ModelNode("default"))
             .setRestartAllServices()
             .build();
-    static final SimpleAttributeDefinition PROXY_FOREIGN_SESSIONS = new SimpleAttributeDefinitionBuilder(Constants.PROXY_FOREIGN_SESSIONS, ModelType.BOOLEAN)
-            .setRequired(false)
-            .setAllowExpression(true)
-            .setDefaultValue(ModelNode.FALSE)
-            .setStability(Stability.EXPERIMENTAL)
-            .setRestartAllServices()
-            .build();
 
-    static final RuntimeCapability<Void> PROXY_ENDPOINT_CAPABILITY = RuntimeCapability.Builder.of(Server.PROXY_ENDPOINT)
-            .setStability(Stability.EXPERIMENTAL)
-            .build();
-
-    static final Collection<AttributeDefinition> ATTRIBUTES = List.of(DEFAULT_HOST, SERVLET_CONTAINER, PROXY_FOREIGN_SESSIONS);
+    static final Collection<AttributeDefinition> ATTRIBUTES = List.of(DEFAULT_HOST, SERVLET_CONTAINER);
 
     ServerDefinition() {
         super(new SimpleResourceDefinition.Parameters(PATH_ELEMENT, UndertowExtension.getResolver(PATH_ELEMENT.getKey()))
                 .setAddHandler(new ServerAdd())
                 .setRemoveHandler(ReloadRequiredRemoveStepHandler.INSTANCE)
-                .addCapabilities(SERVER_CAPABILITY, CommonWebServer.CAPABILITY, PROXY_ENDPOINT_CAPABILITY)
+                .addCapabilities(SERVER_CAPABILITY, CommonWebServer.CAPABILITY)
         );
     }
 

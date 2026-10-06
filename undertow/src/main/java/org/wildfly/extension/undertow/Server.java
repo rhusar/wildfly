@@ -5,7 +5,6 @@
 
 package org.wildfly.extension.undertow;
 
-import java.net.URI;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
@@ -43,11 +42,6 @@ import org.wildfly.service.descriptor.UnaryServiceDescriptor;
 public class Server implements Service<Server> {
     // TODO Extract interface from this class and relocate to an SPI module
     public static final UnaryServiceDescriptor<Server> SERVICE_DESCRIPTOR = UnaryServiceDescriptor.of("org.wildfly.undertow.server", Server.class);
-    /**
-     * The endpoint, i.e. the scheme, host, and port, via which this server can be reached by its peers.
-     * Only provided when the <code>proxy-foreign-sessions</code> attribute of this server is enabled.
-     */
-    public static final UnaryServiceDescriptor<URI> PROXY_ENDPOINT = UnaryServiceDescriptor.of("org.wildfly.undertow.server.proxy-endpoint", URI.class);
 
     private final Consumer<Server> serverConsumer;
     private final Supplier<ServletContainerService> servletContainer;

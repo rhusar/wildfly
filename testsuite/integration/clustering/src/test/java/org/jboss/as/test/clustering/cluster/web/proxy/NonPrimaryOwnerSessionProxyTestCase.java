@@ -31,6 +31,7 @@ import org.jboss.as.test.clustering.cluster.web.DistributableTestCase;
 import org.jboss.as.test.clustering.single.web.Mutable;
 import org.jboss.as.test.clustering.single.web.SimpleServlet;
 import org.jboss.as.test.http.util.TestHttpClientUtils;
+import org.jboss.as.test.shared.CLIServerSetupTask;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -39,22 +40,23 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.wildfly.test.stabilitylevel.StabilityServerSetupSnapshotRestoreTasks;
 
 /**
- * Smoke test for server-side proxying of requests for foreign sessions.
+ * Smoke test for proxying a request associated with a session owned by a peer cluster member to that member.
  * <p>
- * Each member of the cluster is configured to proxy a request associated with a session owned by a peer member to that
- * member. Consequently, once a session exists, a request for it is serviced by its primary owner, irrespective of the
+ * Each member is configured to service such a request via a reverse-proxy handler directed at the primary owner of the
+ * session. Consequently, once a session exists, a request for it is serviced by its primary owner, irrespective of the
  * member that received it.
  *
  * @author Radoslav Husar
  */
 @ExtendWith(ArquillianExtension.class)
-@ServerSetup({ StabilityServerSetupSnapshotRestoreTasks.Experimental.class, ForeignSessionProxyTestCase.ServerSetupTask.class })
-public class ForeignSessionProxyTestCase extends AbstractClusteringTestCase {
+@ServerSetup({ StabilityServerSetupSnapshotRestoreTasks.Experimental.class, NonPrimaryOwnerSessionProxyTestCase.ServerSetupTask.class })
+public class NonPrimaryOwnerSessionProxyTestCase extends AbstractClusteringTestCase {
 
-    private static final String MODULE_NAME = ForeignSessionProxyTestCase.class.getSimpleName();
+    private static final String MODULE_NAME = NonPrimaryOwnerSessionProxyTestCase.class.getSimpleName();
     private static final String DEPLOYMENT_NAME = MODULE_NAME + ".war";
+    private static final String HANDLER_NAME = "non-primary-owner";
 
-    public ForeignSessionProxyTestCase() {
+    public NonPrimaryOwnerSessionProxyTestCase() {
         super(NODE_1_2_3);
     }
 
@@ -85,7 +87,7 @@ public class ForeignSessionProxyTestCase extends AbstractClusteringTestCase {
     }
 
     @Test
-    public void foreignSessionIsServicedByItsPrimaryOwner(
+    public void sessionOwnedByPeerIsServicedByItsPrimaryOwner(
             @ArquillianResource(SimpleServlet.class) @OperateOnDeployment(DEPLOYMENT_1) URL baseURL1,
             @ArquillianResource(SimpleServlet.class) @OperateOnDeployment(DEPLOYMENT_2) URL baseURL2,
             @ArquillianResource(SimpleServlet.class) @OperateOnDeployment(DEPLOYMENT_3) URL baseURL3) throws Exception {
@@ -126,11 +128,13 @@ public class ForeignSessionProxyTestCase extends AbstractClusteringTestCase {
         }
     }
 
-    public static class ServerSetupTask extends org.jboss.as.test.shared.CLIServerSetupTask {
+    public static class ServerSetupTask extends CLIServerSetupTask {
         public ServerSetupTask() {
             this.builder.node(NODE_1_2_3.toArray(new String[0]))
-                    .setup("/subsystem=undertow/server=default-server:write-attribute(name=proxy-foreign-sessions, value=true)")
-                    .teardown("/subsystem=undertow/server=default-server:undefine-attribute(name=proxy-foreign-sessions)")
+                    .setup("/subsystem=undertow/configuration=handler/reverse-proxy=%s:add(max-retries=0)", HANDLER_NAME)
+                    .setup("/subsystem=distributable-web/infinispan-session-management=default:write-attribute(name=non-primary-sessions-handler, value=%s)", HANDLER_NAME)
+                    .teardown("/subsystem=distributable-web/infinispan-session-management=default:undefine-attribute(name=non-primary-sessions-handler)")
+                    .teardown("/subsystem=undertow/configuration=handler/reverse-proxy=%s:remove()", HANDLER_NAME)
                     .reloadOnSetup(true)
                     .reloadOnTearDown(true)
             ;

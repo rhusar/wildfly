@@ -108,9 +108,7 @@ import org.wildfly.extension.undertow.security.jacc.JACCContextIdHandler;
 import org.wildfly.extension.undertow.session.AffinitySessionConfigWrapper;
 import org.wildfly.extension.undertow.session.AffinitySessionIdentifierCodec;
 import org.wildfly.extension.undertow.session.CodecSessionConfigWrapper;
-import org.wildfly.extension.undertow.session.ForeignSessionProxyHandler;
 import org.wildfly.extension.undertow.session.SessionAffinityProvider;
-import org.wildfly.extension.undertow.session.SessionLocalityProvider;
 import org.wildfly.security.auth.server.HttpAuthenticationFactory;
 import org.wildfly.security.auth.server.MechanismConfiguration;
 import org.wildfly.security.auth.server.MechanismConfigurationSelector;
@@ -199,7 +197,7 @@ public class UndertowDeploymentInfoService implements Service<DeploymentInfo> {
     private final Supplier<UndertowService> undertowService;
     private final Supplier<SessionManagerFactory> sessionManagerFactory;
     private final Supplier<SessionAffinityProvider> sessionAffinityProvider;
-    private final Supplier<SessionLocalityProvider> sessionLocalityProvider;
+    private final Supplier<UnaryOperator<HttpHandler>> handlerDecorator;
     private final Supplier<ServletContainerService> container;
     private final Supplier<ComponentRegistry> componentRegistry;
     private final Supplier<Host> host;
@@ -220,7 +218,7 @@ public class UndertowDeploymentInfoService implements Service<DeploymentInfo> {
             final Supplier<UndertowService> undertowService,
             final Supplier<SessionManagerFactory> sessionManagerFactory,
             final Supplier<SessionAffinityProvider> sessionAffinityProvider,
-            final Supplier<SessionLocalityProvider> sessionLocalityProvider,
+            final Supplier<UnaryOperator<HttpHandler>> handlerDecorator,
             final Supplier<ServletContainerService> container,
             final Supplier<ComponentRegistry> componentRegistry,
             final Supplier<Host> host,
@@ -235,7 +233,7 @@ public class UndertowDeploymentInfoService implements Service<DeploymentInfo> {
         this.undertowService = undertowService;
         this.sessionManagerFactory = sessionManagerFactory;
         this.sessionAffinityProvider = sessionAffinityProvider;
-        this.sessionLocalityProvider = sessionLocalityProvider;
+        this.handlerDecorator = handlerDecorator;
         this.container = container;
         this.componentRegistry = componentRegistry;
         this.host = host;
@@ -396,12 +394,11 @@ public class UndertowDeploymentInfoService implements Service<DeploymentInfo> {
                 }
             }
 
-            SessionLocalityProvider locality = (this.sessionLocalityProvider != null) ? this.sessionLocalityProvider.get() : null;
-            if ((locality != null) && locality.isEnabled()) {
-                // Added last, and thus applied outermost, so that a request for a session owned by a peer member is
-                // proxied before it is authenticated or dispatched to a servlet
-                Supplier<String> route = () -> this.host.get().getServer().getRoute();
-                deploymentInfo.addOuterHandlerChainWrapper(next -> new ForeignSessionProxyHandler(next, locality, route));
+            UnaryOperator<HttpHandler> decorator = (this.handlerDecorator != null) ? this.handlerDecorator.get() : null;
+            if (decorator != null) {
+                // Added last, and thus applied outermost, so that a decorated request is handled before it is
+                // authenticated or dispatched to a servlet. An undecorated deployment uses the identity operator.
+                deploymentInfo.addOuterHandlerChainWrapper(decorator::apply);
             }
 
             deploymentInfo.setServerName(serverEnvironment.get().getProductConfig().getPrettyVersionString());
@@ -1407,7 +1404,7 @@ public class UndertowDeploymentInfoService implements Service<DeploymentInfo> {
                 final Supplier<UndertowService> undertowService,
                 final Supplier<SessionManagerFactory> sessionManagerFactory,
                 final Supplier<SessionAffinityProvider> sessionAffinityProvider,
-                final Supplier<SessionLocalityProvider> sessionLocalityProvider,
+                final Supplier<UnaryOperator<HttpHandler>> handlerDecorator,
                 final Supplier<ServletContainerService> container,
                 final Supplier<ComponentRegistry> componentRegistry,
                 final Supplier<Host> host,
@@ -1419,7 +1416,7 @@ public class UndertowDeploymentInfoService implements Service<DeploymentInfo> {
                 final Supplier<BiFunction<DeploymentInfo, Function<String, RunAsIdentityMetaData>, Registration>> applySecurityFunction
         ) {
             return new UndertowDeploymentInfoService(deploymentInfoConsumer, undertowService, sessionManagerFactory,
-                    sessionAffinityProvider, sessionLocalityProvider, container, componentRegistry, host, controlPoint,
+                    sessionAffinityProvider, handlerDecorator, container, componentRegistry, host, controlPoint,
                     suspendController, serverEnvironment, rawSecurityDomain, rawMechanismFactory, applySecurityFunction, mergedMetaData, deploymentName, tldInfo, module,
                     scisMetaData, deploymentRoot, jaccContextId, securityDomain, attributes, contextPath, setupActions, overlays,
                     expressionFactoryWrappers, predicatedHandlers, initialHandlerChainWrappers, innerHandlerChainWrappers, outerHandlerChainWrappers,

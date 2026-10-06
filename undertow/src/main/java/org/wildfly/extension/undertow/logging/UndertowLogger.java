@@ -12,7 +12,6 @@ import static org.jboss.logging.Logger.Level.WARN;
 import java.io.File;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.net.URI;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -437,16 +436,5 @@ public interface UndertowLogger extends BasicLogger {
     @LogMessage(level = WARN)
     @Message(id = 113, value = "Unable to apply Jakarta Authorization Policy - unexpected SecurityContext type: %s")
     void unexpectedSecurityContextType(String securityContextClassName);
-
-    @Message(id = 114, value = "Server '%s' is configured to proxy requests for foreign sessions, but has no enabled, non-secure HTTP listener from which to derive an endpoint reachable by its peers.")
-    StartException noProxyEndpointListener(String serverName);
-
-    @LogMessage(level = INFO)
-    @Message(id = 115, value = "Server '%s' will proxy requests for foreign sessions, and publishes '%s' as the endpoint via which its peers can reach it.")
-    void proxyEndpoint(String serverName, URI endpoint);
-
-    @LogMessage(level = WARN)
-    @Message(id = 116, value = "Socket binding '%s' of the listener of server '%s' binds a wildcard address, which is not reachable by the peers of this member. Define client-mappings for this socket binding to advertise an address via which this server can be reached.")
-    void wildcardProxyEndpointAddress(String socketBindingName, String serverName);
 
 }

@@ -5,9 +5,10 @@
 
 package org.wildfly.extension.clustering.web.routing.infinispan;
 
-import java.net.URI;
+import java.net.InetSocketAddress;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
@@ -18,8 +19,6 @@ import org.wildfly.clustering.marshalling.protostream.util.StringKeyMapEntry;
 import org.wildfly.clustering.server.service.BinaryServiceConfiguration;
 import org.wildfly.clustering.server.service.ClusteringServiceDescriptor;
 import org.wildfly.clustering.server.service.FilteredBinaryServiceInstallerProvider;
-import org.wildfly.clustering.session.cache.affinity.SessionAffinityEndpoint;
-import org.wildfly.clustering.session.cache.affinity.SessionAffinityRegistryEntry;
 import org.wildfly.common.iteration.CompositeIterable;
 import org.wildfly.extension.clustering.web.routing.LocalRoutingProvider;
 import org.wildfly.subsystem.service.ServiceDependency;
@@ -40,14 +39,14 @@ public class InfinispanRoutingProvider extends LocalRoutingProvider {
     }
 
     @Override
-    public Iterable<ServiceInstaller> getServiceInstallers(String serverName, ServiceDependency<String> route, ServiceDependency<URI> endpoint) {
+    public Iterable<ServiceInstaller> getServiceInstallers(String serverName, ServiceDependency<String> route, ServiceDependency<Map<String, List<InetSocketAddress>>> endpoints) {
         BinaryServiceConfiguration serverConfiguration = this.configuration.withChildName(serverName);
         List<ServiceInstaller> installers = new LinkedList<>();
 
-//<<<<<<< HEAD
+
         //installers.add(ServiceInstaller.BlockingBuilder.of(route.combine(ServiceDependency.<Void>empty(), StringKeyMapEntry::new))
-        // The endpoint of this member is only published when its server is configured to proxy requests for foreign sessions
-        installers.add(ServiceInstaller.BlockingBuilder.of(route.combine(endpoint, (id, uri) -> new SessionAffinityRegistryEntry(id, (uri != null) ? new SessionAffinityEndpoint(serverName, uri) : null)))
+        // In addition to the route of this member, publish the addresses via which its peers can reach it
+        installers.add(ServiceInstaller.BlockingBuilder.of(route.combine(endpoints, StringKeyMapEntry::new))
                 .provides(serverConfiguration.resolveServiceName(ClusteringServiceDescriptor.REGISTRY_ENTRY))
                 .build());
 
@@ -56,6 +55,6 @@ public class InfinispanRoutingProvider extends LocalRoutingProvider {
 
         new FilteredBinaryServiceInstallerProvider(Set.of(ClusteringServiceDescriptor.REGISTRY, ClusteringServiceDescriptor.REGISTRY_FACTORY)).apply(serverConfiguration).forEach(installers::add);
 
-        return new CompositeIterable<>(List.of(installers, super.getServiceInstallers(serverName, route, endpoint)));
+        return new CompositeIterable<>(List.of(installers, super.getServiceInstallers(serverName, route, endpoints)));
     }
 }

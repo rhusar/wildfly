@@ -5,6 +5,9 @@
 
 package org.wildfly.extension.undertow.deployment;
 
+import java.util.function.UnaryOperator;
+
+import io.undertow.server.HttpHandler;
 import io.undertow.servlet.api.Deployment;
 import io.undertow.servlet.api.DeploymentInfo;
 import io.undertow.servlet.api.SessionManagerFactory;
@@ -12,7 +15,6 @@ import io.undertow.servlet.api.SessionManagerFactory;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.msc.service.ServiceName;
 import org.wildfly.extension.undertow.session.SessionAffinityProvider;
-import org.wildfly.extension.undertow.session.SessionLocalityProvider;
 import org.wildfly.service.descriptor.ServiceDescriptor;
 
 /**
@@ -25,7 +27,12 @@ public interface WebDeploymentServiceDescriptor<T> extends ServiceDescriptor<T> 
     WebDeploymentServiceDescriptor<DeploymentInfo> DEPLOYMENT_INFO = of("deployment-info", DeploymentInfo.class);
     WebDeploymentServiceDescriptor<SessionManagerFactory> SESSION_MANAGER_FACTORY = of("session-manager-factory", SessionManagerFactory.class);
     WebDeploymentServiceDescriptor<SessionAffinityProvider> SESSION_AFFINITY_PROVIDER = WebDeploymentServiceDescriptor.of("session-affinity-provider", SessionAffinityProvider.class);
-    WebDeploymentServiceDescriptor<SessionLocalityProvider> SESSION_LOCALITY_PROVIDER = WebDeploymentServiceDescriptor.of("session-locality-provider", SessionLocalityProvider.class);
+    /**
+     * Decorates the handler chain of a deployment.
+     * Defaults to {@link UnaryOperator#identity()}, i.e. the handler chain is used as-is.
+     */
+    @SuppressWarnings("unchecked")
+    WebDeploymentServiceDescriptor<UnaryOperator<HttpHandler>> HANDLER_DECORATOR = WebDeploymentServiceDescriptor.of("handler-decorator", (Class<UnaryOperator<HttpHandler>>) (Class<?>) UnaryOperator.class);
 
     default ServiceName resolve(DeploymentUnit unit) {
         return unit.getServiceName().append("undertow", this.getName());

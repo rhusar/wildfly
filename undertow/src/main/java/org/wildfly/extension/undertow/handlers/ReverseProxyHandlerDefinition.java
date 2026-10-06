@@ -5,6 +5,7 @@
 
 package org.wildfly.extension.undertow.handlers;
 
+import io.undertow.client.UndertowClient;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.ResponseCodeHandler;
 import io.undertow.server.handlers.proxy.LoadBalancingProxyClient;
@@ -134,10 +135,10 @@ public class ReverseProxyHandlerDefinition extends HandlerDefinition {
         final boolean rewriteHostHeader = REWRITE_HOST_HEADER.resolveModelAttribute(context, model).asBoolean();
 
 
-        final LoadBalancingProxyClient lb = new LoadBalancingProxyClient(exchange -> {
+        final LoadBalancingProxyClient lb = new LoadBalancingProxyClient(UndertowClient.getInstance(), exchange -> {
             //we always create a new connection for upgrade requests
             return exchange.getRequestHeaders().contains(Headers.UPGRADE);
-        })
+        }, ProxyTargetHostSelector.INSTANCE)
                 .setConnectionsPerThread(connectionsPerThread)
                 .setMaxQueueSize(requestQueueSize)
                 .setSoftMaxConnectionsPerThread(cachedConnectionsPerThread)

@@ -94,6 +94,6 @@ public class SharedSessionManagerDeploymentProcessor implements DeploymentUnitPr
         };
         provider.getSessionManagerFactoryServiceInstaller(configuration).install(phaseContext);
         provider.getSessionAffinityProviderServiceInstaller(configuration).install(phaseContext);
-        provider.getSessionLocalityProviderServiceInstaller(configuration).install(phaseContext);
+        provider.getHandlerDecoratorServiceInstaller(configuration).install(phaseContext);
     }
 }

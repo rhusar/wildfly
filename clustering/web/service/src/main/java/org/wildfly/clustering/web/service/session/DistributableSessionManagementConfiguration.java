@@ -38,4 +38,12 @@ public interface DistributableSessionManagementConfiguration<M> {
     default Optional<Duration> getIdleThreshold() {
         return Optional.empty();
     }
+
+    /**
+     * Returns the name of the handler that services a request associated with a session owned by a peer member, if configured.
+     * @return the name of a handler, if configured.
+     */
+    default Optional<String> getNonPrimaryOwnerSessionHandler() {
+        return Optional.empty();
+    }
 }

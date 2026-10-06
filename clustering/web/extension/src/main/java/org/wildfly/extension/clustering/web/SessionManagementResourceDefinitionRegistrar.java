@@ -17,11 +17,15 @@ import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.ResourceDefinition;
 import org.jboss.as.controller.ResourceRegistration;
+import org.jboss.as.controller.SimpleAttributeDefinition;
+import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.capability.RuntimeCapability;
 import org.jboss.as.controller.descriptions.ResourceDescriptionResolver;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.server.deployment.DeploymentUnit;
+import org.jboss.as.version.Stability;
 import org.jboss.dmr.ModelNode;
+import org.jboss.dmr.ModelType;
 import org.wildfly.clustering.marshalling.ByteBufferMarshaller;
 import org.wildfly.clustering.server.service.BinaryServiceConfiguration;
 import org.wildfly.clustering.server.service.CacheConfigurationAttributeGroup;
@@ -52,6 +56,23 @@ public abstract class SessionManagementResourceDefinitionRegistrar implements Ch
             .setAllowMultipleRegistrations(true)
             .build();
 
+    /**
+     * The name of the capability of an Undertow handler resource, e.g. a reverse-proxy handler.
+     * Referenced by name to avoid a dependency of this subsystem on a specific web container.
+     */
+    private static final String UNDERTOW_HANDLER_CAPABILITY_NAME = "org.wildfly.extension.undertow.handler";
+
+    /**
+     * References the handler that services a request associated with a session owned by a peer member, rather than
+     * servicing that request locally.
+     */
+    static final SimpleAttributeDefinition NON_PRIMARY_OWNER_SESSION_HANDLER = new SimpleAttributeDefinitionBuilder("non-primary-sessions-handler", ModelType.STRING)
+            .setRequired(false)
+            .setStability(Stability.EXPERIMENTAL)
+            .setCapabilityReference(UNDERTOW_HANDLER_CAPABILITY_NAME, CAPABILITY)
+            .setRestartAllServices()
+            .build();
+
     static final EnumAttributeDefinition<SessionGranularity> GRANULARITY = EnumAttributeDefinition.nameBuilder("granularity", SessionGranularity.class).build();
     static final EnumAttributeDefinition<SessionMarshallerFactory> MARSHALLER = EnumAttributeDefinition.nameBuilder("marshaller", SessionMarshallerFactory.class)
             .setDefaultValue(SessionMarshallerFactory.JBOSS)
@@ -71,7 +92,7 @@ public abstract class SessionManagementResourceDefinitionRegistrar implements Ch
     public ResourceDescriptor.Builder apply(ResourceDescriptor.Builder builder) {
         return builder.addCapability(CAPABILITY)
                 .addAttributes(this.cacheAttributeGroup.getAttributes())
-                .addAttributes(List.of(GRANULARITY, MARSHALLER))
+                .addAttributes(List.of(GRANULARITY, MARSHALLER, NON_PRIMARY_OWNER_SESSION_HANDLER))
                 .withRuntimeHandler(ResourceOperationRuntimeHandler.configureService(this))
                 ;
     }
@@ -94,6 +115,8 @@ public abstract class SessionManagementResourceDefinitionRegistrar implements Ch
         SessionGranularity granularity = GRANULARITY.resolve(context, model);
         SessionMarshallerFactory marshallerFactory = MARSHALLER.resolve(context, model);
         Optional<Duration> idleThreshold = Optional.ofNullable(IDLE_THRESHOLD.resolve(context, model));
+        ModelNode handler = NON_PRIMARY_OWNER_SESSION_HANDLER.resolveModelAttribute(context, model);
+        Optional<String> nonPrimaryOwnerSessionHandler = handler.isDefined() ? Optional.of(handler.asString()) : Optional.empty();
         DistributableSessionManagementConfiguration<DeploymentUnit> configuration = new DistributableSessionManagementConfiguration<>() {
             @Override
             public SessionAttributePersistenceStrategy getAttributePersistenceStrategy() {
@@ -108,6 +131,11 @@ public abstract class SessionManagementResourceDefinitionRegistrar implements Ch
             @Override
             public Optional<Duration> getIdleThreshold() {
                 return idleThreshold;
+            }
+
+            @Override
+            public Optional<String> getNonPrimaryOwnerSessionHandler() {
+                return nonPrimaryOwnerSessionHandler;
             }
         };
         BinaryServiceConfiguration cacheConfiguration = this.cacheAttributeGroup.resolve(context, model);

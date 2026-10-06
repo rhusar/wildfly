@@ -5,8 +5,10 @@
 
 package org.wildfly.extension.clustering.web.session.infinispan;
 
+import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Supplier;
@@ -36,7 +38,6 @@ import org.wildfly.clustering.server.service.BinaryServiceConfiguration;
 import org.wildfly.clustering.server.service.ClusteringServiceDescriptor;
 import org.wildfly.clustering.server.infinispan.registry.CacheContainerRegistry;
 import org.wildfly.clustering.session.SessionManagerFactory;
-import org.wildfly.clustering.session.cache.affinity.SessionAffinityEndpoint;
 import org.wildfly.clustering.session.infinispan.embedded.InfinispanSessionManagerFactory;
 import org.wildfly.clustering.session.infinispan.embedded.metadata.SessionMetaDataKey;
 import org.wildfly.clustering.web.service.deployment.WebDeploymentConfiguration;
@@ -157,7 +158,7 @@ public class InfinispanSessionManagementProvider extends AbstractSessionManageme
         BinaryServiceConfiguration templateCacheConfiguration = this.getCacheConfiguration();
         ServiceDependency<Configuration> cacheConfiguration = templateCacheConfiguration.getServiceDependency(InfinispanServiceDescriptor.CACHE_CONFIGURATION);
         ServiceDependency<Cache<Key<String>, ?>> cache = templateCacheConfiguration.withChildName(configuration.getDeploymentName()).getServiceDependency(InfinispanServiceDescriptor.CACHE).map(Cache.class::cast);
-        ServiceDependency<CacheContainerRegistry<String, SessionAffinityEndpoint>> registry = templateCacheConfiguration.withChildName(configuration.getServerName()).getServiceDependency(ClusteringServiceDescriptor.REGISTRY).map(CacheContainerRegistry.class::cast);
+        ServiceDependency<CacheContainerRegistry<String, Map<String, List<InetSocketAddress>>>> registry = templateCacheConfiguration.withChildName(configuration.getServerName()).getServiceDependency(ClusteringServiceDescriptor.REGISTRY).map(CacheContainerRegistry.class::cast);
 
         ServiceInstaller localInstaller = ServiceInstaller.BlockingBuilder.of(org.wildfly.clustering.function.Supplier.of(SessionLocality.LOCAL))
                 .provides(WebDeploymentServiceDescriptor.SESSION_LOCALITY.resolve(unit))

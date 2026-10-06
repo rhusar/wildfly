@@ -30,7 +30,7 @@ public class RankedRouteLocatorProvider extends InfinispanRouteLocatorProvider {
     public RankedRouteLocatorProvider(NarySessionAffinityConfiguration config) {
         super(new BiFunction<>() {
             @Override
-            public UnaryOperator<String> apply(Cache<Key<String>, ?> cache, CacheContainerRegistry<String, Void> registry) {
+            public UnaryOperator<String> apply(Cache<Key<String>, ?> cache, CacheContainerRegistry<String, ?> registry) {
                 Function<String, List<CacheContainerGroupMember>> affinity = new NaryGroupMemberAffinity<>(cache, registry.getGroup());
                 return new NarySessionAffinity<>(affinity, new SessionAffinityRegistryGroupMemberMapper<>(registry), config);
             }

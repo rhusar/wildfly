@@ -5,9 +5,7 @@
 
 package org.wildfly.clustering.web.undertow.session;
 
-import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +18,7 @@ import java.util.concurrent.Executor;
 import jakarta.servlet.ServletContext;
 
 import io.undertow.security.api.AuthenticatedSessionManager.AuthenticatedSession;
+import io.undertow.server.HttpHandler;
 import io.undertow.servlet.api.Deployment;
 import io.undertow.servlet.util.SavedRequest;
 
@@ -32,6 +31,7 @@ import org.jboss.as.web.common.WarMetaData;
 import org.jboss.metadata.web.jboss.JBossWebMetaData;
 import org.jboss.metadata.web.jboss.ReplicationConfig;
 import org.jboss.modules.Module;
+import org.jboss.msc.service.ServiceName;
 import org.kohsuke.MetaInfServices;
 import org.wildfly.clustering.function.Function;
 import org.wildfly.clustering.function.Supplier;
@@ -48,10 +48,12 @@ import org.wildfly.clustering.web.service.session.DistributableSessionManagement
 import org.wildfly.clustering.web.service.session.DistributableSessionManagementProvider;
 import org.wildfly.clustering.web.service.session.LegacyDistributableSessionManagementProviderFactory;
 import org.wildfly.clustering.web.service.session.SessionManagerFactoryConfiguration;
+import org.wildfly.clustering.web.undertow.handlers.NonPrimaryOwnerSessionHandlerDecoratorFactory;
 import org.wildfly.clustering.web.undertow.logging.UndertowClusteringLogger;
 import org.wildfly.elytron.web.undertow.server.servlet.ServletSecurityContextImpl.IdentityContainer;
+import org.wildfly.extension.undertow.Handler;
+import org.wildfly.extension.undertow.Server;
 import org.wildfly.extension.undertow.session.SessionAffinityProvider;
-import org.wildfly.extension.undertow.session.SessionLocalityProvider;
 import org.wildfly.security.cache.CachedIdentity;
 import org.wildfly.service.BlockingLifecycle;
 import org.wildfly.service.NonBlockingLifecycle;
@@ -123,16 +125,32 @@ public class DistributableWebDeploymentServiceInstallerProvider implements WebDe
     }
 
     @Override
-    public DeploymentServiceInstaller getSessionLocalityProviderServiceInstaller(org.wildfly.clustering.web.container.WebDeploymentConfiguration configuration) {
+    public DeploymentServiceInstaller getHandlerDecoratorServiceInstaller(org.wildfly.clustering.web.container.WebDeploymentConfiguration configuration) {
         DeploymentUnit unit = configuration.getDeploymentUnit();
         DistributableSessionManagementProvider provider = this.findDistributableSessionManagementProvider(unit);
+        ServiceName name = org.wildfly.extension.undertow.deployment.WebDeploymentServiceDescriptor.HANDLER_DECORATOR.resolve(unit);
+        String handlerName = provider.getSessionManagementConfiguration().getNonPrimaryOwnerSessionHandler().orElse(null);
+
+        // Without a configured handler, the handler chain of this deployment is used as-is
+        if (handlerName == null) {
+            return ServiceInstaller.BlockingBuilder.of(Supplier.of(java.util.function.UnaryOperator.<HttpHandler>identity())).provides(name).build();
+        }
 
         DeploymentServiceInstaller localityInstaller = provider.getSessionLocalityServiceInstaller(new WebDeploymentConfigurationAdapter(configuration));
         ServiceDependency<SessionLocality> locality = ServiceDependency.on(WebDeploymentServiceDescriptor.SESSION_LOCALITY.resolve(unit));
-        DeploymentServiceInstaller providerInstaller = ServiceInstaller.BlockingBuilder.of(locality.map(SessionLocalityProviderAdapter::new))
-                .provides(org.wildfly.extension.undertow.deployment.WebDeploymentServiceDescriptor.SESSION_LOCALITY_PROVIDER.resolve(unit))
+        ServiceDependency<HttpHandler> handler = ServiceDependency.on(Handler.SERVICE_DESCRIPTOR, handlerName);
+        ServiceDependency<Server> server = ServiceDependency.on(Server.SERVICE_DESCRIPTOR, configuration.getServerName());
+        java.util.function.Supplier<java.util.function.UnaryOperator<HttpHandler>> decorator = new java.util.function.Supplier<>() {
+            @Override
+            public java.util.function.UnaryOperator<HttpHandler> get() {
+                return NonPrimaryOwnerSessionHandlerDecoratorFactory.createDecorator(handlerName, handler.get(), locality.get(), server);
+            }
+        };
+        DeploymentServiceInstaller decoratorInstaller = ServiceInstaller.BlockingBuilder.of(decorator)
+                .provides(name)
+                .requires(List.of(locality, handler, server))
                 .build();
-        return DeploymentServiceInstaller.combine(localityInstaller, providerInstaller);
+        return DeploymentServiceInstaller.combine(localityInstaller, decoratorInstaller);
     }
 
     private DistributableSessionManagementProvider findDistributableSessionManagementProvider(DeploymentUnit unit) {
@@ -219,30 +237,6 @@ public class DistributableWebDeploymentServiceInstallerProvider implements WebDe
         @Override
         public SessionAttributePersistenceStrategy getAttributePersistenceStrategy() {
             return this.attributePersistenceStrategy;
-        }
-    }
-
-    static class SessionLocalityProviderAdapter implements SessionLocalityProvider {
-
-        private final SessionLocality locality;
-
-        SessionLocalityProviderAdapter(SessionLocality locality) {
-            this.locality = locality;
-        }
-
-        @Override
-        public boolean isEnabled() {
-            return this.locality.isEnabled();
-        }
-
-        @Override
-        public Optional<URI> findRemoteOwner(String sessionId) {
-            return Optional.ofNullable(this.locality.locate(sessionId));
-        }
-
-        @Override
-        public Collection<URI> getPeerEndpoints() {
-            return this.locality.getPeers();
         }
     }
 

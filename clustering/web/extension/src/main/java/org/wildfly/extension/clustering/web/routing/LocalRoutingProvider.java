@@ -5,8 +5,9 @@
 
 package org.wildfly.extension.clustering.web.routing;
 
-import java.net.URI;
+import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.Map;
 
 import org.jboss.as.controller.ServiceNameFactory;
 import org.wildfly.clustering.web.service.routing.RoutingProvider;
@@ -21,7 +22,7 @@ public class LocalRoutingProvider implements RoutingProvider {
     static final UnaryServiceDescriptor<String> LOCAL_ROUTE = UnaryServiceDescriptor.of("org.wildfly.clustering.web.local-route", String.class);
 
     @Override
-    public Iterable<ServiceInstaller> getServiceInstallers(String serverName, ServiceDependency<String> route, ServiceDependency<URI> endpoint) {
+    public Iterable<ServiceInstaller> getServiceInstallers(String serverName, ServiceDependency<String> route, ServiceDependency<Map<String, List<InetSocketAddress>>> endpoints) {
         return List.of(ServiceInstaller.BlockingBuilder.of(route).provides(ServiceNameFactory.resolveServiceName(LOCAL_ROUTE, serverName)).build());
     }
 }

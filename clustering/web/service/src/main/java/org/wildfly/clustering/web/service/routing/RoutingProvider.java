@@ -5,7 +5,9 @@
 
 package org.wildfly.clustering.web.service.routing;
 
-import java.net.URI;
+import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.Map;
 
 import org.wildfly.service.descriptor.NullaryServiceDescriptor;
 import org.wildfly.subsystem.service.ServiceDependency;
@@ -23,8 +25,8 @@ public interface RoutingProvider {
      * Returns a number of installers of services, one of which will provide a {@link RoutingProvider} for the server identified by the specified name.
      * @param serverName the name of the server
      * @param route a dependency on a service providing the server route.
-     * @param endpoint a dependency on a service providing the endpoint via which the server can be reached by its peers, whose value is null unless the server is configured to proxy requests for foreign sessions.
+     * @param endpoints a dependency on a service providing the addresses, per scheme, via which the server can be reached by its peers.
      * @return a number of service installers
      */
-    Iterable<ServiceInstaller> getServiceInstallers(String serverName, ServiceDependency<String> route, ServiceDependency<URI> endpoint);
+    Iterable<ServiceInstaller> getServiceInstallers(String serverName, ServiceDependency<String> route, ServiceDependency<Map<String, List<InetSocketAddress>>> endpoints);
 }
