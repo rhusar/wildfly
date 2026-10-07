@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
@@ -51,6 +52,8 @@ public class UndertowEventHandlerAdapterService implements UndertowEventListener
     private final UndertowEventHandlerAdapterConfiguration configuration;
     private final Set<Context> contexts = ConcurrentHashMap.newKeySet();
     private volatile ScheduledExecutorService executor;
+    // Gates deployment events until the initial status (and thus CONFIG) has been sent to the proxy (WFLY-22198, WFLY-22306)
+    private volatile CountDownLatch established;
     private volatile SuspendableActivityRegistration suspendableActivityRegistration;
     private volatile Server server;
     private volatile Connector connector;
@@ -63,33 +66,46 @@ public class UndertowEventHandlerAdapterService implements UndertowEventListener
     @Override
     public void start(StartContext context) {
         this.executor = Executors.newScheduledThreadPool(1, THREAD_FACTORY);
+        this.established = new CountDownLatch(1);
 
         this.suspendableActivityRegistration = this.configuration.getSuspendableActivityRegistrar().register(this, SuspendPriority.FIRST);
 
         UndertowService service = this.configuration.getUndertowService();
-        ContainerEventHandler eventHandler = this.configuration.getContainerEventHandler();
         this.connector = new UndertowConnector(this.configuration.getListener());
         this.serverName = this.configuration.getServer().getName();
         this.server = new UndertowServer(this.serverName, service, this.connector);
 
-        // Initialize mod_cluster and start it now
-        eventHandler.init(this.server);
-        eventHandler.start(this.server);
-
-        // Workaround for MODCLUSTER-876: establish the proxy connection and send CONFIG synchronously by calling ContainerEventHandler#status
-        this.run();
-
-        // Register listener after init/start so that deployment events cannot fire before CONFIG has been sent to the proxy (WFLY-22198)
+        // Register the listener up front so that no deployment event is missed. Deployment events are gated on the initial
+        // establishment below (see #onStart / #onStop), so STOP-APP/ENABLE-APP cannot be sent before CONFIG (WFLY-22198).
         service.registerListener(this);
 
-        for (Engine engine : this.server.getEngines()) {
-            for (org.jboss.modcluster.container.Host host : engine.getHosts()) {
-                host.getContexts().forEach(contexts::add);
-            }
-        }
+        // Initialize mod_cluster, establish the proxy connection and send the initial CONFIG asynchronously on the dedicated
+        // executor. This keeps the potentially blocking MCMP I/O off the MSC service start threads so that server boot is not
+        // blocked waiting for an unresponsive proxy (WFLY-22306). Deployment events gate on its completion via #established.
+        this.executor.execute(() -> {
+            try {
+                ContainerEventHandler eventHandler = this.configuration.getContainerEventHandler();
+                eventHandler.init(this.server);
+                eventHandler.start(this.server);
 
-        // Start the periodic STATUS thread
-        // Workaround for MODCLUSTER-876: set initialDelay since we already called ContainerEventHandler#status above
+                // Workaround for MODCLUSTER-876: start() does not yet establish the connection nor send CONFIG, so force it
+                // via status(). Once MODCLUSTER-876 is resolved, start() sends CONFIG itself and this run() call can be removed.
+                this.run();
+
+                for (Engine engine : this.server.getEngines()) {
+                    for (org.jboss.modcluster.container.Host host : engine.getHosts()) {
+                        host.getContexts().forEach(contexts::add);
+                    }
+                }
+            } catch (Throwable e) {
+                log.error(e.getLocalizedMessage(), e);
+            } finally {
+                // Open the gate once establishment has been attempted, whether or not the proxy responded (WFLY-22306)
+                this.established.countDown();
+            }
+        });
+
+        // Start the periodic STATUS thread; the initial establishment above has already sent CONFIG.
         long statusInterval = this.configuration.getStatusInterval().toMillis();
         this.executor.scheduleWithFixedDelay(this, statusInterval, statusInterval, TimeUnit.MILLISECONDS);
     }
@@ -99,6 +115,9 @@ public class UndertowEventHandlerAdapterService implements UndertowEventListener
         this.configuration.getUndertowService().unregisterListener(this);
 
         this.suspendableActivityRegistration.close();
+
+        // Release any deployment events still gated on the initial status in case we stop before the first status ran (WFLY-22306)
+        this.established.countDown();
 
         this.executor.shutdownNow();
         try {
@@ -121,6 +140,9 @@ public class UndertowEventHandlerAdapterService implements UndertowEventListener
     }
 
     private void onStart(Context context) {
+        // Do not emit any deployment event until the initial status (and thus CONFIG) has been sent to the proxy (WFLY-22198)
+        this.awaitEstablished();
+
         ContainerEventHandler handler = this.configuration.getContainerEventHandler();
 
         SuspensionStateProvider.State state = this.suspendableActivityRegistration.getState();
@@ -138,6 +160,9 @@ public class UndertowEventHandlerAdapterService implements UndertowEventListener
     }
 
     private void onStop(Context context) {
+        // Do not emit any deployment event until the initial status (and thus CONFIG) has been sent to the proxy (WFLY-22198)
+        this.awaitEstablished();
+
         ContainerEventHandler handler = this.configuration.getContainerEventHandler();
 
         // Trigger STOP-APP with possible session draining
@@ -189,6 +214,14 @@ public class UndertowEventHandlerAdapterService implements UndertowEventListener
             }
         } catch (Throwable e) {
             log.error(e.getLocalizedMessage(), e);
+        }
+    }
+
+    private void awaitEstablished() {
+        try {
+            this.established.await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
