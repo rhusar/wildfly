@@ -9,8 +9,8 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -52,8 +52,6 @@ public class UndertowEventHandlerAdapterService implements UndertowEventListener
     private final UndertowEventHandlerAdapterConfiguration configuration;
     private final Set<Context> contexts = ConcurrentHashMap.newKeySet();
     private volatile ScheduledExecutorService executor;
-    // Gates deployment events until the initial status (and thus CONFIG) has been sent to the proxy (WFLY-22198, WFLY-22306)
-    private volatile CountDownLatch established;
     private volatile SuspendableActivityRegistration suspendableActivityRegistration;
     private volatile Server server;
     private volatile Connector connector;
@@ -66,7 +64,6 @@ public class UndertowEventHandlerAdapterService implements UndertowEventListener
     @Override
     public void start(StartContext context) {
         this.executor = Executors.newScheduledThreadPool(1, THREAD_FACTORY);
-        this.established = new CountDownLatch(1);
 
         this.suspendableActivityRegistration = this.configuration.getSuspendableActivityRegistrar().register(this, SuspendPriority.FIRST);
 
@@ -75,13 +72,15 @@ public class UndertowEventHandlerAdapterService implements UndertowEventListener
         this.serverName = this.configuration.getServer().getName();
         this.server = new UndertowServer(this.serverName, service, this.connector);
 
-        // Register the listener up front so that no deployment event is missed. Deployment events are gated on the initial
-        // establishment below (see #onStart / #onStop), so STOP-APP/ENABLE-APP cannot be sent before CONFIG (WFLY-22198).
+        // Register the listener up front so that no deployment event is missed. Deployment events are dispatched to the same
+        // single-threaded executor as the establishment task below, which is enqueued ahead of them, so CONFIG is always sent
+        // before any STOP-APP/ENABLE-APP (WFLY-22198). This ordering holds because the service only becomes available (and
+        // thus deployments can only start firing events) after this method has returned and queued the establishment task.
         service.registerListener(this);
 
         // Initialize mod_cluster, establish the proxy connection and send the initial CONFIG asynchronously on the dedicated
         // executor. This keeps the potentially blocking MCMP I/O off the MSC service start threads so that server boot is not
-        // blocked waiting for an unresponsive proxy (WFLY-22306). Deployment events gate on its completion via #established.
+        // blocked waiting for an unresponsive proxy (WFLY-22306).
         this.executor.execute(() -> {
             try {
                 ContainerEventHandler eventHandler = this.configuration.getContainerEventHandler();
@@ -99,9 +98,6 @@ public class UndertowEventHandlerAdapterService implements UndertowEventListener
                 }
             } catch (Throwable e) {
                 log.error(e.getLocalizedMessage(), e);
-            } finally {
-                // Open the gate once establishment has been attempted, whether or not the proxy responded (WFLY-22306)
-                this.established.countDown();
             }
         });
 
@@ -115,9 +111,6 @@ public class UndertowEventHandlerAdapterService implements UndertowEventListener
         this.configuration.getUndertowService().unregisterListener(this);
 
         this.suspendableActivityRegistration.close();
-
-        // Release any deployment events still gated on the initial status in case we stop before the first status ran (WFLY-22306)
-        this.established.countDown();
 
         this.executor.shutdownNow();
         try {
@@ -140,9 +133,6 @@ public class UndertowEventHandlerAdapterService implements UndertowEventListener
     }
 
     private void onStart(Context context) {
-        // Do not emit any deployment event until the initial status (and thus CONFIG) has been sent to the proxy (WFLY-22198)
-        this.awaitEstablished();
-
         ContainerEventHandler handler = this.configuration.getContainerEventHandler();
 
         SuspensionStateProvider.State state = this.suspendableActivityRegistration.getState();
@@ -160,9 +150,6 @@ public class UndertowEventHandlerAdapterService implements UndertowEventListener
     }
 
     private void onStop(Context context) {
-        // Do not emit any deployment event until the initial status (and thus CONFIG) has been sent to the proxy (WFLY-22198)
-        this.awaitEstablished();
-
         ContainerEventHandler handler = this.configuration.getContainerEventHandler();
 
         // Trigger STOP-APP with possible session draining
@@ -177,28 +164,48 @@ public class UndertowEventHandlerAdapterService implements UndertowEventListener
     @Override
     public void onDeploymentStart(Deployment deployment, Host host) {
         if (this.filter(host)) {
-            this.onStart(this.createContext(deployment, host));
+            this.submit(() -> this.onStart(this.createContext(deployment, host)));
         }
     }
 
     @Override
     public void onDeploymentStop(Deployment deployment, Host host) {
         if (this.filter(host)) {
-            this.onStop(this.createContext(deployment, host));
+            this.submit(() -> this.onStop(this.createContext(deployment, host)));
         }
     }
 
     @Override
     public void onDeploymentStart(String contextPath, Host host) {
         if (this.filter(host)) {
-            this.onStart(this.createContext(contextPath, host));
+            this.submit(() -> this.onStart(this.createContext(contextPath, host)));
         }
     }
 
     @Override
     public void onDeploymentStop(String contextPath, Host host) {
         if (this.filter(host)) {
-            this.onStop(this.createContext(contextPath, host));
+            this.submit(() -> this.onStop(this.createContext(contextPath, host)));
+        }
+    }
+
+    /**
+     * Dispatches a deployment event to the dedicated executor so that the potentially blocking MCMP I/O is kept off the
+     * calling (boot or deployment) thread, and so that it is serialized after the initial establishment task that sends
+     * CONFIG (WFLY-22198, WFLY-22306).
+     */
+    private void submit(Runnable task) {
+        try {
+            this.executor.execute(() -> {
+                try {
+                    task.run();
+                } catch (RuntimeException e) {
+                    log.error(e.getLocalizedMessage(), e);
+                }
+            });
+        } catch (RejectedExecutionException e) {
+            // The executor has been shut down, i.e. the service is stopping; the event can be safely ignored.
+            log.debugf("Ignoring mod_cluster deployment event because the adapter service is stopping.");
         }
     }
 
@@ -214,14 +221,6 @@ public class UndertowEventHandlerAdapterService implements UndertowEventListener
             }
         } catch (Throwable e) {
             log.error(e.getLocalizedMessage(), e);
-        }
-    }
-
-    private void awaitEstablished() {
-        try {
-            this.established.await();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
         }
     }
 
