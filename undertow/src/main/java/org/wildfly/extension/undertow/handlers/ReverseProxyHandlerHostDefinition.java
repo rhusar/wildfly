@@ -19,9 +19,7 @@ import javax.net.ssl.SSLContext;
 
 import io.undertow.UndertowOptions;
 import io.undertow.protocols.ssl.UndertowXnioSsl;
-import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.proxy.LoadBalancingProxyClient;
-import io.undertow.server.handlers.proxy.ProxyHandler;
 import org.jboss.as.controller.AbstractAddStepHandler;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.CapabilityServiceBuilder;
@@ -48,8 +46,8 @@ import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
-import org.wildfly.extension.undertow.Capabilities;
 import org.wildfly.extension.undertow.Constants;
+import org.wildfly.extension.undertow.ReverseProxy;
 import org.wildfly.extension.undertow.UndertowExtension;
 import org.wildfly.extension.undertow.UndertowSubsystemModel;
 import org.wildfly.subsystem.resource.capability.CapabilityReference;
@@ -172,10 +170,10 @@ public class ReverseProxyHandlerHostDefinition extends PersistentResourceDefinit
             }
             final CapabilityServiceBuilder<?> sb = context.getCapabilityServiceTarget().addCapability(REVERSE_PROXY_HOST_RUNTIME_CAPABILITY);
             final Consumer<ReverseProxyHostService> serviceConsumer = sb.provides(REVERSE_PROXY_HOST_RUNTIME_CAPABILITY);
-            final Supplier<HttpHandler> phSupplier = sb.requiresCapability(Capabilities.CAPABILITY_HANDLER, HttpHandler.class, proxyName);
+            final Supplier<ReverseProxy> rpSupplier = sb.requires(ReverseProxy.SERVICE_DESCRIPTOR, proxyName);
             final Supplier<OutboundSocketBinding> sbSupplier = sb.requires(OutboundSocketBinding.SERVICE_DESCRIPTOR, socketBinding);
             final Supplier<SSLContext> scSupplier = sslContext.isDefined() ? sb.requiresCapability(REF_SSL_CONTEXT, SSLContext.class, sslContext.asString()) : null;
-            sb.setInstance(new ReverseProxyHostService(serviceConsumer, phSupplier, sbSupplier, scSupplier, scheme, jvmRoute, path, enableHttp2));
+            sb.setInstance(new ReverseProxyHostService(serviceConsumer, rpSupplier, sbSupplier, scSupplier, scheme, jvmRoute, path, enableHttp2));
             sb.install();
         }
     }
@@ -183,7 +181,7 @@ public class ReverseProxyHandlerHostDefinition extends PersistentResourceDefinit
     private static final class ReverseProxyHostService implements Service {
 
         private final Consumer<ReverseProxyHostService> serviceConsumer;
-        private final Supplier<HttpHandler> proxyHandler;
+        private final Supplier<ReverseProxy> reverseProxy;
         private final Supplier<OutboundSocketBinding> socketBinding;
         private final Supplier<SSLContext> sslContext;
         private final String instanceId;
@@ -192,12 +190,12 @@ public class ReverseProxyHandlerHostDefinition extends PersistentResourceDefinit
         private final boolean enableHttp2;
 
         private ReverseProxyHostService(final Consumer<ReverseProxyHostService> serviceConsumer,
-                final Supplier<HttpHandler> proxyHandler,
+                final Supplier<ReverseProxy> reverseProxy,
                 final Supplier<OutboundSocketBinding> socketBinding,
                 final Supplier<SSLContext> sslContext,
                 String scheme, String instanceId, String path, boolean enableHttp2) {
             this.serviceConsumer = serviceConsumer;
-            this.proxyHandler = proxyHandler;
+            this.reverseProxy = reverseProxy;
             this.socketBinding = socketBinding;
             this.sslContext = sslContext;
             this.instanceId = instanceId;
@@ -212,10 +210,7 @@ public class ReverseProxyHandlerHostDefinition extends PersistentResourceDefinit
 
         @Override
         public void start(final StartContext startContext) throws StartException {
-            //todo: this is a bit of a hack, as the proxy handler may be wrapped by a request controller handler for graceful shutdown
-            ProxyHandler proxyHandler = (ProxyHandler) (this.proxyHandler.get() instanceof GlobalRequestControllerHandler ? ((GlobalRequestControllerHandler)this.proxyHandler.get()).getNext() : this.proxyHandler.get());
-
-            final LoadBalancingProxyClient client = (LoadBalancingProxyClient) proxyHandler.getProxyClient();
+            final LoadBalancingProxyClient client = this.reverseProxy.get().getProxyClient();
             try {
                 SSLContext sslContext = this.sslContext != null ? this.sslContext.get() : null;
 
@@ -238,8 +233,7 @@ public class ReverseProxyHandlerHostDefinition extends PersistentResourceDefinit
         @Override
         public void stop(final StopContext stopContext) {
             serviceConsumer.accept(null);
-            ProxyHandler proxyHandler = (ProxyHandler) (this.proxyHandler.get() instanceof GlobalRequestControllerHandler ? ((GlobalRequestControllerHandler)this.proxyHandler.get()).getNext() : this.proxyHandler.get());
-            final LoadBalancingProxyClient client = (LoadBalancingProxyClient) proxyHandler.getProxyClient();
+            final LoadBalancingProxyClient client = this.reverseProxy.get().getProxyClient();
             try {
                 client.removeHost(getUri());
             } catch (URISyntaxException e) {

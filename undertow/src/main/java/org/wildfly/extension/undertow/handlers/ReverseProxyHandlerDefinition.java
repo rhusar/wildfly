@@ -17,11 +17,16 @@ import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.PersistentResourceDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
+import org.jboss.as.controller.capability.RuntimeCapability;
 import org.jboss.as.controller.client.helpers.MeasurementUnit;
 import org.jboss.as.controller.registry.AttributeAccess;
+import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
+import org.wildfly.common.function.Functions;
 import org.wildfly.extension.undertow.Constants;
+import org.wildfly.extension.undertow.ReverseProxy;
+import org.wildfly.subsystem.service.capability.CapabilityServiceInstaller;
 
 import java.util.Collection;
 import java.util.List;
@@ -31,6 +36,8 @@ import java.util.List;
  */
 public class ReverseProxyHandlerDefinition extends HandlerDefinition {
     public static final PathElement PATH_ELEMENT = PathElement.pathElement(Constants.REVERSE_PROXY);
+
+    static final RuntimeCapability<Void> REVERSE_PROXY_CAPABILITY = RuntimeCapability.Builder.of(ReverseProxy.SERVICE_DESCRIPTOR).build();
 
     public static final AttributeDefinition PROBLEM_SERVER_RETRY = new SimpleAttributeDefinitionBuilder(Constants.PROBLEM_SERVER_RETRY, ModelType.INT)
             .setRequired(false)
@@ -117,6 +124,12 @@ public class ReverseProxyHandlerDefinition extends HandlerDefinition {
     }
 
     @Override
+    public void registerCapabilities(ManagementResourceRegistration resourceRegistration) {
+        super.registerCapabilities(resourceRegistration);
+        resourceRegistration.registerCapability(REVERSE_PROXY_CAPABILITY);
+    }
+
+    @Override
     protected List<? extends PersistentResourceDefinition> getChildren() {
         return List.of(new ReverseProxyHandlerHostDefinition());
     }
@@ -149,7 +162,7 @@ public class ReverseProxyHandlerDefinition extends HandlerDefinition {
             lb.addSessionCookieName(id);
         }
 
-        return ProxyHandler.builder()
+        HttpHandler handler = ProxyHandler.builder()
                 .setProxyClient(lb)
                 .setMaxRequestTime(maxTime)
                 .setNext(ResponseCodeHandler.HANDLE_404)
@@ -159,5 +172,21 @@ public class ReverseProxyHandlerDefinition extends HandlerDefinition {
                 .setRewriteHostHeader(rewriteHostHeader)
                 .setReuseXForwarded(reuseXForwardedHeader)
                 .build();
+
+        // Expose the unwrapped handler and its proxy client via a dedicated capability
+        ReverseProxy reverseProxy = new ReverseProxy() {
+            @Override
+            public HttpHandler getHandler() {
+                return handler;
+            }
+
+            @Override
+            public LoadBalancingProxyClient getProxyClient() {
+                return lb;
+            }
+        };
+        CapabilityServiceInstaller.BlockingBuilder.of(REVERSE_PROXY_CAPABILITY, Functions.constantSupplier(reverseProxy)).build().install(context);
+
+        return handler;
     }
 }

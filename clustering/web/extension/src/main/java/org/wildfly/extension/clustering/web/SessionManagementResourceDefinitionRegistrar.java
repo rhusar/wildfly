@@ -57,10 +57,10 @@ public abstract class SessionManagementResourceDefinitionRegistrar implements Ch
             .build();
 
     /**
-     * The name of the capability of an Undertow handler resource, e.g. a reverse-proxy handler.
+     * The name of the capability of an Undertow reverse-proxy handler resource.
      * Referenced by name to avoid a dependency of this subsystem on a specific web container.
      */
-    private static final String UNDERTOW_HANDLER_CAPABILITY_NAME = "org.wildfly.extension.undertow.handler";
+    private static final String UNDERTOW_REVERSE_PROXY_CAPABILITY_NAME = "org.wildfly.undertow.reverse-proxy";
 
     /**
      * References the handler that services a request associated with a session owned by a peer member, rather than
@@ -69,7 +69,7 @@ public abstract class SessionManagementResourceDefinitionRegistrar implements Ch
     static final SimpleAttributeDefinition NON_PRIMARY_OWNER_SESSION_HANDLER = new SimpleAttributeDefinitionBuilder("non-primary-sessions-handler", ModelType.STRING)
             .setRequired(false)
             .setStability(Stability.EXPERIMENTAL)
-            .setCapabilityReference(UNDERTOW_HANDLER_CAPABILITY_NAME, CAPABILITY)
+            .setCapabilityReference(UNDERTOW_REVERSE_PROXY_CAPABILITY_NAME, CAPABILITY)
             .setRestartAllServices()
             .build();
 

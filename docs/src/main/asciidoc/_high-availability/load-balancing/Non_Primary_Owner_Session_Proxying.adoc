@@ -51,8 +51,8 @@ Reference that handler from the session management provider of the deployment:
 The session management provider must be backed by a clustered Infinispan cache, e.g. the default `primary-owner`
 affinity of the `distributable-web` subsystem.
 Requests of a non-distributable deployment, and requests that are not associated with a session, are always serviced locally.
-A handler that cannot be directed at a specific member, i.e. anything other than a reverse-proxy handler, is ignored
-with a warning, and every request is serviced locally as before.
+The referenced handler must be a reverse-proxy handler; a reference to any other kind of handler is rejected by the
+management model.
 
 == Advertised addresses
 

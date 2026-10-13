@@ -42,7 +42,7 @@ public class DistributableWebSubsystemTestCase extends AbstractSubsystemSchemaTe
                 .require(InfinispanServiceDescriptor.CACHE_CONFIGURATION, "foo", "bar")
                 .require(HotRodServiceDescriptor.REMOTE_CACHE_CONTAINER, "foo")
                 // Referenced by the non-primary-sessions-handler attribute of the experimental schema
-                .require("org.wildfly.extension.undertow.handler.my-reverse-proxy")
+                .require("org.wildfly.undertow.reverse-proxy.my-reverse-proxy")
                 ;
     }
 }

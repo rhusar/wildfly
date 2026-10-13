@@ -90,7 +90,7 @@
         <xs:attribute name="non-primary-sessions-handler" type="xs:string">
             <xs:annotation>
                 <xs:documentation>
-                    References an Undertow handler, e.g. a reverse-proxy handler, that services a request associated with a session owned by a peer cluster member, rather than servicing that request locally.
+                    References an Undertow reverse-proxy handler that services a request associated with a session owned by a peer cluster member, rather than servicing that request locally.
                     If unspecified, every request is serviced by the member that receives it.
                 </xs:documentation>
             </xs:annotation>

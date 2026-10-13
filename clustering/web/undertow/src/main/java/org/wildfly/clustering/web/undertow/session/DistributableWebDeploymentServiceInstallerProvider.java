@@ -51,7 +51,7 @@ import org.wildfly.clustering.web.service.session.SessionManagerFactoryConfigura
 import org.wildfly.clustering.web.undertow.handlers.NonPrimaryOwnerSessionHandlerDecoratorFactory;
 import org.wildfly.clustering.web.undertow.logging.UndertowClusteringLogger;
 import org.wildfly.elytron.web.undertow.server.servlet.ServletSecurityContextImpl.IdentityContainer;
-import org.wildfly.extension.undertow.Handler;
+import org.wildfly.extension.undertow.ReverseProxy;
 import org.wildfly.extension.undertow.Server;
 import org.wildfly.extension.undertow.session.SessionAffinityProvider;
 import org.wildfly.security.cache.CachedIdentity;
@@ -138,17 +138,17 @@ public class DistributableWebDeploymentServiceInstallerProvider implements WebDe
 
         DeploymentServiceInstaller localityInstaller = provider.getSessionLocalityServiceInstaller(new WebDeploymentConfigurationAdapter(configuration));
         ServiceDependency<SessionLocality> locality = ServiceDependency.on(WebDeploymentServiceDescriptor.SESSION_LOCALITY.resolve(unit));
-        ServiceDependency<HttpHandler> handler = ServiceDependency.on(Handler.SERVICE_DESCRIPTOR, handlerName);
+        ServiceDependency<ReverseProxy> reverseProxy = ServiceDependency.on(ReverseProxy.SERVICE_DESCRIPTOR, handlerName);
         ServiceDependency<Server> server = ServiceDependency.on(Server.SERVICE_DESCRIPTOR, configuration.getServerName());
         java.util.function.Supplier<java.util.function.UnaryOperator<HttpHandler>> decorator = new java.util.function.Supplier<>() {
             @Override
             public java.util.function.UnaryOperator<HttpHandler> get() {
-                return NonPrimaryOwnerSessionHandlerDecoratorFactory.createDecorator(handlerName, handler.get(), locality.get(), server);
+                return NonPrimaryOwnerSessionHandlerDecoratorFactory.createDecorator(reverseProxy.get(), locality.get(), server);
             }
         };
         DeploymentServiceInstaller decoratorInstaller = ServiceInstaller.BlockingBuilder.of(decorator)
                 .provides(name)
-                .requires(List.of(locality, handler, server))
+                .requires(List.of(locality, reverseProxy, server))
                 .build();
         return DeploymentServiceInstaller.combine(localityInstaller, decoratorInstaller);
     }

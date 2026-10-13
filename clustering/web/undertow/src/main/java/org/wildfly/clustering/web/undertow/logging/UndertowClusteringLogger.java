@@ -50,8 +50,4 @@ public interface UndertowClusteringLogger extends BasicLogger {
     @Message(id = 10, value = "Listener '%s' of server '%s' binds a wildcard address and its socket binding '%s' defines no client-mappings, thus its peers cannot determine how to reach it. Requests for sessions owned by this member will not be proxied to it.")
     @LogMessage(level = Level.WARN)
     void unresolvableListenerAddress(String listenerName, String serverName, String socketBindingName);
-
-    @Message(id = 11, value = "Handler '%s' of type %s cannot service a request for a session owned by a peer member; such requests will be serviced locally. Use a reverse-proxy handler instead.")
-    @LogMessage(level = Level.WARN)
-    void unsupportedNonPrimaryOwnerSessionHandler(String handlerName, String handlerClassName);
 }
