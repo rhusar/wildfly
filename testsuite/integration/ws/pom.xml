@@ -503,8 +503,6 @@
                                     <systemPropertyVariables>
                                         <jboss.install.dir>${basedir}/target/wildfly</jboss.install.dir>
                                         <jboss.server.config.file.name>standalone.xml</jboss.server.config.file.name>
-                                        <!-- EJB client library hack, see WFLY-4973-->
-                                        <org.jboss.ejb.client.wildfly-testsuite-hack>true</org.jboss.ejb.client.wildfly-testsuite-hack>
 
                                         <!-- SSL settings -->
                                         <cxf.tls-client.disableCNCheck>true</cxf.tls-client.disableCNCheck>
@@ -667,8 +665,6 @@
                                         <module.path>${project.build.directory}/wildfly-webservices/modules${path.separator}${basedir}/target/modules</module.path>
                                         
                                         <jboss.server.config.file.name>standalone.xml</jboss.server.config.file.name>
-                                        <!-- EJB client library hack, see WFLY-4973-->
-                                        <org.jboss.ejb.client.wildfly-testsuite-hack>true</org.jboss.ejb.client.wildfly-testsuite-hack>
 
                                         <!-- SSL settings -->
                                         <cxf.tls-client.disableCNCheck>true</cxf.tls-client.disableCNCheck>

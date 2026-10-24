@@ -605,8 +605,6 @@
                         <javax.net.ssl.keyStore>${basedir}/target/test-classes/ejb3/ssl/jbossClient.keystore</javax.net.ssl.keyStore>
                         <javax.net.ssl.trustStorePassword>clientPassword</javax.net.ssl.trustStorePassword>
                         <javax.net.ssl.keyStorePassword>clientPassword</javax.net.ssl.keyStorePassword>
-                        <!-- EJB client library hack, see WFLY-4973-->
-                        <org.jboss.ejb.client.wildfly-testsuite-hack>true</org.jboss.ejb.client.wildfly-testsuite-hack>
                         <node0>${node0}</node0>
                         <node1>${node1}</node1>
                         <node2>${node2}</node2>

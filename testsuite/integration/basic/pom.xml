@@ -1930,8 +1930,6 @@
                                         <jboss.inst>${basedir}/target/wildfly</jboss.inst>
                                         <!-- Needed for the IIOP tests-->
                                         <com.sun.CORBA.ORBUseDynamicStub>true</com.sun.CORBA.ORBUseDynamicStub>
-                                        <!-- EJB client library hack, see WFLY-4973-->
-                                        <org.jboss.ejb.client.wildfly-testsuite-hack>true</org.jboss.ejb.client.wildfly-testsuite-hack>
                                         <!-- IIOP NameService authentication requires SecurityDomain - override server.jvm.args to include it -->
                                         <server.jvm.args>${surefire.system.args} ${jvm.args.ip.server} ${jvm.args.other} ${jvm.args.timeouts} -Dnode0=${node0} -Dnode1=${node1} -Djboss.iiop.naming.security-domain=ApplicationDomain ${jvm.args.dirs} ${extra.server.jvm.args}</server.jvm.args>
                                     </systemPropertyVariables>
@@ -1991,8 +1989,6 @@
                                     <systemPropertyVariables combine.children="append">
                                         <jboss.server.config.file.name>standalone.xml</jboss.server.config.file.name>
                                         <jboss.inst>${basedir}/target/wildfly</jboss.inst>
-                                        <!-- EJB client library hack, see WFLY-4973-->
-                                        <org.jboss.ejb.client.wildfly-testsuite-hack>true</org.jboss.ejb.client.wildfly-testsuite-hack>
                                     </systemPropertyVariables>
                                     <additionalClasspathElements>
                                         <additionalClasspathElement>${project.basedir}/../src/test/resources</additionalClasspathElement>
@@ -2018,8 +2014,6 @@
                                         <exclude>none</exclude>
                                     </excludes>
                                     <systemPropertyVariables>
-                                        <!-- EJB client library hack, see WFLY-4973-->
-                                        <org.jboss.ejb.client.wildfly-testsuite-hack>true</org.jboss.ejb.client.wildfly-testsuite-hack>
                                     </systemPropertyVariables>
                                 </configuration>
                             </execution>
@@ -2039,8 +2033,6 @@
                                     <systemPropertyVariables combine.children="append">
                                         <jboss.server.config.file.name>standalone.xml</jboss.server.config.file.name>
                                         <jboss.inst>${basedir}/target/wildfly</jboss.inst>
-                                        <!-- EJB client library hack, see WFLY-4973-->
-                                        <org.jboss.ejb.client.wildfly-testsuite-hack>true</org.jboss.ejb.client.wildfly-testsuite-hack>
                                     </systemPropertyVariables>
 
                                     <additionalClasspathElements>
@@ -2088,8 +2080,6 @@
                                 <configuration>
                                     <systemPropertyVariables combine.children="append">
                                         <jboss.server.config.file.name>standalone-full.xml</jboss.server.config.file.name>
-                                        <!-- EJB client library hack, see WFLY-4973-->
-                                        <org.jboss.ejb.client.wildfly-testsuite-hack>true</org.jboss.ejb.client.wildfly-testsuite-hack>
                                     </systemPropertyVariables>
                                     <includes>
                                         <include>**/*TestCase.java</include>
@@ -3131,8 +3121,6 @@
                                         <jboss.dist>${project.build.directory}/wildfly-ejb</jboss.dist>
                                         <!-- Override the standard module path that points at the shared module set from dist -->
                                         <module.path>${project.build.directory}/wildfly-ejb/modules${path.separator}${basedir}/target/modules</module.path>
-                                        <!-- EJB client library hack, see WFLY-4973-->
-                                        <org.jboss.ejb.client.wildfly-testsuite-hack>true</org.jboss.ejb.client.wildfly-testsuite-hack>
                                     </systemPropertyVariables>
                                     <environmentVariables>
                                         <JBOSS_HOME>${project.build.directory}/wildfly-ejb</JBOSS_HOME>

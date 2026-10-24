@@ -261,8 +261,6 @@
                                         <jboss.inst>${basedir}/target/wildfly</jboss.inst>
                                         <!-- Needed for the IIOP tests-->
                                         <com.sun.CORBA.ORBUseDynamicStub>true</com.sun.CORBA.ORBUseDynamicStub>
-                                        <!-- EJB client library hack, see WFLY-4973-->
-                                        <org.jboss.ejb.client.wildfly-testsuite-hack>true</org.jboss.ejb.client.wildfly-testsuite-hack>
                                         <!-- Override the standard module path that points at the shared module set from dist -->
                                         <module.path>${project.build.directory}/wildfly/modules${path.separator}${basedir}/target/modules</module.path>
                                     </systemPropertyVariables>
@@ -294,8 +292,6 @@
                                     <systemPropertyVariables combine.children="append">
                                         <jboss.server.config.file.name>standalone.xml</jboss.server.config.file.name>
                                         <jboss.inst>${basedir}/target/wildfly</jboss.inst>
-                                        <!-- EJB client library hack, see WFLY-4973-->
-                                        <org.jboss.ejb.client.wildfly-testsuite-hack>true</org.jboss.ejb.client.wildfly-testsuite-hack>
                                         <!-- Override the standard module path that points at the shared module set from dist -->
                                         <module.path>${project.build.directory}/wildfly/modules${path.separator}${basedir}/target/modules</module.path>
                                     </systemPropertyVariables>
