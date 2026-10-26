@@ -12,11 +12,10 @@ import java.util.concurrent.Callable;
 import jakarta.ejb.EJBAccessException;
 import javax.naming.InitialContext;
 
-import org.hamcrest.CoreMatchers;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.OperateOnDeployment;
-import org.jboss.arquillian.junit5.Arquillian;
+import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.as.arquillian.api.ServerSetup;
 import org.jboss.as.test.categories.CommonCriteria;
@@ -39,15 +38,14 @@ import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.wildfly.security.auth.permission.ChangeRoleMapperPermission;
 import org.wildfly.security.permission.ElytronPermission;
 
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.jboss.as.test.shared.PermissionUtils.createFilePermission;
 import static org.jboss.as.test.shared.PermissionUtils.createPermissionsXmlAsset;
 
@@ -56,7 +54,7 @@ import static org.jboss.as.test.shared.PermissionUtils.createPermissionsXmlAsset
  *
  * @author Carlo de Wolf, Ondrej Chaloupka
  */
-@RunWith(Arquillian.class)
+@ExtendWith(ArquillianExtension.class)
 @ServerSetup({EjbSecurityDomainSetup.class, RunAsPrincipalTestCase.TestLogHandlerSetup.class})
 @Tag("CommonCriteria")
 public class RunAsPrincipalTestCase  {
@@ -75,7 +73,7 @@ public class RunAsPrincipalTestCase  {
                 .addClass(WhoAmI.class)
                 .addClass(StatelessBBean.class)
                 .addClass(SingletonStartupBean.class)
-                .addPackage(Assert.class.getPackage())
+                .addPackage(Assertions.class.getPackage())
                 .addClass(Util.class)
                 .addClass(Entry.class)
                 .addClass(RunAsPrincipalTestCase.class)
@@ -205,7 +203,7 @@ public class RunAsPrincipalTestCase  {
         } catch (Exception dex) {
             Throwable t = checkEjbException(dex);
             log.trace("Expected deployment error because the Singleton has nosecurity context per itself", dex.getCause());
-            assertThat(t.getMessage(), t.getMessage(), CoreMatchers.containsString("WFLYEJB0364"));
+            assertThat(t.getMessage()).as(t.getMessage()).contains("WFLYEJB0364");
         } finally {
             deployer.undeploy(STARTUP_SINGLETON_DEPLOYMENT);
         }
@@ -224,7 +222,7 @@ public class RunAsPrincipalTestCase  {
         } catch (Exception dex) {
             Throwable t = checkEjbException(dex);
             log.trace("Expected EJB call fail because identity should not be propagated from @PostConstruct method", dex.getCause());
-            assertThat(t.getMessage(), t.getMessage(), CoreMatchers.containsString("WFLYEJB0364"));
+            assertThat(t.getMessage()).as(t.getMessage()).contains("WFLYEJB0364");
         }
     }
 
