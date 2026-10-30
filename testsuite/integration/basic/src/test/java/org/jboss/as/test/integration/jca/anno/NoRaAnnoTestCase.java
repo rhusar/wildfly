@@ -33,7 +33,7 @@ import org.jboss.as.test.integration.jca.annorar.AnnoMessageListener;
 import org.jboss.as.test.integration.jca.annorar.AnnoMessageListener1;
 import org.jboss.as.test.integration.jca.annorar.AnnoResourceAdapter;
 import org.jboss.as.test.integration.management.base.AbstractMgmtServerSetupTask;
-import org.jboss.as.test.integration.management.base.AbstractMgmtTestBase;
+import org.wildfly.test.management.base.AbstractMgmtTestBase;
 import org.jboss.as.test.shared.FileUtils;
 import org.jboss.dmr.ModelNode;
 import org.jboss.jca.common.metadata.spec.ConnectorImpl;
