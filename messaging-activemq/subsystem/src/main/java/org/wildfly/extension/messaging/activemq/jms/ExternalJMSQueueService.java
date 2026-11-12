@@ -4,7 +4,6 @@
  */
 package org.wildfly.extension.messaging.activemq.jms;
 
-import java.util.Collection;
 import jakarta.jms.ConnectionFactory;
 import jakarta.jms.JMSException;
 import jakarta.jms.Queue;
@@ -13,7 +12,6 @@ import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ClusterTopologyListener;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.api.core.client.TopologyMember;
-import org.apache.activemq.artemis.core.client.impl.TopologyMemberImpl;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.activemq.artemis.jms.client.ActiveMQDestination;
 import org.apache.activemq.artemis.ra.ActiveMQRAConnectionFactory;
@@ -104,10 +102,10 @@ public class ExternalJMSQueueService implements Service<Queue> {
                     };
                     locator.addClusterTopologyListener(listener);
                     sessionFactory = locator.createSessionFactory();
-                    Collection<TopologyMemberImpl> members = locator.getTopology().getMembers();
-                    if (members == null || members.isEmpty()) {
-                        config.createQueue(cf, managementQueue, queueName);
-                    }
+                    // Always create the destination synchronously so that it exists once this service has started.
+                    // The topology listener above only creates it asynchronously, which races with the deployment completing.
+                    // Creation is idempotent, so a concurrent creation by the listener is harmless.
+                    config.createQueue(cf, managementQueue, queueName);
                 } else {
                     config.createQueue(cf, managementQueue, queueName);
                 }
