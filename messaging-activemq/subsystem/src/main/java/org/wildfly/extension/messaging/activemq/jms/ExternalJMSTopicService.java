@@ -10,6 +10,7 @@ import jakarta.jms.JMSException;
 import jakarta.jms.Queue;
 import jakarta.jms.Topic;
 import javax.naming.NamingException;
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ClusterTopologyListener;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
@@ -77,27 +78,11 @@ public class ExternalJMSTopicService implements Service<Topic> {
                     ClusterTopologyListener listener = new ClusterTopologyListener() {
                         @Override
                         public void nodeUP(TopologyMember member, boolean last) {
-                            try (ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(false, member.getPrimary())) {
-                                factory.getServerLocator().setProtocolManagerFactory(protocolManagerFactory);
-                                factory.setUser(raCf.getResourceAdapter().getUserName());
-                                factory.setPassword(raCf.getResourceAdapter().getPassword());
-                                MessagingLogger.ROOT_LOGGER.infof("Creating topic %s on node UP %s - %s", topicName, member.getNodeId(), member.getPrimary().toString());
-                                config.createTopic(factory, managementQueue, topicName);
+                            try {
+                                createTopic(member, raCf, protocolManagerFactory, managementQueue);
                             } catch (JMSException | StartException ex) {
                                 MessagingLogger.ROOT_LOGGER.errorf(ex, "Creating topic %s on node UP %s failed", topicName, member.getPrimary().toString());
                                 throw new RuntimeException(ex);
-                            }
-                            if (member.getBackup() != null) {
-                                try (ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(false, member.getBackup())) {
-                                    factory.getServerLocator().setProtocolManagerFactory(protocolManagerFactory);
-                                    factory.setUser(raCf.getResourceAdapter().getUserName());
-                                    factory.setPassword(raCf.getResourceAdapter().getPassword());
-                                    MessagingLogger.ROOT_LOGGER.infof("Creating topic %s on backup node UP %s - %s", topicName, member.getNodeId(), member.getBackup().toString());
-                                    config.createTopic(factory, managementQueue, topicName);
-                                } catch (JMSException | StartException ex) {
-                                    MessagingLogger.ROOT_LOGGER.errorf(ex, "Creating topic %s on node UP %s failed", topicName, member.getBackup().toString());
-                                    throw new RuntimeException(ex);
-                                }
                             }
                         }
 
@@ -110,6 +95,14 @@ public class ExternalJMSTopicService implements Service<Topic> {
                     Collection<TopologyMemberImpl> members = locator.getTopology().getMembers();
                     if (members == null || members.isEmpty()) {
                         config.createTopic(cf, managementQueue, topicName);
+                    } else {
+                        // The listener creates the topic on these members asynchronously, which would race with this service
+                        // (and the deployment depending on it) being reported as started.
+                        // So create it on the currently known members synchronously, leaving the listener for members joining later.
+                        // Creating it more than once is harmless, as a topic which already exists is tolerated.
+                        for (TopologyMember member : members) {
+                            createTopic(member, raCf, protocolManagerFactory, managementQueue);
+                        }
                     }
                 } else {
                     config.createTopic(cf, managementQueue, topicName);
@@ -126,6 +119,35 @@ public class ExternalJMSTopicService implements Service<Topic> {
             }
         }
         topic = ActiveMQDestination.createTopic(topicName);
+    }
+
+    /**
+     * Creates the topic on the primary node of the specified topology member and, on a best effort basis, on its backup node.
+     */
+    private void createTopic(TopologyMember member, ActiveMQRAConnectionFactory raCf, ClientProtocolManagerFactory protocolManagerFactory, Queue managementQueue) throws JMSException, StartException {
+        TransportConfiguration primary = member.getPrimary();
+        if (primary != null) {
+            MessagingLogger.ROOT_LOGGER.infof("Creating topic %s on node UP %s - %s", topicName, member.getNodeId(), primary.toString());
+            createTopic(primary, raCf, protocolManagerFactory, managementQueue);
+        }
+        TransportConfiguration backup = member.getBackup();
+        if (backup != null) {
+            MessagingLogger.ROOT_LOGGER.infof("Creating topic %s on backup node UP %s - %s", topicName, member.getNodeId(), backup.toString());
+            try {
+                createTopic(backup, raCf, protocolManagerFactory, managementQueue);
+            } catch (JMSException | StartException ex) {
+                MessagingLogger.ROOT_LOGGER.errorf(ex, "Creating topic %s on node UP %s failed", topicName, backup.toString());
+            }
+        }
+    }
+
+    private void createTopic(TransportConfiguration connector, ActiveMQRAConnectionFactory raCf, ClientProtocolManagerFactory protocolManagerFactory, Queue managementQueue) throws JMSException, StartException {
+        try (ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(false, connector)) {
+            factory.getServerLocator().setProtocolManagerFactory(protocolManagerFactory);
+            factory.setUser(raCf.getResourceAdapter().getUserName());
+            factory.setPassword(raCf.getResourceAdapter().getPassword());
+            config.createTopic(factory, managementQueue, topicName);
+        }
     }
 
     @Override

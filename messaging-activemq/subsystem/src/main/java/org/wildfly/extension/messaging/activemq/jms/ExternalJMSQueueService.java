@@ -9,6 +9,7 @@ import jakarta.jms.ConnectionFactory;
 import jakarta.jms.JMSException;
 import jakarta.jms.Queue;
 import javax.naming.NamingException;
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ClusterTopologyListener;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
@@ -74,27 +75,11 @@ public class ExternalJMSQueueService implements Service<Queue> {
                     ClusterTopologyListener listener = new ClusterTopologyListener() {
                         @Override
                         public void nodeUP(TopologyMember member, boolean last) {
-                            try (ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(false, member.getPrimary())) {
-                                factory.getServerLocator().setProtocolManagerFactory(protocolManagerFactory);
-                                factory.setUser(raCf.getResourceAdapter().getUserName());
-                                factory.setPassword(raCf.getResourceAdapter().getPassword());
-                                MessagingLogger.ROOT_LOGGER.infof("Creating queue %s on node UP %s - %s", queueName, member.getNodeId(), member.getPrimary().toString());
-                                config.createQueue(factory, managementQueue, queueName);
+                            try {
+                                createQueue(member, raCf, protocolManagerFactory, managementQueue);
                             } catch (JMSException | StartException ex) {
                                 MessagingLogger.ROOT_LOGGER.errorf(ex, "Creating queue %s on node UP %s failed", queueName, member.getPrimary().toString());
                                 throw new RuntimeException(ex);
-                            }
-                            if (member.getBackup() != null) {
-                                try (ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(false, member.getBackup())) {
-                                    factory.getServerLocator().setProtocolManagerFactory(protocolManagerFactory);
-                                    factory.setUser(raCf.getResourceAdapter().getUserName());
-                                    factory.setPassword(raCf.getResourceAdapter().getPassword());
-                                    MessagingLogger.ROOT_LOGGER.infof("Creating queue %s on backup node UP %s - %s", queueName, member.getNodeId(), member.getBackup().toString());
-                                    config.createQueue(factory, managementQueue, queueName);
-                                } catch (JMSException | StartException ex) {
-                                    MessagingLogger.ROOT_LOGGER.errorf(ex, "Creating queue %s on node UP %s failed", queueName, member.getBackup().toString());
-                                    throw new RuntimeException(ex);
-                                }
                             }
                         }
 
@@ -107,6 +92,14 @@ public class ExternalJMSQueueService implements Service<Queue> {
                     Collection<TopologyMemberImpl> members = locator.getTopology().getMembers();
                     if (members == null || members.isEmpty()) {
                         config.createQueue(cf, managementQueue, queueName);
+                    } else {
+                        // The listener creates the queue on these members asynchronously, which would race with this service
+                        // (and the deployment depending on it) being reported as started.
+                        // So create it on the currently known members synchronously, leaving the listener for members joining later.
+                        // Creating it more than once is harmless, as a queue which already exists is tolerated.
+                        for (TopologyMember member : members) {
+                            createQueue(member, raCf, protocolManagerFactory, managementQueue);
+                        }
                     }
                 } else {
                     config.createQueue(cf, managementQueue, queueName);
@@ -123,6 +116,35 @@ public class ExternalJMSQueueService implements Service<Queue> {
             }
         }
         queue = ActiveMQDestination.createQueue(queueName);
+    }
+
+    /**
+     * Creates the queue on the primary node of the specified topology member and, on a best effort basis, on its backup node.
+     */
+    private void createQueue(TopologyMember member, ActiveMQRAConnectionFactory raCf, ClientProtocolManagerFactory protocolManagerFactory, Queue managementQueue) throws JMSException, StartException {
+        TransportConfiguration primary = member.getPrimary();
+        if (primary != null) {
+            MessagingLogger.ROOT_LOGGER.infof("Creating queue %s on node UP %s - %s", queueName, member.getNodeId(), primary.toString());
+            createQueue(primary, raCf, protocolManagerFactory, managementQueue);
+        }
+        TransportConfiguration backup = member.getBackup();
+        if (backup != null) {
+            MessagingLogger.ROOT_LOGGER.infof("Creating queue %s on backup node UP %s - %s", queueName, member.getNodeId(), backup.toString());
+            try {
+                createQueue(backup, raCf, protocolManagerFactory, managementQueue);
+            } catch (JMSException | StartException ex) {
+                MessagingLogger.ROOT_LOGGER.errorf(ex, "Creating queue %s on node UP %s failed", queueName, backup.toString());
+            }
+        }
+    }
+
+    private void createQueue(TransportConfiguration connector, ActiveMQRAConnectionFactory raCf, ClientProtocolManagerFactory protocolManagerFactory, Queue managementQueue) throws JMSException, StartException {
+        try (ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(false, connector)) {
+            factory.getServerLocator().setProtocolManagerFactory(protocolManagerFactory);
+            factory.setUser(raCf.getResourceAdapter().getUserName());
+            factory.setPassword(raCf.getResourceAdapter().getPassword());
+            config.createQueue(factory, managementQueue, queueName);
+        }
     }
 
     @Override
