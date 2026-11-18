@@ -32,12 +32,14 @@
         <module name="org.jboss.metadata.web"/>
         <module name="org.jboss.modules"/>
         <module name="org.jboss.msc"/>
+        <module name="org.jboss.xnio"/>
         <module name="org.wildfly.clustering.cache.spi"/>
         <module name="org.wildfly.clustering.context"/>
         <module name="org.wildfly.clustering.function"/>
         <module name="org.wildfly.clustering.marshalling.jboss"/>
         <module name="org.wildfly.clustering.marshalling.protostream"/>
         <module name="org.wildfly.clustering.marshalling.spi"/>
+        <module name="org.wildfly.clustering.server.api"/>
         <module name="org.wildfly.clustering.server.spi"/>
         <module name="org.wildfly.clustering.session.container.spi"/>
         <module name="org.wildfly.clustering.session.spi"/>

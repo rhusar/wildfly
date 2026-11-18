@@ -104,6 +104,10 @@
         </dependency>
         <dependency>
             <groupId>org.wildfly.clustering</groupId>
+            <artifactId>wildfly-clustering-server-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.clustering</groupId>
             <artifactId>wildfly-clustering-session-spi</artifactId>
         </dependency>
         <dependency>
