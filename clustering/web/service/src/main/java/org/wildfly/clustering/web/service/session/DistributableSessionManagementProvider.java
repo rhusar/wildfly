@@ -8,10 +8,14 @@ package org.wildfly.clustering.web.service.session;
 import org.jboss.as.server.deployment.AttachmentKey;
 import org.jboss.as.server.deployment.AttachmentList;
 import org.jboss.as.server.deployment.DeploymentUnit;
+import org.wildfly.clustering.function.Supplier;
 import org.wildfly.clustering.web.service.deployment.WebDeploymentConfiguration;
+import org.wildfly.clustering.web.service.deployment.WebDeploymentServiceDescriptor;
+import org.wildfly.clustering.web.service.routing.SessionLocality;
 import org.wildfly.service.descriptor.NullaryServiceDescriptor;
 import org.wildfly.service.descriptor.UnaryServiceDescriptor;
 import org.wildfly.subsystem.service.DeploymentServiceInstaller;
+import org.wildfly.subsystem.service.ServiceInstaller;
 
 /**
  * A distributable session management provider.
@@ -38,6 +42,19 @@ public interface DistributableSessionManagementProvider {
      * @return a service configurator
      */
     DeploymentServiceInstaller getRouteLocatorServiceInstaller(WebDeploymentConfiguration configuration);
+
+    /**
+     * Returns an installer of a service providing the {@link SessionLocality} of a deployment, i.e. the resolution of
+     * the group member from which the session associated with a given request can currently be read locally.
+     * By default, sessions are always read locally, i.e. requests are never proxied to a peer member.
+     * @param configuration the configuration of a deployment
+     * @return a service installer
+     */
+    default DeploymentServiceInstaller getSessionLocalityServiceInstaller(WebDeploymentConfiguration configuration) {
+        return ServiceInstaller.BlockingBuilder.of(Supplier.of(SessionLocality.LOCAL))
+                .provides(WebDeploymentServiceDescriptor.SESSION_LOCALITY.resolve(configuration.getDeploymentUnit()))
+                .build();
+    }
 
     DistributableSessionManagementConfiguration<DeploymentUnit> getSessionManagementConfiguration();
 }
