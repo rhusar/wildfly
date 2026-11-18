@@ -25,7 +25,7 @@ public interface DistributableSessionManagementProvider {
     AttachmentKey<AttachmentList<String>> IMMUTABILITY_ATTACHMENT_KEY = AttachmentKey.createList(String.class);
 
     /**
-     * Returns a {@link CapabilityServiceConfigurator} used to configure a service providing a {@link org.wildfly.clustering.web.session.SessionManagerFactory}.
+     * Returns a {@link DeploymentServiceInstaller} used to configure a service providing a {@link org.wildfly.clustering.web.session.SessionManagerFactory}.
      * @param <C> the session context type
      * @param configuration the configuration of the session manager factory
      * @return a service configurator
@@ -33,7 +33,7 @@ public interface DistributableSessionManagementProvider {
     <C> DeploymentServiceInstaller getSessionManagerFactoryServiceInstaller(SessionManagerFactoryConfiguration<C> configuration);
 
     /**
-     * Returns a {@link CapabilityServiceConfigurator} used to configure a service providing a {@link org.wildfly.clustering.web.routing.RouteLocator}.
+     * Returns a {@link DeploymentServiceInstaller} used to configure a service providing a {@link org.wildfly.clustering.web.service.routing.RouteLocatorProvider}.
      * @param configuration the configuration of a deployment
      * @return a service configurator
      */

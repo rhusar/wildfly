@@ -32,7 +32,6 @@ import org.wildfly.extension.undertow.logging.UndertowLogger;
 public class FileHandlerDefinition extends HandlerDefinition {
     public static final PathElement PATH_ELEMENT = PathElement.pathElement(Constants.FILE);
 
-    /*<file path="/opt/data" cache-buffer-size="1024" cache-buffers="1024"/>*/
     public static final AttributeDefinition PATH = new SimpleAttributeDefinitionBuilder(Constants.PATH, ModelType.STRING)
             .setRequired(true)
             .setAllowExpression(true)
