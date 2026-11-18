@@ -16,20 +16,28 @@ import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.PersistentResourceDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
+import org.jboss.as.controller.capability.RuntimeCapability;
 import org.jboss.as.controller.client.helpers.MeasurementUnit;
 import org.jboss.as.controller.registry.AttributeAccess;
+import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
+import org.wildfly.common.function.Functions;
 import org.wildfly.extension.undertow.Constants;
+import org.wildfly.extension.undertow.ReverseProxyConfiguration;
+import org.wildfly.subsystem.service.capability.CapabilityServiceInstaller;
 
 import java.util.Collection;
 import java.util.List;
 
 /**
  * @author Stuart Douglas
+ * @author Radoslav Husar
  */
 public class ReverseProxyHandlerDefinition extends HandlerDefinition {
     public static final PathElement PATH_ELEMENT = PathElement.pathElement(Constants.REVERSE_PROXY);
+
+    static final RuntimeCapability<Void> REVERSE_PROXY_CAPABILITY = RuntimeCapability.Builder.of(ReverseProxyConfiguration.SERVICE_DESCRIPTOR).build();
 
     public static final AttributeDefinition PROBLEM_SERVER_RETRY = new SimpleAttributeDefinitionBuilder(Constants.PROBLEM_SERVER_RETRY, ModelType.INT)
             .setRequired(false)
@@ -116,6 +124,12 @@ public class ReverseProxyHandlerDefinition extends HandlerDefinition {
     }
 
     @Override
+    public void registerCapabilities(ManagementResourceRegistration resourceRegistration) {
+        super.registerCapabilities(resourceRegistration);
+        resourceRegistration.registerCapability(REVERSE_PROXY_CAPABILITY);
+    }
+
+    @Override
     protected List<? extends PersistentResourceDefinition> getChildren() {
         return List.of(new ReverseProxyHandlerHostDefinition());
     }
@@ -147,6 +161,55 @@ public class ReverseProxyHandlerDefinition extends HandlerDefinition {
         for (String id : sessionIds) {
             lb.addSessionCookieName(id);
         }
+
+        // Expose the configuration of this handler via a dedicated capability, for reuse by other proxy clients
+        ReverseProxyConfiguration configuration = new ReverseProxyConfiguration() {
+            @Override
+            public int getConnectionsPerThread() {
+                return connectionsPerThread;
+            }
+
+            @Override
+            public int getCachedConnectionsPerThread() {
+                return cachedConnectionsPerThread;
+            }
+
+            @Override
+            public int getRequestQueueSize() {
+                return requestQueueSize;
+            }
+
+            @Override
+            public int getConnectionIdleTimeout() {
+                return connectionIdleTimeout;
+            }
+
+            @Override
+            public int getProblemServerRetry() {
+                return problemServerRetry;
+            }
+
+            @Override
+            public int getMaxRequestTime() {
+                return maxTime;
+            }
+
+            @Override
+            public int getMaxRetries() {
+                return maxRetries;
+            }
+
+            @Override
+            public boolean isReuseXForwardedHeader() {
+                return reuseXForwardedHeader;
+            }
+
+            @Override
+            public boolean isRewriteHostHeader() {
+                return rewriteHostHeader;
+            }
+        };
+        CapabilityServiceInstaller.BlockingBuilder.of(REVERSE_PROXY_CAPABILITY, Functions.constantSupplier(configuration)).build().install(context);
 
         return ProxyHandler.builder()
                 .setProxyClient(lb)
