@@ -7,6 +7,7 @@ package org.wildfly.extension.clustering.web;
 
 import java.util.EnumSet;
 
+import org.jboss.as.clustering.controller.CommonServiceDescriptor;
 import org.jboss.as.clustering.subsystem.AdditionalInitialization;
 import org.jboss.as.subsystem.test.AbstractSubsystemSchemaTest;
 import org.junit.runner.RunWith;
@@ -41,6 +42,9 @@ public class DistributableWebSubsystemTestCase extends AbstractSubsystemSchemaTe
                 .require(InfinispanServiceDescriptor.DEFAULT_CACHE_CONFIGURATION, "foo")
                 .require(InfinispanServiceDescriptor.CACHE_CONFIGURATION, "foo", "bar")
                 .require(HotRodServiceDescriptor.REMOTE_CACHE_CONTAINER, "foo")
+                // Referenced by the proxy resource of the experimental schema
+                .require("org.wildfly.undertow.reverse-proxy.configuration.my-reverse-proxy")
+                .require(CommonServiceDescriptor.SSL_CONTEXT, "my-ssl-context")
                 ;
     }
 }

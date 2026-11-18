@@ -42,8 +42,9 @@ public enum DistributableWebSubsystemSchema implements SubsystemResourceXMLSchem
     VERSION_5_0(5, 0), // WildFly 36-39
     VERSION_5_0_COMMUNITY(5, 0, Stability.COMMUNITY), // WildFly 39-41
     VERSION_6_0(6, 0), // WildFly 42-present, EAP 8.2-present
+    VERSION_6_0_EXPERIMENTAL(6, 0, Stability.EXPERIMENTAL), // WildFly 43-present
     ;
-    static final Set<DistributableWebSubsystemSchema> CURRENT = Set.of(VERSION_6_0);
+    static final Set<DistributableWebSubsystemSchema> CURRENT = Set.of(VERSION_6_0, VERSION_6_0_EXPERIMENTAL);
 
     private final ResourceXMLParticleFactory factory = ResourceXMLParticleFactory.newInstance(this);
     private final VersionedNamespace<IntVersion, DistributableWebSubsystemSchema> namespace;
@@ -159,8 +160,15 @@ public enum DistributableWebSubsystemSchema implements SubsystemResourceXMLSchem
     }
 
     ResourceRegistrationXMLElement infinispanRoutingElement() {
+        // Only emitted by a schema whose stability enables this resource
+        SingletonResourceRegistrationXMLElement proxyElement = this.factory.singletonElement(NonPrimaryOwnerProxyResourceDefinitionRegistrar.REGISTRATION)
+                .withCardinality(XMLCardinality.Single.OPTIONAL)
+                .withElementLocalName(ResourceXMLElementLocalName.VALUE_KEY)
+                .addAttributes(List.of(NonPrimaryOwnerProxyResourceDefinitionRegistrar.REVERSE_PROXY, NonPrimaryOwnerProxyResourceDefinitionRegistrar.CLIENT_SSL_CONTEXT))
+                .build();
         return this.routingElementBuilder(RoutingProviderResourceRegistration.INFINISPAN)
                 .addAttributes(InfinispanRoutingProviderResourceDefinitionRegistrar.CACHE_ATTRIBUTE_GROUP.getAttributes())
+                .withContent(this.factory.sequence().addElement(proxyElement).build())
                 .build();
     }
 

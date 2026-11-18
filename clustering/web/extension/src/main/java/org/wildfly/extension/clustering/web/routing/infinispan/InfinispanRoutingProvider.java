@@ -9,6 +9,7 @@ import java.net.InetSocketAddress;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
@@ -23,6 +24,7 @@ import org.wildfly.clustering.server.registry.RegistryListener;
 import org.wildfly.clustering.server.service.BinaryServiceConfiguration;
 import org.wildfly.clustering.server.service.ClusteringServiceDescriptor;
 import org.wildfly.clustering.server.service.FilteredBinaryServiceInstallerProvider;
+import org.wildfly.clustering.web.service.routing.NonPrimaryOwnerProxyConfiguration;
 import org.wildfly.clustering.web.service.routing.RouteEndpointRegistry;
 import org.wildfly.common.iteration.CompositeIterable;
 import org.wildfly.extension.clustering.web.routing.LocalRoutingProvider;
@@ -37,10 +39,21 @@ public class InfinispanRoutingProvider extends LocalRoutingProvider {
 
     private final BinaryServiceConfiguration configuration;
     private final UnaryOperator<ConfigurationBuilder> configurator;
+    private final Optional<NonPrimaryOwnerProxyConfiguration> proxy;
 
     public InfinispanRoutingProvider(BinaryServiceConfiguration configuration, UnaryOperator<ConfigurationBuilder> configurator) {
+        this(configuration, configurator, Optional.empty());
+    }
+
+    public InfinispanRoutingProvider(BinaryServiceConfiguration configuration, UnaryOperator<ConfigurationBuilder> configurator, Optional<NonPrimaryOwnerProxyConfiguration> proxy) {
         this.configuration = configuration;
         this.configurator = configurator;
+        this.proxy = proxy;
+    }
+
+    @Override
+    public Optional<NonPrimaryOwnerProxyConfiguration> getNonPrimaryOwnerProxyConfiguration() {
+        return this.proxy;
     }
 
     @Override

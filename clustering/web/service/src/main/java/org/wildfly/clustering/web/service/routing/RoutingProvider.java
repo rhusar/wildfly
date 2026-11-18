@@ -8,6 +8,7 @@ package org.wildfly.clustering.web.service.routing;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.wildfly.service.descriptor.NullaryServiceDescriptor;
 import org.wildfly.subsystem.service.ServiceDependency;
@@ -29,4 +30,14 @@ public interface RoutingProvider {
      * @return a number of service installers
      */
     Iterable<ServiceInstaller> getServiceInstallers(String serverName, ServiceDependency<String> route, ServiceDependency<Map<String, List<InetSocketAddress>>> endpoints);
+
+    /**
+     * Returns the configuration of the proxy that services a request associated with a session owned by a peer member, if configured.
+     * A web container installs a single proxy per server, on demand.
+     * Any routing provider that exposes a proxy configuration must also install a {@link RouteEndpointRegistry} for each server.
+     * @return a proxy configuration, if configured.
+     */
+    default Optional<NonPrimaryOwnerProxyConfiguration> getNonPrimaryOwnerProxyConfiguration() {
+        return Optional.empty();
+    }
 }

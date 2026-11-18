@@ -4,18 +4,24 @@
  */
 package org.wildfly.extension.clustering.web;
 
+import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
+import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.capability.RuntimeCapability;
+import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.dmr.ModelNode;
 import org.wildfly.clustering.function.Supplier;
 import org.wildfly.clustering.infinispan.service.InfinispanCacheConfigurationAttributeGroup;
 import org.wildfly.clustering.server.service.CacheConfigurationAttributeGroup;
+import org.wildfly.clustering.web.service.routing.NonPrimaryOwnerProxyConfiguration;
 import org.wildfly.clustering.web.service.routing.RoutingProvider;
 import org.wildfly.extension.clustering.web.routing.infinispan.InfinispanRoutingProvider;
+import org.wildfly.subsystem.resource.ManagementResourceRegistrationContext;
 import org.wildfly.subsystem.resource.ResourceDescriptor;
+import org.wildfly.subsystem.resource.operation.ResourceOperationRuntimeHandler;
 import org.wildfly.subsystem.service.ResourceServiceInstaller;
 import org.wildfly.subsystem.service.capability.CapabilityServiceInstaller;
 
@@ -29,7 +35,8 @@ public class InfinispanRoutingProviderResourceDefinitionRegistrar extends Routin
     static final CacheConfigurationAttributeGroup CACHE_ATTRIBUTE_GROUP = new InfinispanCacheConfigurationAttributeGroup(CAPABILITY);
 
     InfinispanRoutingProviderResourceDefinitionRegistrar() {
-        super(RoutingProviderResourceRegistration.INFINISPAN);
+        // The routing provider exposes the configuration of its child proxy resource, and thus reads its model recursively
+        super(RoutingProviderResourceRegistration.INFINISPAN, ResourceOperationRuntimeHandler::configureParentService);
     }
 
     @Override
@@ -41,8 +48,19 @@ public class InfinispanRoutingProviderResourceDefinitionRegistrar extends Routin
     }
 
     @Override
+    public ManagementResourceRegistration register(ManagementResourceRegistration parent, ManagementResourceRegistrationContext context) {
+        ManagementResourceRegistration registration = super.register(parent, context);
+
+        new NonPrimaryOwnerProxyResourceDefinitionRegistrar(this.getRuntimeHandler()).register(registration, context);
+
+        return registration;
+    }
+
+    @Override
     public RoutingProvider resolve(OperationContext context, ModelNode model) throws OperationFailedException {
-        return new InfinispanRoutingProvider(CACHE_ATTRIBUTE_GROUP.resolve(context, model), UnaryOperator.identity());
+        PathElement path = NonPrimaryOwnerProxyResourceDefinitionRegistrar.REGISTRATION.getPathElement();
+        NonPrimaryOwnerProxyConfiguration proxy = model.hasDefined(path.getKeyValuePair()) ? new NonPrimaryOwnerProxyResourceDefinitionRegistrar(this.getRuntimeHandler()).resolve(context, model.get(path.getKeyValuePair())) : null;
+        return new InfinispanRoutingProvider(CACHE_ATTRIBUTE_GROUP.resolve(context, model), UnaryOperator.identity(), Optional.ofNullable(proxy));
     }
 
     @Override

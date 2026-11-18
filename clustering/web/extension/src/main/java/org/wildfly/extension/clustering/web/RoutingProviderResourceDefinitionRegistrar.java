@@ -4,6 +4,7 @@
  */
 package org.wildfly.extension.clustering.web;
 
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 import org.jboss.as.controller.OperationContext;
@@ -35,15 +36,29 @@ public abstract class RoutingProviderResourceDefinitionRegistrar implements Chil
     static final RuntimeCapability<Void> CAPABILITY = RuntimeCapability.Builder.of(RoutingProvider.SERVICE_DESCRIPTOR).setAllowMultipleRegistrations(true).build();
 
     private final ResourceRegistration registration;
+    private final ResourceOperationRuntimeHandler runtimeHandler;
 
     RoutingProviderResourceDefinitionRegistrar(ResourceRegistration registration) {
+        this(registration, ResourceOperationRuntimeHandler::configureService);
+    }
+
+    RoutingProviderResourceDefinitionRegistrar(ResourceRegistration registration, Function<ResourceServiceConfigurator, ResourceOperationRuntimeHandler> runtimeHandlerFactory) {
         this.registration = registration;
+        this.runtimeHandler = runtimeHandlerFactory.apply(this);
+    }
+
+    /**
+     * Returns the runtime handler of this resource, which a child resource may use to restart this resource.
+     * @return the runtime handler of this resource
+     */
+    ResourceOperationRuntimeHandler getRuntimeHandler() {
+        return this.runtimeHandler;
     }
 
     @Override
     public ResourceDescriptor.Builder apply(ResourceDescriptor.Builder builder) {
         return builder.addCapability(CAPABILITY)
-                .withRuntimeHandler(ResourceOperationRuntimeHandler.configureService(this))
+                .withRuntimeHandler(this.runtimeHandler)
                 ;
     }
 
