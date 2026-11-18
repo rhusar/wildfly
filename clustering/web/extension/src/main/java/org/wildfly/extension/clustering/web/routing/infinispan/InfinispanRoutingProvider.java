@@ -13,12 +13,17 @@ import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.jboss.as.controller.ServiceNameFactory;
 import org.wildfly.clustering.infinispan.service.CacheConfigurationServiceInstaller;
 import org.wildfly.clustering.infinispan.service.CacheServiceInstaller;
 import org.wildfly.clustering.marshalling.protostream.util.StringKeyMapEntry;
+import org.wildfly.clustering.server.Registration;
+import org.wildfly.clustering.server.infinispan.registry.CacheContainerRegistry;
+import org.wildfly.clustering.server.registry.RegistryListener;
 import org.wildfly.clustering.server.service.BinaryServiceConfiguration;
 import org.wildfly.clustering.server.service.ClusteringServiceDescriptor;
 import org.wildfly.clustering.server.service.FilteredBinaryServiceInstallerProvider;
+import org.wildfly.clustering.web.service.routing.RouteEndpointRegistry;
 import org.wildfly.common.iteration.CompositeIterable;
 import org.wildfly.extension.clustering.web.routing.LocalRoutingProvider;
 import org.wildfly.subsystem.service.ServiceDependency;
@@ -53,6 +58,33 @@ public class InfinispanRoutingProvider extends LocalRoutingProvider {
 
         new FilteredBinaryServiceInstallerProvider(Set.of(ClusteringServiceDescriptor.REGISTRY, ClusteringServiceDescriptor.REGISTRY_FACTORY)).apply(serverConfiguration).forEach(installers::add);
 
+        // Expose the endpoints of the routing registry of this server, agnostic of its implementation, for use by a proxy client
+        ServiceDependency<CacheContainerRegistry<String, Map<String, List<InetSocketAddress>>>> registry = serverConfiguration.getServiceDependency(ClusteringServiceDescriptor.REGISTRY).map(CacheContainerRegistry.class::cast);
+        installers.add(ServiceInstaller.BlockingBuilder.of(registry.map(RegistryRouteEndpointRegistry::new))
+                .provides(ServiceNameFactory.resolveServiceName(RouteEndpointRegistry.SERVICE_DESCRIPTOR, serverName))
+                .build());
+
         return new CompositeIterable<>(List.of(installers, super.getServiceInstallers(serverName, route, endpoints)));
+    }
+
+    /**
+     * Exposes the entries of a routing registry, i.e. the endpoints of each member, keyed by route.
+     */
+    static class RegistryRouteEndpointRegistry implements RouteEndpointRegistry {
+        private final CacheContainerRegistry<String, Map<String, List<InetSocketAddress>>> registry;
+
+        RegistryRouteEndpointRegistry(CacheContainerRegistry<String, Map<String, List<InetSocketAddress>>> registry) {
+            this.registry = registry;
+        }
+
+        @Override
+        public Map<String, Map<String, List<InetSocketAddress>>> getEndpoints() {
+            return this.registry.getEntries();
+        }
+
+        @Override
+        public Registration register(RegistryListener<String, Map<String, List<InetSocketAddress>>> listener) {
+            return this.registry.register(listener);
+        }
     }
 }
