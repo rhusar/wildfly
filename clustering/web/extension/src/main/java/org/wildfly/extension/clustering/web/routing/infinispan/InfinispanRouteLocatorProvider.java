@@ -34,9 +34,9 @@ import org.wildfly.subsystem.service.ServiceInstaller;
  * @author Paul Ferraro
  */
 public class InfinispanRouteLocatorProvider extends LocalRouteLocatorProvider {
-    private final BiFunction<Cache<Key<String>, ?>, CacheContainerRegistry<String, Void>, UnaryOperator<String>> factory;
+    private final BiFunction<Cache<Key<String>, ?>, CacheContainerRegistry<String, ?>, UnaryOperator<String>> factory;
 
-    InfinispanRouteLocatorProvider(BiFunction<Cache<Key<String>, ?>, CacheContainerRegistry<String, Void>, UnaryOperator<String>> factory) {
+    InfinispanRouteLocatorProvider(BiFunction<Cache<Key<String>, ?>, CacheContainerRegistry<String, ?>, UnaryOperator<String>> factory) {
         this.factory = factory;
     }
 
@@ -46,7 +46,7 @@ public class InfinispanRouteLocatorProvider extends LocalRouteLocatorProvider {
         DeploymentUnit unit = deployment.getDeploymentUnit();
         ServiceDependency<Configuration> cacheConfiguration = configuration.getServiceDependency(InfinispanServiceDescriptor.CACHE_CONFIGURATION);
         ServiceDependency<Cache<Key<String>, ?>> cache = configuration.withChildName(deployment.getDeploymentName()).getServiceDependency(InfinispanServiceDescriptor.CACHE).map(Cache.class::cast);
-        ServiceDependency<CacheContainerRegistry<String, Void>> registry = configuration.withChildName(deployment.getServerName()).getServiceDependency(ClusteringServiceDescriptor.REGISTRY).map(CacheContainerRegistry.class::cast);
+        ServiceDependency<CacheContainerRegistry<String, ?>> registry = configuration.withChildName(deployment.getServerName()).getServiceDependency(ClusteringServiceDescriptor.REGISTRY).map(CacheContainerRegistry.class::cast);
         Supplier<UnaryOperator<String>> factory = cache.combine(registry, this.factory);
         return ServiceInstaller.Builder.of(new ServiceInstaller() {
             @Override

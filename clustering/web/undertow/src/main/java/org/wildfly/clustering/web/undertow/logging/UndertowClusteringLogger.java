@@ -46,4 +46,8 @@ public interface UndertowClusteringLogger extends BasicLogger {
 
 //    @Message(id = 9, value = "Invalidation attempted for session %s after the response was committed (e.g. after HttpServletResponse.sendRedirect or sendError)")
 //    IllegalStateException batchIsAlreadyClosed(String sessionId);
+
+    @Message(id = 10, value = "Listener '%s' of server '%s' binds a wildcard address and its socket binding '%s' defines no client-mappings, thus its peers cannot determine how to reach it. Requests for sessions owned by this member will not be proxied to it.")
+    @LogMessage(level = Level.WARN)
+    void unresolvableListenerAddress(String listenerName, String serverName, String socketBindingName);
 }

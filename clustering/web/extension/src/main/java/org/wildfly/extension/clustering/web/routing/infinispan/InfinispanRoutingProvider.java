@@ -5,8 +5,10 @@
 
 package org.wildfly.extension.clustering.web.routing.infinispan;
 
+import java.net.InetSocketAddress;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
@@ -37,11 +39,12 @@ public class InfinispanRoutingProvider extends LocalRoutingProvider {
     }
 
     @Override
-    public Iterable<ServiceInstaller> getServiceInstallers(String serverName, ServiceDependency<String> route) {
+    public Iterable<ServiceInstaller> getServiceInstallers(String serverName, ServiceDependency<String> route, ServiceDependency<Map<String, List<InetSocketAddress>>> endpoints) {
         BinaryServiceConfiguration serverConfiguration = this.configuration.withChildName(serverName);
         List<ServiceInstaller> installers = new LinkedList<>();
 
-        installers.add(ServiceInstaller.BlockingBuilder.of(route.combine(ServiceDependency.<Void>empty(), StringKeyMapEntry::new))
+        // In addition to the route of this member, publish the addresses via which its peers can reach it
+        installers.add(ServiceInstaller.BlockingBuilder.of(route.combine(endpoints, StringKeyMapEntry::new))
                 .provides(serverConfiguration.resolveServiceName(ClusteringServiceDescriptor.REGISTRY_ENTRY))
                 .build());
 
@@ -50,6 +53,6 @@ public class InfinispanRoutingProvider extends LocalRoutingProvider {
 
         new FilteredBinaryServiceInstallerProvider(Set.of(ClusteringServiceDescriptor.REGISTRY, ClusteringServiceDescriptor.REGISTRY_FACTORY)).apply(serverConfiguration).forEach(installers::add);
 
-        return new CompositeIterable<>(List.of(installers, super.getServiceInstallers(serverName, route)));
+        return new CompositeIterable<>(List.of(installers, super.getServiceInstallers(serverName, route, endpoints)));
     }
 }

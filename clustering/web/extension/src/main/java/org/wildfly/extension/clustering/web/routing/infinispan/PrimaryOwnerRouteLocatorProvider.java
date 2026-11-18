@@ -26,7 +26,7 @@ public class PrimaryOwnerRouteLocatorProvider extends InfinispanRouteLocatorProv
     public PrimaryOwnerRouteLocatorProvider() {
         super(new BiFunction<>() {
             @Override
-            public UnaryOperator<String> apply(Cache<Key<String>, ?> cache, CacheContainerRegistry<String, Void> registry) {
+            public UnaryOperator<String> apply(Cache<Key<String>, ?> cache, CacheContainerRegistry<String, ?> registry) {
                 Function<String, CacheContainerGroupMember> affinity = new UnaryGroupMemberAffinity<>(cache, registry.getGroup());
                 return new UnarySessionAffinity<>(affinity, new SessionAffinityRegistryGroupMemberMapper<>(registry));
             }
