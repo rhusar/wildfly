@@ -22,6 +22,7 @@ import io.undertow.server.HttpHandler;
 import io.undertow.servlet.api.Deployment;
 import io.undertow.servlet.util.SavedRequest;
 
+import org.jboss.as.controller.RequirementServiceTarget;
 import org.jboss.as.controller.management.Capabilities;
 import org.jboss.as.server.deployment.Attachments;
 import org.jboss.as.server.deployment.DeploymentUnit;
@@ -31,6 +32,8 @@ import org.jboss.as.web.common.WarMetaData;
 import org.jboss.metadata.web.jboss.JBossWebMetaData;
 import org.jboss.metadata.web.jboss.ReplicationConfig;
 import org.jboss.modules.Module;
+import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceName;
 import org.kohsuke.MetaInfServices;
 import org.wildfly.clustering.function.Function;
 import org.wildfly.clustering.function.Supplier;
@@ -42,10 +45,14 @@ import org.wildfly.clustering.session.SessionManagerFactory;
 import org.wildfly.clustering.web.container.WebDeploymentServiceInstallerProvider;
 import org.wildfly.clustering.web.service.deployment.WebDeploymentConfiguration;
 import org.wildfly.clustering.web.service.deployment.WebDeploymentServiceDescriptor;
+import org.wildfly.clustering.web.service.routing.NonPrimaryOwnerProxyConfiguration;
+import org.wildfly.clustering.web.service.routing.SessionLocality;
 import org.wildfly.clustering.web.service.session.DistributableSessionManagementConfiguration;
 import org.wildfly.clustering.web.service.session.DistributableSessionManagementProvider;
 import org.wildfly.clustering.web.service.session.LegacyDistributableSessionManagementProviderFactory;
 import org.wildfly.clustering.web.service.session.SessionManagerFactoryConfiguration;
+import org.wildfly.clustering.web.undertow.handlers.NonPrimaryOwnerHandlerDecorator;
+import org.wildfly.clustering.web.undertow.handlers.NonPrimaryOwnerProxy;
 import org.wildfly.clustering.web.undertow.logging.UndertowClusteringLogger;
 import org.wildfly.elytron.web.undertow.server.servlet.ServletSecurityContextImpl.IdentityContainer;
 import org.wildfly.extension.undertow.session.SessionAffinityProvider;
@@ -121,10 +128,34 @@ public class DistributableWebDeploymentServiceInstallerProvider implements WebDe
 
     @Override
     public DeploymentServiceInstaller getHandlerDecoratorServiceInstaller(org.wildfly.clustering.web.container.WebDeploymentConfiguration configuration) {
-        // The handler chain of a distributable deployment is used as-is
-        return ServiceInstaller.BlockingBuilder.of(Supplier.of(java.util.function.UnaryOperator.<HttpHandler>identity()))
-                .provides(org.wildfly.extension.undertow.deployment.WebDeploymentServiceDescriptor.HANDLER_DECORATOR.resolve(configuration.getDeploymentUnit()))
-                .build();
+        DeploymentUnit unit = configuration.getDeploymentUnit();
+        DistributableSessionManagementProvider provider = this.findDistributableSessionManagementProvider(unit);
+        ServiceName name = org.wildfly.extension.undertow.deployment.WebDeploymentServiceDescriptor.HANDLER_DECORATOR.resolve(unit);
+        // The handler chain of a deployment whose requests are never proxied is used as-is
+        ServiceInstaller identityInstaller = ServiceInstaller.BlockingBuilder.of(Supplier.of(java.util.function.UnaryOperator.<HttpHandler>identity())).provides(name).build();
+        // Requests are only ever proxied if the non-primary owner proxy is configured, in which case every deployment whose sessions have a primary owner within the cluster uses it
+        if (!unit.getAttachment(Attachments.CAPABILITY_SERVICE_SUPPORT).hasCapability(NonPrimaryOwnerProxyConfiguration.SERVICE_DESCRIPTOR)) {
+            return identityInstaller;
+        }
+
+        DeploymentServiceInstaller localityInstaller = provider.getSessionLocalityServiceInstaller(new WebDeploymentConfigurationAdapter(configuration));
+        ServiceDependency<SessionLocality> locality = ServiceDependency.on(WebDeploymentServiceDescriptor.SESSION_LOCALITY.resolve(unit));
+        // The proxy, and thus its client and connection pools, are shared by every deployment of this server whose sessions have a primary owner within the cluster
+        ServiceDependency<NonPrimaryOwnerProxy> proxy = ServiceDependency.on(NonPrimaryOwnerProxy.SERVICE_DESCRIPTOR, configuration.getServerName());
+        ServiceInstaller decoratorInstaller = new ServiceInstaller() {
+            @Override
+            public ServiceController<?> install(RequirementServiceTarget target) {
+                // The sessions of a deployment with a local cache are always owned locally, so its server's proxy is never required
+                if (locality.get() == SessionLocality.LOCAL) {
+                    return identityInstaller.install(target);
+                }
+                return ServiceInstaller.BlockingBuilder.of(proxy.combine(locality, NonPrimaryOwnerHandlerDecorator::new))
+                        .provides(name)
+                        .build()
+                        .install(target);
+            }
+        };
+        return DeploymentServiceInstaller.combine(localityInstaller, ServiceInstaller.Builder.of(decoratorInstaller, unit.getAttachment(Attachments.CAPABILITY_SERVICE_SUPPORT)).requires(locality).build());
     }
 
     private DistributableSessionManagementProvider findDistributableSessionManagementProvider(DeploymentUnit unit) {

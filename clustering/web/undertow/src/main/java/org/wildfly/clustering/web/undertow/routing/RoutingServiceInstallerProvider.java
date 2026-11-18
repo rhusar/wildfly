@@ -16,9 +16,15 @@ import java.util.ServiceLoader;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 
+import javax.net.ssl.SSLContext;
+
+import io.undertow.protocols.ssl.UndertowXnioSsl;
+
+import org.jboss.as.clustering.controller.CommonServiceDescriptor;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.RequirementServiceTarget;
+import org.jboss.as.controller.ServiceNameFactory;
 import org.jboss.as.controller.capability.RuntimeCapability;
 import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.network.ClientMapping;
@@ -26,15 +32,23 @@ import org.jboss.as.network.SocketBinding;
 import org.jboss.msc.service.ServiceController;
 import org.kohsuke.MetaInfServices;
 import org.wildfly.clustering.web.service.routing.LegacyRoutingProviderFactory;
+import org.wildfly.clustering.web.service.routing.NonPrimaryOwnerProxyConfiguration;
+import org.wildfly.clustering.web.service.routing.RouteEndpointRegistry;
 import org.wildfly.clustering.web.service.routing.RoutingProvider;
+import org.wildfly.clustering.web.undertow.handlers.NonPrimaryOwnerProxy;
 import org.wildfly.clustering.web.undertow.logging.UndertowClusteringLogger;
 import org.wildfly.extension.undertow.Constants;
+import org.wildfly.extension.undertow.ReverseProxyConfiguration;
 import org.wildfly.extension.undertow.Server;
 import org.wildfly.extension.undertow.ServerServiceInstallerProvider;
 import org.wildfly.extension.undertow.UndertowListener;
+import org.wildfly.service.Installer.StartWhen;
 import org.wildfly.subsystem.service.ResourceServiceInstaller;
 import org.wildfly.subsystem.service.ServiceDependency;
 import org.wildfly.subsystem.service.ServiceInstaller;
+import org.xnio.OptionMap;
+import org.xnio.Options;
+import org.xnio.Xnio;
 
 /**
  * @author Paul Ferraro
@@ -68,12 +82,38 @@ public class RoutingServiceInstallerProvider implements ServerServiceInstallerPr
                         for (ServiceInstaller installer : routingProvider.getServiceInstallers(serverName, serverId, endpoints)) {
                             installer.install(target);
                         }
+                        // Install a single proxy for this server, shared by each deployment whose sessions have a primary owner within the cluster
+                        routingProvider.getNonPrimaryOwnerProxyConfiguration().ifPresent(configuration -> proxyInstaller(serverName, configuration).install(target));
                         return null;
                     }
                 };
                 return ServiceInstaller.Builder.of(installer, context.getCapabilityServiceSupport()).requires(provider).build().install(context);
             }
         };
+    }
+
+    /**
+     * Returns an installer of the proxy of the specified server, using the specified proxy configuration.
+     * The proxy is installed on demand, and thus creates no connection pools unless a deployment of this server requires it.
+     */
+    private static ServiceInstaller proxyInstaller(String serverName, NonPrimaryOwnerProxyConfiguration configuration) {
+        ServiceDependency<RouteEndpointRegistry> registry = ServiceDependency.on(RouteEndpointRegistry.SERVICE_DESCRIPTOR, serverName);
+        ServiceDependency<ReverseProxyConfiguration> reverseProxy = ServiceDependency.on(ReverseProxyConfiguration.SERVICE_DESCRIPTOR, configuration.getReverseProxy());
+        ServiceDependency<SSLContext> sslContext = configuration.getSSLContext().map(name -> ServiceDependency.on(CommonServiceDescriptor.SSL_CONTEXT, name)).orElse(ServiceDependency.empty());
+        ServiceDependency<Server> server = ServiceDependency.on(Server.SERVICE_DESCRIPTOR, serverName);
+        java.util.function.Supplier<NonPrimaryOwnerProxy> factory = new java.util.function.Supplier<>() {
+            @Override
+            public NonPrimaryOwnerProxy get() {
+                SSLContext context = sslContext.get();
+                UndertowXnioSsl ssl = (context != null) ? new UndertowXnioSsl(Xnio.getInstance(), OptionMap.builder().set(Options.USE_DIRECT_BUFFERS, true).getMap(), context) : null;
+                return new NonPrimaryOwnerProxy(registry.get(), reverseProxy.get(), ssl, server);
+            }
+        };
+        return ServiceInstaller.BlockingLifecycleBuilder.of(factory)
+                .provides(ServiceNameFactory.resolveServiceName(NonPrimaryOwnerProxy.SERVICE_DESCRIPTOR, serverName))
+                .requires(List.of(registry, reverseProxy, sslContext, server))
+                .startWhen(StartWhen.REQUIRED)
+                .build();
     }
 
     /**
