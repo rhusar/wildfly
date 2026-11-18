@@ -1,0 +1,144 @@
+[[non-primary-owner-session-proxying]]
+= Proxying requests for sessions owned by a peer
+
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+
+WildFly's distributed session management coordinates access to a session via its _primary owner_,
+as determined by the consistent hash of the session identifier.
+A given request is therefore handled most efficiently by a specific cluster member,
+which normally requires a load balancer that supports session affinity and honours the affinity changes made by the server.
+
+In environments whose load balancer has limited or no session affinity support,
+or whose cluster topology changes frequently enough that the routing information of the load balancer is often stale,
+requests for the same session are instead sprayed across the cluster,
+which results in slow responses, or in request failures caused by lock timeouts.
+
+To address this, the `infinispan` routing provider can be configured to service a request associated with a session owned
+by a peer member by proxying that request to its primary owner, rather than pulling the state of that session onto the
+member that received the request.
+Each member thus corrects a misrouted request immediately, rather than relying on the load balancer to eventually learn the correct route.
+
+[IMPORTANT]
+====
+This feature is provided at the `experimental` stability level, and thus requires a server started with `--stability=experimental`.
+====
+
+== Configuration
+
+Requests are proxied using the configuration of a reverse-proxy handler of the `undertow` subsystem, so that connection
+pooling, timeouts and retry behavior are tuned in the usual way.
+Only the configuration of that handler is used: the members of the cluster are proxied via a dedicated proxy client, whose
+targets are discovered from, and kept up to date with, the routing registry. Any `host` children of the handler are not used.
+Define a reverse-proxy handler, without any `host` children:
+
+[source,options="nowrap"]
+----
+/subsystem=undertow/configuration=handler/reverse-proxy=non-primary-owner:add(max-retries=0, connection-idle-timeout=60)
+----
+
+Configure the non-primary owner proxy of the `infinispan` routing provider of the `distributable-web` subsystem, referencing that handler:
+
+[source,options="nowrap"]
+----
+/subsystem=distributable-web/routing=infinispan/proxy=non-primary-owner:add(reverse-proxy=non-primary-owner)
+----
+
+The equivalent XML configuration is:
+
+[source,xml,options="nowrap"]
+----
+<subsystem xmlns="urn:jboss:domain:distributable-web:experimental:6.0">
+    <session-management default="default">
+        <infinispan-session-management name="default" cache-container="web" granularity="SESSION">
+            <primary-owner-affinity/>
+        </infinispan-session-management>
+    </session-management>
+    ...
+    <infinispan-routing cache-container="web" cache="routing">
+        <non-primary-owner-proxy reverse-proxy="non-primary-owner"/>
+    </infinispan-routing>
+</subsystem>
+----
+
+Once the proxy is configured, it applies to every distributable deployment whose sessions are managed by an
+`infinispan-session-management` provider, irrespective of its affinity, i.e. `primary-owner`, `ranked`, `local` or `none`.
+It cannot be enabled or disabled per session management provider or per deployment.
+Deployments using a `hotrod-session-management` provider are unaffected, since their sessions have no primary owner within the cluster.
+Requests of a non-distributable deployment, of a deployment whose cache is not clustered, and requests that are not
+associated with a session, are always serviced locally.
+The referenced handler must be a reverse-proxy handler; otherwise, the configuration is rejected by the management model.
+Since the routing provider exposes its proxy configuration, adding, changing, or removing the proxy restarts the routing
+provider, and thus requires a reload, unless restarting resource services is allowed.
+
+Each Undertow server creates a single proxy client, and thus a single set of connection pools to its peers.
+That client is created on demand, i.e. only once a deployment whose sessions have a primary owner within the cluster is
+deployed to that server, and is shared by every such deployment of that server, irrespective of their session management provider.
+A proxy client never creates a connection to the member on which it runs.
+
+== Advertised addresses
+
+Every member publishes the addresses of the listeners of its Undertow server to the routing registry of the cluster,
+irrespective of whether this feature is enabled, keyed by scheme, i.e. `ajp`, `http` and `https`.
+A request is proxied via the same scheme on which it arrived, so a request received on an AJP listener is proxied via AJP.
+If the primary owner publishes no address for that scheme, another of its addresses is used, except for a request received
+via HTTPS, which is never proxied via an insecure scheme.
+
+Requests are only proxied via `https` if the proxy references a client SSL context, whose trust manager must trust the certificates of the HTTPS listeners of its peers:
+
+[source,options="nowrap"]
+----
+/subsystem=distributable-web/routing=infinispan/proxy=non-primary-owner:write-attribute(name=client-ssl-context, value=proxy-client-ssl-context)
+----
+
+[NOTE]
+====
+Without a client SSL context, `https` addresses are not used, and thus a request received via HTTPS is serviced locally by
+whichever member receives it.
+====
+
+The published address of a listener is resolved from the `client-mappings` of its socket binding, and falls back to its
+bind address when no client mappings are defined.
+Define client mappings whenever the bind address of a member is not reachable by its peers,
+e.g. under NAT, cloud, container, or multi-homed networking:
+
+[source,options="nowrap"]
+----
+/socket-binding-group=standard-sockets/socket-binding=http:write-attribute(name=client-mappings, value=[{destination-address=node1.example.com, destination-port=8080}])
+----
+
+As is the case for the JGroups transport, a client mapping cannot be selected based on the address of the requesting member,
+and thus the first mapping is used.
+
+[NOTE]
+====
+A listener that binds a wildcard address, e.g. `0.0.0.0`, and whose socket binding defines no client mappings, tells its
+peers nothing about how to reach it. Such a listener publishes no address, and a warning is logged at server startup.
+Requests for sessions owned by that member are then serviced locally by whichever member receives them, as before.
+====
+
+== Behaviour
+
+For a request associated with a session, the receiving member resolves the primary owner of that session:
+
+* If this member is the primary owner, the request is serviced locally.
+* If the primary owner publishes no address via a supported scheme, or its last connection attempt failed, the request is serviced locally.
+* Otherwise, the request is proxied to the primary owner, and the response of that member is returned to the client.
+
+A request that a peer member already proxied, identified by the `x-wildfly-proxied-by` header, is never proxied again.
+If the member that receives such a request is not the primary owner of its session, it responds with `503 Service Unavailable`,
+which prevents proxy loops when the topology views of two members disagree.
+A client that sends this header itself can only suppress proxying of its own request - it can neither cause a request to
+be proxied, nor affect the handling of any other session.
+
+== Recommended cache configuration
+
+This mechanism is most valuable for a deployment configured for strict locality,
+i.e. a distributed cache with a single owner, using a shared persistence store, with state transfer disabled.
+In that configuration the primary owner of a session is precisely the member that can service it without a remote read,
+and centralising request processing on that member removes the need for state transfer altogether.
