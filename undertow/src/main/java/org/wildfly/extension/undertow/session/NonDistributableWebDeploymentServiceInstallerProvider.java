@@ -7,6 +7,7 @@ package org.wildfly.extension.undertow.session;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 import org.wildfly.clustering.web.container.WebDeploymentServiceInstallerProvider;
 import org.wildfly.clustering.web.container.SessionManagerFactoryConfiguration;
@@ -18,6 +19,7 @@ import org.wildfly.subsystem.service.DeploymentServiceInstaller;
 import org.wildfly.subsystem.service.ServiceDependency;
 import org.wildfly.subsystem.service.ServiceInstaller;
 
+import io.undertow.server.HttpHandler;
 import io.undertow.servlet.api.SessionManagerFactory;
 
 /**
@@ -42,6 +44,14 @@ public class NonDistributableWebDeploymentServiceInstallerProvider implements We
         ServiceDependency<Server> server = ServiceDependency.on(Server.SERVICE_DESCRIPTOR, configuration.getServerName());
         return ServiceInstaller.BlockingBuilder.of(server.map(NonDistributableSessionAffinityProvider::new))
                 .provides(WebDeploymentServiceDescriptor.SESSION_AFFINITY_PROVIDER.resolve(configuration.getDeploymentUnit()))
+                .build();
+    }
+
+    @Override
+    public DeploymentServiceInstaller getHandlerDecoratorServiceInstaller(WebDeploymentConfiguration configuration) {
+        // The handler chain of a non-distributable deployment is used as-is
+        return ServiceInstaller.BlockingBuilder.of(() -> UnaryOperator.<HttpHandler>identity())
+                .provides(WebDeploymentServiceDescriptor.HANDLER_DECORATOR.resolve(configuration.getDeploymentUnit()))
                 .build();
     }
 

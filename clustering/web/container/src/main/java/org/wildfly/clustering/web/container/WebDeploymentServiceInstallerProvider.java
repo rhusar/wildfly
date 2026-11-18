@@ -26,4 +26,11 @@ public interface WebDeploymentServiceInstallerProvider {
      * @return a number of service configurators
      */
     DeploymentServiceInstaller getSessionAffinityProviderServiceInstaller(WebDeploymentConfiguration configuration);
+
+    /**
+     * Returns an installer of a service providing a decorator of the handler chain of a deployment.
+     * @param configuration the configuration of the deployment
+     * @return a number of service configurators
+     */
+    DeploymentServiceInstaller getHandlerDecoratorServiceInstaller(WebDeploymentConfiguration configuration);
 }

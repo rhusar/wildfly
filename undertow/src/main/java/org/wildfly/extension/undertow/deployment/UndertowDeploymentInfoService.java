@@ -14,11 +14,13 @@ import io.undertow.security.api.AuthenticationMode;
 import io.undertow.server.HandlerWrapper;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
+import io.undertow.server.handlers.ResponseCodeHandler;
 import io.undertow.server.handlers.builder.PredicatedHandler;
 import io.undertow.server.handlers.resource.CachingResourceManager;
 import io.undertow.server.handlers.resource.FileResourceManager;
 import io.undertow.server.handlers.resource.ResourceManager;
 import io.undertow.server.session.SecureRandomSessionIdGenerator;
+import io.undertow.server.session.SessionConfig;
 import io.undertow.servlet.ServletExtension;
 import io.undertow.servlet.Servlets;
 import io.undertow.servlet.api.AuthMethodConfig;
@@ -197,6 +199,7 @@ public class UndertowDeploymentInfoService implements Service<DeploymentInfo> {
     private final Supplier<UndertowService> undertowService;
     private final Supplier<SessionManagerFactory> sessionManagerFactory;
     private final Supplier<SessionAffinityProvider> sessionAffinityProvider;
+    private final Supplier<UnaryOperator<HttpHandler>> handlerDecorator;
     private final Supplier<ServletContainerService> container;
     private final Supplier<ComponentRegistry> componentRegistry;
     private final Supplier<Host> host;
@@ -217,6 +220,7 @@ public class UndertowDeploymentInfoService implements Service<DeploymentInfo> {
             final Supplier<UndertowService> undertowService,
             final Supplier<SessionManagerFactory> sessionManagerFactory,
             final Supplier<SessionAffinityProvider> sessionAffinityProvider,
+            final Supplier<UnaryOperator<HttpHandler>> handlerDecorator,
             final Supplier<ServletContainerService> container,
             final Supplier<ComponentRegistry> componentRegistry,
             final Supplier<Host> host,
@@ -231,6 +235,7 @@ public class UndertowDeploymentInfoService implements Service<DeploymentInfo> {
         this.undertowService = undertowService;
         this.sessionManagerFactory = sessionManagerFactory;
         this.sessionAffinityProvider = sessionAffinityProvider;
+        this.handlerDecorator = handlerDecorator;
         this.container = container;
         this.componentRegistry = componentRegistry;
         this.host = host;
@@ -390,6 +395,32 @@ public class UndertowDeploymentInfoService implements Service<DeploymentInfo> {
                     deploymentInfo.addThreadSetupAction(threadSetupAction);
                 }
             }
+
+            UnaryOperator<HttpHandler> decorator = (this.handlerDecorator != null) ? this.handlerDecorator.get() : null;
+            // An undecorated deployment uses the identity operator
+            if ((decorator != null) && (decorator.apply(ResponseCodeHandler.HANDLE_404) != ResponseCodeHandler.HANDLE_404)) {
+                // A decorated handler must service a request before any servlet request listener accesses its session,
+                // e.g. so that a request proxied to a peer does not lock its session locally, and thus wraps the initial
+                // handler of this deployment. Added last, and thus applied outermost.
+                // Since no servlet request context yet exists, expose the session configuration of this deployment via the exchange.
+                // The session configuration of the servlet context requires a servlet request context, so capture its delegate,
+                // i.e. the session configuration per the session tracking modes of this deployment, as wrapped by any configured wrapper.
+                AtomicReference<SessionConfig> decoratedSessionConfig = new AtomicReference<>();
+                SessionConfigWrapper sessionConfigWrapper = deploymentInfo.getSessionConfigWrapper();
+                deploymentInfo.setSessionConfigWrapper((trackingSessionConfig, deployment) -> {
+                    SessionConfig wrapped = (sessionConfigWrapper != null) ? sessionConfigWrapper.wrap(trackingSessionConfig, deployment) : trackingSessionConfig;
+                    decoratedSessionConfig.set(wrapped);
+                    return wrapped;
+                });
+                deploymentInfo.addInitialHandlerChainWrapper(next -> {
+                    HttpHandler decorated = decorator.apply(next);
+                    return exchange -> {
+                        exchange.putAttachment(DeploymentHandlerAttachments.SESSION_CONFIG, decoratedSessionConfig.get());
+                        decorated.handleRequest(exchange);
+                    };
+                });
+            }
+
             deploymentInfo.setServerName(serverEnvironment.get().getProductConfig().getPrettyVersionString());
             if (undertowService.get().isStatisticsEnabled()) {
                 deploymentInfo.setMetricsCollector(new UndertowMetricsCollector());
@@ -1393,6 +1424,7 @@ public class UndertowDeploymentInfoService implements Service<DeploymentInfo> {
                 final Supplier<UndertowService> undertowService,
                 final Supplier<SessionManagerFactory> sessionManagerFactory,
                 final Supplier<SessionAffinityProvider> sessionAffinityProvider,
+                final Supplier<UnaryOperator<HttpHandler>> handlerDecorator,
                 final Supplier<ServletContainerService> container,
                 final Supplier<ComponentRegistry> componentRegistry,
                 final Supplier<Host> host,
@@ -1404,7 +1436,7 @@ public class UndertowDeploymentInfoService implements Service<DeploymentInfo> {
                 final Supplier<BiFunction<DeploymentInfo, Function<String, RunAsIdentityMetaData>, Registration>> applySecurityFunction
         ) {
             return new UndertowDeploymentInfoService(deploymentInfoConsumer, undertowService, sessionManagerFactory,
-                    sessionAffinityProvider, container, componentRegistry, host, controlPoint,
+                    sessionAffinityProvider, handlerDecorator, container, componentRegistry, host, controlPoint,
                     suspendController, serverEnvironment, rawSecurityDomain, rawMechanismFactory, applySecurityFunction, mergedMetaData, deploymentName, tldInfo, module,
                     scisMetaData, deploymentRoot, jaccContextId, securityDomain, attributes, contextPath, setupActions, overlays,
                     expressionFactoryWrappers, predicatedHandlers, initialHandlerChainWrappers, innerHandlerChainWrappers, outerHandlerChainWrappers,

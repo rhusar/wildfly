@@ -30,9 +30,11 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 import jakarta.security.jacc.PolicyConfiguration;
 
+import io.undertow.server.HttpHandler;
 import io.undertow.servlet.api.DeploymentInfo;
 import io.undertow.servlet.api.SessionManagerFactory;
 import io.undertow.servlet.core.InMemorySessionManagerFactory;
@@ -320,6 +322,7 @@ public class UndertowDeploymentProcessor implements DeploymentUnitProcessor {
         ServletContainerService servletContainer = deploymentUnit.getAttachment(UndertowAttachments.SERVLET_CONTAINER_SERVICE);
         Supplier<SessionManagerFactory> sessionManagerFactory = (servletContainer != null) ? builder.requires(WebDeploymentServiceDescriptor.SESSION_MANAGER_FACTORY.resolve(sessionDeploymentUnit)) : null;
         Supplier<SessionAffinityProvider> sessionAffinityProvider = (servletContainer != null) ? builder.requires(WebDeploymentServiceDescriptor.SESSION_AFFINITY_PROVIDER.resolve(sessionDeploymentUnit)) : null;
+        Supplier<UnaryOperator<HttpHandler>> handlerDecorator = (servletContainer != null) ? builder.requires(WebDeploymentServiceDescriptor.HANDLER_DECORATOR.resolve(sessionDeploymentUnit)) : null;
 
         if ((servletContainer != null) && (sharedSessionManagerConfig == null)) {
             Integer maxActiveSessions = (metaData.getMaxActiveSessions() != null) ? metaData.getMaxActiveSessions() : servletContainer.getMaxSessions();
@@ -356,6 +359,7 @@ public class UndertowDeploymentProcessor implements DeploymentUnitProcessor {
             };
             provider.getSessionManagerFactoryServiceInstaller(configuration).install(phaseContext);
             provider.getSessionAffinityProviderServiceInstaller(configuration).install(phaseContext);
+            provider.getHandlerDecoratorServiceInstaller(configuration).install(phaseContext);
         }
 
         UndertowDeploymentInfoService undertowDeploymentInfoService = UndertowDeploymentInfoService.builder()
@@ -384,7 +388,7 @@ public class UndertowDeploymentProcessor implements DeploymentUnitProcessor {
                 .setTempDir(warMetaData.getTempDir())
                 .setExternalResources(deploymentUnit.getAttachmentList(UndertowAttachments.EXTERNAL_RESOURCES))
                 .setAllowSuspendedRequests(deploymentUnit.getAttachmentList(UndertowAttachments.ALLOW_REQUEST_WHEN_SUSPENDED))
-                .createUndertowDeploymentInfoService(deploymentInfo, undertowService, sessionManagerFactory, sessionAffinityProvider,
+                .createUndertowDeploymentInfoService(deploymentInfo, undertowService, sessionManagerFactory, sessionAffinityProvider, handlerDecorator,
                         servletContainerService, componentRegistryDependency, host, controlPoint, suspendController, serverEnvironment, securityDomain, mechanismFactorySupplier, applySecurityFunction);
         builder.setInstance(undertowDeploymentInfoService);
 

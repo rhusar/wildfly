@@ -18,6 +18,7 @@ import java.util.concurrent.Executor;
 import jakarta.servlet.ServletContext;
 
 import io.undertow.security.api.AuthenticatedSessionManager.AuthenticatedSession;
+import io.undertow.server.HttpHandler;
 import io.undertow.servlet.api.Deployment;
 import io.undertow.servlet.util.SavedRequest;
 
@@ -116,6 +117,14 @@ public class DistributableWebDeploymentServiceInstallerProvider implements WebDe
                 .provides(org.wildfly.extension.undertow.deployment.WebDeploymentServiceDescriptor.SESSION_AFFINITY_PROVIDER.resolve(unit))
                 .build();
         return DeploymentServiceInstaller.combine(locatorInstaller, affinityInstaller);
+    }
+
+    @Override
+    public DeploymentServiceInstaller getHandlerDecoratorServiceInstaller(org.wildfly.clustering.web.container.WebDeploymentConfiguration configuration) {
+        // The handler chain of a distributable deployment is used as-is
+        return ServiceInstaller.BlockingBuilder.of(Supplier.of(java.util.function.UnaryOperator.<HttpHandler>identity()))
+                .provides(org.wildfly.extension.undertow.deployment.WebDeploymentServiceDescriptor.HANDLER_DECORATOR.resolve(configuration.getDeploymentUnit()))
+                .build();
     }
 
     private DistributableSessionManagementProvider findDistributableSessionManagementProvider(DeploymentUnit unit) {
