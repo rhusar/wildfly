@@ -7,6 +7,8 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_1.xsd"
          version="6.1">
+    <!-- Creates a distributed web session cache whose topology can be awaited via TopologyChangeListenerServlet -->
+    <distributable/>
     <resource-env-ref>
         <resource-env-ref-name>clustering/dispatcher</resource-env-ref-name>
         <resource-env-ref-type>org.wildfly.clustering.dispatcher.CommandDispatcherFactory</resource-env-ref-type>

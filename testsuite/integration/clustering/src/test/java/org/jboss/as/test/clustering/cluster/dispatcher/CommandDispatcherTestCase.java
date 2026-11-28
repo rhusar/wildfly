@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.TargetsContainer;
 import org.jboss.arquillian.junit5.ArquillianExtension;
+import org.jboss.as.test.clustering.ClusterTestUtil;
 import org.jboss.as.test.clustering.cluster.AbstractClusteringTestCase;
 import org.jboss.as.test.clustering.cluster.dispatcher.bean.ClusterTopology;
 import org.jboss.as.test.clustering.cluster.dispatcher.bean.ClusterTopologyRetriever;
@@ -17,7 +18,6 @@ import org.jboss.as.test.clustering.cluster.dispatcher.bean.ClusterTopologyRetri
 import org.jboss.as.test.clustering.cluster.dispatcher.bean.legacy.LegacyClusterTopologyRetrieverBean;
 import org.jboss.as.test.clustering.ejb.EJBDirectory;
 import org.jboss.as.test.clustering.ejb.RemoteEJBDirectory;
-import org.jboss.as.test.shared.PermissionUtils;
 import org.jboss.as.test.shared.TimeoutUtil;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -28,6 +28,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(ArquillianExtension.class)
 public class CommandDispatcherTestCase extends AbstractClusteringTestCase {
     protected static final String MODULE_NAME = CommandDispatcherTestCase.class.getSimpleName();
+    protected static final String DEPLOYMENT_NAME = MODULE_NAME + ".war";
     private static final long VIEW_CHANGE_WAIT = TimeoutUtil.adjust(2000);
 
     @Deployment(name = DEPLOYMENT_1, managed = false, testable = false)
@@ -43,11 +44,12 @@ public class CommandDispatcherTestCase extends AbstractClusteringTestCase {
     }
 
     private static Archive<?> createDeployment() {
-        WebArchive war = ShrinkWrap.create(WebArchive.class, MODULE_NAME + ".war");
+        WebArchive war = ShrinkWrap.create(WebArchive.class, DEPLOYMENT_NAME);
         war.addPackage(ClusterTopologyRetrieverBean.class.getPackage());
         war.addPackage(LegacyClusterTopologyRetrieverBean.class.getPackage());
-        war.addAsManifestResource(PermissionUtils.createPermissionsXmlAsset(new RuntimePermission("getClassLoader")), "permissions.xml");
         war.setWebXML(CommandDispatcherTestCase.class.getPackage(), "web.xml");
+        // Also adds a permissions.xml granting the getClassLoader permission
+        ClusterTestUtil.addTopologyListenerDependencies(war);
         return war;
     }
 
